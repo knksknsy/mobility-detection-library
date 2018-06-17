@@ -41,6 +41,8 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Util;
 
 public class MainActivity extends AppCompatActivity {
 
+    //test
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private MobilityDetection mobilityDetection;

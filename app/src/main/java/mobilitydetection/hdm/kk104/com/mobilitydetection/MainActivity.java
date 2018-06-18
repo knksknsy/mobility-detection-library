@@ -41,8 +41,6 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Util;
 
 public class MainActivity extends AppCompatActivity {
 
-    //test
-
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private MobilityDetection mobilityDetection;
@@ -60,9 +58,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         createNotificationChannel();
-        initMobilityDetection();
         initView();
-        initLocationSettings();
+        initMobilityDetection();
     }
 
     private void createNotificationChannel() {
@@ -106,21 +103,17 @@ public class MainActivity extends AppCompatActivity {
         Credentials credentials;
         try {
             credentials = new Credentials(Util.getProperty("login", getApplicationContext()), Util.getProperty("password", getApplicationContext()));
-            mobilityDetection = MobilityDetection.getInstance().setContext(MainActivity.this).setFirebaseCredentials(credentials);
+            mobilityDetection = MobilityDetection.getInstance()
+                    .setContext(MainActivity.this)
+                    .setFirebaseCredentials(credentials);
+
+            initiateLocationSettings();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void startMobilityDetection() {
-        mobilityDetection.startMobilityDetection();
-    }
-
-    private void stopMobilityDetection() {
-        mobilityDetection.stopMobilityDetection();
-    }
-
-    private void initLocationSettings() {
+    private void initiateLocationSettings() {
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -135,12 +128,32 @@ public class MainActivity extends AppCompatActivity {
             } else {
 
                 Log.e(TAG, "GPS_PROVIDER enabled");
-                startMobilityDetection();
+                mobilityDetection.startMobilityDetection();
             }
         } else {
 
             Log.e(TAG, "PERMISSION_DENIEND for ACCESS_FINE_LOCATION. Requesting permission...");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_LOCATION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST_LOCATION && grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            Log.e(TAG, "PERMISSION_GRANTED for ACCESS_FINE_LOCATION");
+            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
+                Log.e(TAG, "GPS_PROVIDER disabled. Requesting location settings...");
+                checkLocationSettings();
+            } else {
+
+                Log.e(TAG, "GPS_PROVIDER enabled");
+                mobilityDetection.startMobilityDetection();
+            }
+        } else {
+            Toast.makeText(this, "Please enable location services to allow GPS tracking", Toast.LENGTH_SHORT).show();
+            mobilityDetection.stopMobilityDetection();
         }
     }
 
@@ -175,32 +188,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSIONS_REQUEST_LOCATION && grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            Log.e(TAG, "PERMISSION_GRANTED for ACCESS_FINE_LOCATION");
-            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-
-                Log.e(TAG, "GPS_PROVIDER disabled. Requesting location settings...");
-                checkLocationSettings();
-            } else {
-
-                Log.e(TAG, "GPS_PROVIDER enabled");
-                startMobilityDetection();
-            }
-        } else {
-            Toast.makeText(this, "Please enable location services to allow GPS tracking", Toast.LENGTH_SHORT).show();
-            stopMobilityDetection();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CHECK_LOCATION_SETTINGS) {
             if (resultCode == Activity.RESULT_OK) {
                 Log.e(TAG, "LOCATION_SETTINGS RESULT_OK");
-                startMobilityDetection();
+                mobilityDetection.startMobilityDetection();
             }
             if (resultCode == Activity.RESULT_CANCELED) {
                 Log.e(TAG, "LOCATION_SETTINGS RESULT_CANCELED");
@@ -208,4 +200,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }

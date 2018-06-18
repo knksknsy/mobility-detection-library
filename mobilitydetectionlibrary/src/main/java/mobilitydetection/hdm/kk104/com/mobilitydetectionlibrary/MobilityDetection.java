@@ -2,7 +2,6 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Credentials;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.MobilityDetectionService;

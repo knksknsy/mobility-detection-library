@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -22,7 +23,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.awareness.Awareness;
+import com.google.android.gms.awareness.snapshot.DetectedActivityResponse;
 import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -32,11 +37,19 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.FirebaseDatabaseStatistic;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Credentials;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.DetectedActivitiesService;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Util;
 
 public class MainActivity extends AppCompatActivity {
@@ -52,24 +65,45 @@ public class MainActivity extends AppCompatActivity {
     private Button btnSend;
     private Spinner spinner;
 
+    private FirebaseDatabaseStatistic fbStatistic;
+
+    private ActivityRecognitionClient arClient;
+    private PendingIntent activityPendingIntent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        arClient = new ActivityRecognitionClient(MainActivity.this);
+
+        fbStatistic = new FirebaseDatabaseStatistic();
 
         createNotificationChannel();
         initView();
         initMobilityDetection();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "mobilityDetectionChannel";
-            String description = "mobilityDetectionDescription";
+            CharSequence name = getString(R.string.notification_channel);
+            String description = getString(R.string.notification_description);
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("default", name, importance);
+            NotificationChannel channel = new NotificationChannel(getString(R.string.notification_id), name, importance);
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
@@ -89,14 +123,60 @@ public class MainActivity extends AppCompatActivity {
         spinner.setAdapter(spinnerAdapter);
 
         btnSend = findViewById(R.id.btn_send);
+
+        /*// Awareness
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String activity = spinner.getSelectedItem().toString();
-                // fbStatistic.uploadValidation(activity);
+                final String activity = spinner.getSelectedItem().toString();
+                // todo outsource
+                Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
+                        .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
+                            @Override
+                            public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
+                                List<DetectedActivity> detectedActivity = detectedActivityResponse.getActivityRecognitionResult().getProbableActivities();
+                                fbStatistic.uploadValidation(activity, detectedActivity);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.e(TAG, e.getMessage());
+                            }
+                        });
+            }
+        });*/
+
+        // ActivityRecognition
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String activity = spinner.getSelectedItem().toString();
+
+                Intent activityIntent = new Intent(MainActivity.this, DetectedActivitiesService.class);
+                int requestCode = 3;
+                activityIntent.putExtra("requestCode", requestCode);
+                activityIntent.putExtra("validation", activity);
+
+                activityPendingIntent = PendingIntent.getService(MainActivity.this, requestCode, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                Task<Void> task = arClient.requestActivityUpdates(100, activityPendingIntent);
+
+                task.addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.e(TAG, "successfully requested");
+                        // arClient.removeActivityUpdates(activityPendingIntent);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, e.getMessage());
+                        // arClient.removeActivityUpdates(activityPendingIntent);
+                    }
+                });
             }
         });
-
     }
 
     private void initMobilityDetection() {
@@ -197,6 +277,87 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == Activity.RESULT_CANCELED) {
                 Log.e(TAG, "LOCATION_SETTINGS RESULT_CANCELED");
                 checkLocationSettings();
+            }
+        }
+    }
+
+    @Subscribe()
+    public void removeActivityRecognitionUpdates(String placeholder) {
+        if (placeholder == "abc") {
+            arClient.removeActivityUpdates(activityPendingIntent);
+            Log.e(TAG, "updates successfully removed");
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void handleUserActivity(final ArrayList<DetectedActivity> activities) {
+        ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
+        textActivity.setText("");
+        textConfidence.setText("");
+        textList.setText("");
+
+        for (DetectedActivity activity : copyActivities) {
+            int type = activity.getType();
+            int confidence = activity.getConfidence();
+
+            String label = "UNKNOWN";
+
+            switch (type) {
+                case DetectedActivity.IN_VEHICLE: {
+                    label = "IN_VEHICLE";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+                case DetectedActivity.ON_BICYCLE: {
+                    label = "ON_BICYCLE";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+                case DetectedActivity.ON_FOOT: {
+                    label = "ON_FOOT";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+                case DetectedActivity.RUNNING: {
+                    label = "RUNNING";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+                case DetectedActivity.STILL: {
+                    label = "STILL";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+                case DetectedActivity.TILTING: {
+                    label = "TILTING";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+                case DetectedActivity.WALKING: {
+                    label = "WALKING";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+                case DetectedActivity.UNKNOWN: {
+                    label = "UNKNOWN";
+                    textList.append(label + ": " + confidence);
+                    textList.append("\n");
+                    break;
+                }
+            }
+
+            Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
+
+            if (confidence > 75) {
+                textActivity.setText(label);
+                textConfidence.setText("Confidence: " + confidence);
             }
         }
     }

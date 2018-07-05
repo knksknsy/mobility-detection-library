@@ -9,6 +9,7 @@ import com.google.firebase.database.Exclude;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class ProbableActivities implements Parcelable {
 
@@ -25,12 +26,21 @@ public class ProbableActivities implements Parcelable {
     public int mostProbableConfidence;
 
     private ArrayList<DetectedActivity> activities;
+    private List<DetectedActivity> activityList;
 
     public ProbableActivities(ArrayList<DetectedActivity> activities) {
         initProbableActivities(activities);
         this.activities = sortActivitiesByConfidence(activities);
 
-        mostProbableType = convertActivityType(getMostProbableActivity().getType());
+        mostProbableType = Activities.getActivityType(getMostProbableActivity().getType());
+        mostProbableConfidence = getMostProbableActivity().getConfidence();
+    }
+
+    public ProbableActivities(List<DetectedActivity> activities) {
+        initProbableActivities(activities);
+        this.activityList = sortActivitiesByConfidence(activities);
+
+        mostProbableType = Activities.getActivityType(getMostProbableActivity().getType());
         mostProbableConfidence = getMostProbableActivity().getConfidence();
     }
 
@@ -78,8 +88,18 @@ public class ProbableActivities implements Parcelable {
         }
     };
 
+    @Exclude
     public ArrayList<DetectedActivity> getActivities() {
         return activities;
+    }
+
+    public void setActivityList(List<DetectedActivity> activityList) {
+        this.activityList = activityList;
+    }
+
+    @Exclude
+    public List<DetectedActivity> getActivityList() {
+        return activityList;
     }
 
     public void setActivities(ArrayList<DetectedActivity> activities) {
@@ -88,38 +108,7 @@ public class ProbableActivities implements Parcelable {
 
     @Exclude
     public DetectedActivity getMostProbableActivity() {
-        return activities.get(0);
-    }
-
-    private String convertActivityType(int type) {
-        String activity = "";
-        switch (type) {
-            case DetectedActivity.IN_VEHICLE:
-                activity = Activities.IN_VEHICLE;
-                break;
-            case DetectedActivity.ON_BICYCLE:
-                activity = Activities.ON_BICYCLE;
-                break;
-            case DetectedActivity.ON_FOOT:
-                activity = Activities.ON_FOOT;
-                break;
-            case DetectedActivity.STILL:
-                activity = Activities.STILL;
-                break;
-            case DetectedActivity.UNKNOWN:
-                activity = Activities.UNKNOWN;
-                break;
-            case DetectedActivity.TILTING:
-                activity = Activities.TILTING;
-                break;
-            case DetectedActivity.WALKING:
-                activity = Activities.WALKING;
-                break;
-            case DetectedActivity.RUNNING:
-                activity = Activities.RUNNING;
-                break;
-        }
-        return activity;
+        return activities != null ? activities.get(0) : activityList.get(0);
     }
 
     private void initProbableActivities(final ArrayList<DetectedActivity> activities) {
@@ -164,7 +153,60 @@ public class ProbableActivities implements Parcelable {
         }
     }
 
+    private void initProbableActivities(final List<DetectedActivity> activities) {
+        for (DetectedActivity activity : activities) {
+            int type = activity.getType();
+            int confidence = activity.getConfidence();
+
+            switch (type) {
+                case DetectedActivity.IN_VEHICLE: {
+                    IN_VEHICLE = confidence;
+                    break;
+                }
+                case DetectedActivity.ON_BICYCLE: {
+                    ON_BICYCLE = confidence;
+                    break;
+                }
+                case DetectedActivity.ON_FOOT: {
+                    ON_FOOT = confidence;
+                    break;
+                }
+                case DetectedActivity.STILL: {
+                    STILL = confidence;
+                    break;
+                }
+                case DetectedActivity.UNKNOWN: {
+                    UNKNOWN = confidence;
+                    break;
+                }
+                case DetectedActivity.TILTING: {
+                    TILTING = confidence;
+                    break;
+                }
+                case DetectedActivity.WALKING: {
+                    WALKING = confidence;
+                    break;
+                }
+                case DetectedActivity.RUNNING: {
+                    RUNNING = confidence;
+                    break;
+                }
+            }
+        }
+    }
+
     private ArrayList<DetectedActivity> sortActivitiesByConfidence(ArrayList<DetectedActivity> activities) {
+        Collections.sort(activities, new Comparator<DetectedActivity>() {
+            @Override
+            public int compare(DetectedActivity o1, DetectedActivity o2) {
+                return Integer.compare(o2.getConfidence(), o1.getConfidence());
+            }
+        });
+
+        return activities;
+    }
+
+    private List<DetectedActivity> sortActivitiesByConfidence(List<DetectedActivity> activities) {
         Collections.sort(activities, new Comparator<DetectedActivity>() {
             @Override
             public int compare(DetectedActivity o1, DetectedActivity o2) {

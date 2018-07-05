@@ -1,11 +1,14 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers;
 
+import com.google.android.gms.location.DetectedActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
@@ -57,8 +60,12 @@ public class FirebaseDatabaseStatistic {
         dbStatistic.child(getDateShort()).child(LOCATION).child(getTime()).setValue(detectedLocation);
     }
 
-    public void uploadValidation(String activity) {
-        dbStatistic.child(getDateShort()).child(VALIDATION).child(getTime()).setValue(new Validation(activity));
+    public void uploadValidation(String activity, DetectedActivities detectedActivities) {
+        dbStatistic.child(getDateShort()).child(VALIDATION).child(getTime()).setValue(new Validation(activity, detectedActivities));
+    }
+
+    public void uploadValidation(String activity, List<DetectedActivity> activityList) {
+        dbStatistic.child(getDateShort()).child(VALIDATION).child(getTime()).setValue(new Validation(activity, activityList));
     }
 
     private String getDateShort() {

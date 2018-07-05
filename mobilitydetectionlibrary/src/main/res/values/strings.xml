@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">MobilityDetectionLibrary</string>
     <string name="tracking_enabled_notify">Tracking is currently enabled. Tap to cancel.</string>
-
+    <string name="notification_channel">mobilityDetectionChannel</string>
+    <string name="notification_description">mobilityDetectionDescription</string>
+    <string name="notification_id">default</string>
 </resources>

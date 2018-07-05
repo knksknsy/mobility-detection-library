@@ -39,6 +39,7 @@ dependencies {
     compileOnly("com.google.firebase:firebase-database:$currentFirebaseVersion")
     compileOnly("com.google.firebase:firebase-auth:$currentFirebaseVersion")
 
-    implementation('com.google.android.gms:play-services-location:15.0.1')
-    implementation('com.google.android.gms:play-services-awareness:15.0.1')
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
+    implementation 'com.google.android.gms:play-services-awareness:15.0.1'
+    implementation 'org.greenrobot:eventbus:3.1.1'
 }

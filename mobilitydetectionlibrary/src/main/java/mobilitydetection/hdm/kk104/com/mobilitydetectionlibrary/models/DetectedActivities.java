@@ -8,6 +8,7 @@ import com.google.android.gms.location.DetectedActivity;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 public class DetectedActivities implements Parcelable {
@@ -15,6 +16,11 @@ public class DetectedActivities implements Parcelable {
     private ProbableActivities probableActivities;
 
     public DetectedActivities(ArrayList<DetectedActivity> detectedActivities) {
+        this.timestamp = generateTimestamp();
+        this.probableActivities = new ProbableActivities(detectedActivities);
+    }
+
+    public DetectedActivities(List<DetectedActivity> detectedActivities) {
         this.timestamp = generateTimestamp();
         this.probableActivities = new ProbableActivities(detectedActivities);
     }

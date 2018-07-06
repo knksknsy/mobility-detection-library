@@ -29,7 +29,6 @@ public class TrackingService extends IntentService {
             LocationResult locationResult = LocationResult.extractResult(intent);
             Location location = locationResult.getLastLocation();
             if (location != null) {
-                Log.e(TAG, "handle LocationResult");
                 DetectedLocation coordinate = new DetectedLocation(this, location.getLatitude(), location.getLongitude());
 
                 Intent fbDbintent = new Intent("LOCATION_ACTION");

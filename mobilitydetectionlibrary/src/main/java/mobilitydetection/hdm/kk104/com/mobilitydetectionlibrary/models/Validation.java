@@ -19,14 +19,14 @@ public class Validation {
 
     public Validation(String activity, DetectedActivities detectedActivities) {
         this.activity = activity;
-        this.timestamp = generateTimestamp();
+        this.timestamp = detectedActivities.getTimestamp();
         this.detectedActivities = detectedActivities;
     }
 
     public Validation(String activity, List<DetectedActivity> activityList) {
         this.activity = activity;
-        this.timestamp = generateTimestamp();
         this.detectedActivities = new DetectedActivities(activityList);
+        this.timestamp = this.detectedActivities.getTimestamp();
     }
 
     public String getTimestamp() {

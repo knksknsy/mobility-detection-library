@@ -43,7 +43,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.FirebaseDatabaseStatistic;
@@ -158,9 +157,9 @@ public class MainActivity extends AppCompatActivity {
                 activityIntent.putExtra("requestCode", requestCode);
                 activityIntent.putExtra("validation", activity);
 
-                activityPendingIntent = PendingIntent.getService(MainActivity.this, requestCode, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                activityPendingIntent = PendingIntent.getService(MainActivity.this, requestCode, activityIntent, PendingIntent.FLAG_ONE_SHOT);
 
-                Task<Void> task = arClient.requestActivityUpdates(100, activityPendingIntent);
+                Task<Void> task = arClient.requestActivityUpdates(0, activityPendingIntent);
 
                 task.addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -177,6 +176,14 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    @Subscribe()
+    public void removeActivityRecognitionUpdates(String placeholder) {
+        if (placeholder == "REMOVE_ACTIVITY_RECOGNITION") {
+            arClient.removeActivityUpdates(activityPendingIntent);
+            Log.e(TAG, "updates successfully removed");
+        }
     }
 
     private void initMobilityDetection() {
@@ -278,14 +285,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "LOCATION_SETTINGS RESULT_CANCELED");
                 checkLocationSettings();
             }
-        }
-    }
-
-    @Subscribe()
-    public void removeActivityRecognitionUpdates(String placeholder) {
-        if (placeholder == "abc") {
-            arClient.removeActivityUpdates(activityPendingIntent);
-            Log.e(TAG, "updates successfully removed");
         }
     }
 

@@ -31,12 +31,12 @@ public class DetectedActivitiesService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         int requestCode = intent.getIntExtra("requestCode", -1);
         String validationActivity = intent.getStringExtra("validation");
-        Log.e(TAG, "requestCode: " + requestCode);
-        Log.e(TAG, "validation activity: " + validationActivity);
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
             if (requestCode == 3) {
+                Log.e(TAG, "requestCode: " + requestCode);
+                Log.e(TAG, "validation activity: " + validationActivity);
                 broadcastValidationActivities(validationActivity, detectedActivities);
             } else {
                 broadcastActivities(detectedActivities);

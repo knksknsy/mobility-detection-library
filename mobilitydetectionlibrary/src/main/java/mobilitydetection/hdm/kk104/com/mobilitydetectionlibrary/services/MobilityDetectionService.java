@@ -9,12 +9,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.util.EventLog;
 import android.util.Log;
 
 import com.google.android.gms.awareness.Awareness;
@@ -92,11 +92,46 @@ public class MobilityDetectionService extends Service {
                 String validation = intent.getStringExtra("validation");
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 Log.e(TAG, "validation detectedActivity: " + detectedActivities.getDetectedActivities());
-                fbStatistic.uploadValidation(validation, detectedActivities);
-                EventBus.getDefault().post("abc");
+                Log.e(TAG, "validation timestamp: " + detectedActivities.getTimestamp());
+                // fbStatistic.uploadValidation(validation, detectedActivities);
+
+                new FirebaseUpload().execute(validation, detectedActivities);
+
+                EventBus.getDefault().post("REMOVE_ACTIVITY_RECOGNITION");
             }
         }
     };
+
+    public class FirebaseUpload extends AsyncTask<Object, Void, Void> {
+
+        public String validation;
+        public DetectedActivities detectedActivities;
+        @Override
+        protected Void doInBackground(Object... objects) {
+            String validation = null;
+            DetectedActivities detectedActivities = null;
+
+            for (int i = 0; i < objects.length; i++) {
+                if (objects[i] instanceof String) {
+                    validation = (String) objects[i];
+                }
+                if (objects[i] instanceof DetectedActivities) {
+                    detectedActivities = (DetectedActivities) objects[i];
+                }
+            }
+
+            fbStatistic.uploadValidation(validation, detectedActivities);
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Log.e(TAG, "upload done");
+
+        }
+    }
 
     @Override
     public void onCreate() {

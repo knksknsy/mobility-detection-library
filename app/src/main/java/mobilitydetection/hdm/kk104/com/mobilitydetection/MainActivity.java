@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnSend;
     private Spinner spinner;
 
-    private FirebaseDatabaseStatistic fbStatistic;
+    // private FirebaseDatabaseStatistic fbStatistic;
 
     private ActivityRecognitionClient arClient;
     private PendingIntent activityPendingIntent;
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
         arClient = new ActivityRecognitionClient(MainActivity.this);
 
-        fbStatistic = new FirebaseDatabaseStatistic();
+        // fbStatistic = new FirebaseDatabaseStatistic();
 
         createNotificationChannel();
         initView();

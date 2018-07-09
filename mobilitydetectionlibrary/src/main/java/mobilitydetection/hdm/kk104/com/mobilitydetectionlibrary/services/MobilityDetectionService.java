@@ -45,7 +45,7 @@ public class MobilityDetectionService extends Service {
 
     private static final String TAG = MobilityDetectionService.class.getSimpleName();
 
-    private static final long INTERVAL_AR = 500;
+    private static final long INTERVAL_AR = 1000;
     private static final long INTERVAL = 1000;
     private static final long INTERVAL_TEST = 1000 * 60;
 
@@ -93,51 +93,18 @@ public class MobilityDetectionService extends Service {
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 Log.e(TAG, "validation detectedActivity: " + detectedActivities.getDetectedActivities());
                 Log.e(TAG, "validation timestamp: " + detectedActivities.getTimestamp());
-                // fbStatistic.uploadValidation(validation, detectedActivities);
-
-                new FirebaseUpload().execute(validation, detectedActivities);
+                fbStatistic.uploadValidation(validation, detectedActivities);
 
                 EventBus.getDefault().post("REMOVE_ACTIVITY_RECOGNITION");
             }
         }
     };
 
-    public class FirebaseUpload extends AsyncTask<Object, Void, Void> {
-
-        public String validation;
-        public DetectedActivities detectedActivities;
-        @Override
-        protected Void doInBackground(Object... objects) {
-            String validation = null;
-            DetectedActivities detectedActivities = null;
-
-            for (int i = 0; i < objects.length; i++) {
-                if (objects[i] instanceof String) {
-                    validation = (String) objects[i];
-                }
-                if (objects[i] instanceof DetectedActivities) {
-                    detectedActivities = (DetectedActivities) objects[i];
-                }
-            }
-
-            fbStatistic.uploadValidation(validation, detectedActivities);
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            Log.e(TAG, "upload done");
-
-        }
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
 
-        fbStatistic = new FirebaseDatabaseStatistic();
+        fbStatistic = new FirebaseDatabaseStatistic(this);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction("LOCATION_ACTION");
@@ -149,11 +116,11 @@ public class MobilityDetectionService extends Service {
 
         Intent activityIntent = new Intent(this, DetectedActivitiesService.class);
         Intent trackingIntent = new Intent(this, TrackingService.class);
-        Intent fenceIntent = new Intent(this, FenceService.class);
+        // Intent fenceIntent = new Intent(this, FenceService.class);
 
         activityPendingIntent = PendingIntent.getService(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         trackingPendingIntent = PendingIntent.getService(this, 1, trackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        fencePendingIntent = PendingIntent.getService(this, 2, fenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // fencePendingIntent = PendingIntent.getService(this, 2, fenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         buildNotification();
     }

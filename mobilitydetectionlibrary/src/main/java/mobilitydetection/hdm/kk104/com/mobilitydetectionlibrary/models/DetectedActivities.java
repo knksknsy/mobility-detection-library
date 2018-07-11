@@ -5,13 +5,14 @@ import android.os.Parcelable;
 
 import com.google.android.gms.location.DetectedActivity;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-public class DetectedActivities implements Parcelable {
+public class DetectedActivities implements Parcelable, Serializable {
     private String timestamp;
     private ProbableActivities probableActivities;
 

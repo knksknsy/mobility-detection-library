@@ -2,12 +2,13 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 
 import com.google.android.gms.location.DetectedActivity;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-public class Validation {
+public class Validation implements Serializable {
     private String timestamp;
     private String activity;
     private DetectedActivities detectedActivities;

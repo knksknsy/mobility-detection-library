@@ -6,12 +6,13 @@ import android.os.Parcelable;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.firebase.database.Exclude;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class ProbableActivities implements Parcelable {
+public class ProbableActivities implements Parcelable, Serializable {
 
     public int IN_VEHICLE;
     public int ON_BICYCLE;

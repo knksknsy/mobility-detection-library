@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
@@ -23,6 +24,7 @@ import com.google.android.gms.awareness.fence.AwarenessFence;
 import com.google.android.gms.awareness.fence.DetectedActivityFence;
 import com.google.android.gms.awareness.fence.FenceUpdateRequest;
 import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -34,6 +36,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
 import org.greenrobot.eventbus.EventBus;
+
+import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.FirebaseDatabaseStatistic;
@@ -47,7 +51,7 @@ public class MobilityDetectionService extends Service {
 
     private static final long INTERVAL_AR = 1000;
     private static final long INTERVAL = 1000;
-    private static final long INTERVAL_TEST = 1000 * 60;
+    private static final long INTERVAL_TEST = 1000;
 
     IBinder binder = new MobilityDetectionService.LocalBinder();
 
@@ -59,8 +63,9 @@ public class MobilityDetectionService extends Service {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationRequest locationRequest;
 
-    public MobilityDetectionService() {
+    private IntentFilter filter = new IntentFilter();
 
+    public MobilityDetectionService() {
     }
 
     public class LocalBinder extends Binder {
@@ -91,11 +96,10 @@ public class MobilityDetectionService extends Service {
             if (action.equals("VALIDATION_ACTIVITY_ACTION")) {
                 String validation = intent.getStringExtra("validation");
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                Log.e(TAG, "validation detectedActivity: " + detectedActivities.getDetectedActivities());
-                Log.e(TAG, "validation timestamp: " + detectedActivities.getTimestamp());
+                Log.e(TAG, "validation: " + detectedActivities.getDetectedActivities());
                 fbStatistic.uploadValidation(validation, detectedActivities);
-
-                EventBus.getDefault().post("REMOVE_ACTIVITY_RECOGNITION");
+                fbStatistic.uploadEvent("EVENT");
+                // EventBus.getDefault().post("REMOVE_ACTIVITY_RECOGNITION");
             }
         }
     };
@@ -105,11 +109,12 @@ public class MobilityDetectionService extends Service {
         super.onCreate();
 
         fbStatistic = new FirebaseDatabaseStatistic(this);
+        fbStatistic.uploadEvent("MobilityDetectionService onCreate");
 
-        IntentFilter filter = new IntentFilter();
         filter.addAction("LOCATION_ACTION");
         filter.addAction("ACTIVITY_DETECTED_ACTION");
         filter.addAction("VALIDATION_ACTIVITY_ACTION");
+
         registerReceiver(firebaseReceiver, filter);
 
         activityRecognitionClient = new ActivityRecognitionClient(this);
@@ -128,6 +133,7 @@ public class MobilityDetectionService extends Service {
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        fbStatistic.uploadEvent("MobilityDetectionService onStartCommand");
         Credentials credentials = intent.getParcelableExtra("credentials");
         loginToFirebase(credentials);
         return START_STICKY;
@@ -138,6 +144,25 @@ public class MobilityDetectionService extends Service {
         super.onDestroy();
         // removeActivityUpdates();
         unregisterReceiver(firebaseReceiver);
+        fbStatistic.uploadEvent("MobilityDetectionService onDestroy");
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        super.onRebind(intent);
+        if (filter.countActions() == 0) {
+            filter.addAction("LOCATION_ACTION");
+            filter.addAction("ACTIVITY_DETECTED_ACTION");
+            filter.addAction("VALIDATION_ACTIVITY_ACTION");
+        }
+        registerReceiver(firebaseReceiver, filter);
+        fbStatistic.uploadEvent("MobilityDetectionService onRebind");
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        fbStatistic.uploadEvent("MobilityDetectionService onUnbind");
+        return super.onUnbind(intent);
     }
 
     public void requestActivityRecognitionUpdates() {

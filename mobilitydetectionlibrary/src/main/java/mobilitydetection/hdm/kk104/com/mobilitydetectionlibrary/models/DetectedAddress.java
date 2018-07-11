@@ -4,9 +4,10 @@ import android.location.Address;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class DetectedAddress implements Parcelable {
+public class DetectedAddress implements Parcelable, Serializable {
 
     private String address;
     private String city;

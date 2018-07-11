@@ -2,6 +2,7 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
@@ -54,7 +55,7 @@ public class DetectedActivitiesService extends IntentService {
         DetectedActivities detectedActivities = new DetectedActivities(activities);
 
         Intent fbDbIntent = new Intent("ACTIVITY_DETECTED_ACTION");
-        fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
+        fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
         sendBroadcast(fbDbIntent, null);
     }
 
@@ -62,7 +63,7 @@ public class DetectedActivitiesService extends IntentService {
         DetectedActivities detectedActivities = new DetectedActivities(activities);
 
         Intent fbDbIntent = new Intent("VALIDATION_ACTIVITY_ACTION");
-        fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
+        fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
         fbDbIntent.putExtra("validation", validation);
         sendBroadcast(fbDbIntent, null);
     }

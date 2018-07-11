@@ -8,6 +8,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class DetectedLocation implements Parcelable {
+public class DetectedLocation implements Parcelable, Serializable {
 
     private static final String TAG = DetectedLocation.class.getSimpleName();
 

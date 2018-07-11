@@ -5,11 +5,14 @@ import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Parcelable;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -43,11 +46,13 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.FirebaseDatabaseStatistic;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Credentials;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.DetectedActivitiesService;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Util;
 
@@ -63,18 +68,21 @@ public class MainActivity extends AppCompatActivity {
     private TextView textActivity, textConfidence, textList;
     private Button btnSend;
     private Spinner spinner;
+    private Vibrator vibe;
 
     // private FirebaseDatabaseStatistic fbStatistic;
 
-    private ActivityRecognitionClient arClient;
-    private PendingIntent activityPendingIntent;
+    /*private ActivityRecognitionClient arClient;
+    private PendingIntent activityPendingIntent;*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        arClient = new ActivityRecognitionClient(MainActivity.this);
+        vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        // arClient = new ActivityRecognitionClient(MainActivity.this);
 
         // fbStatistic = new FirebaseDatabaseStatistic();
 
@@ -150,41 +158,62 @@ public class MainActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                vibe.vibrate(100);
                 final String activity = spinner.getSelectedItem().toString();
 
+                /*int requestCode = 3;
                 Intent activityIntent = new Intent(MainActivity.this, DetectedActivitiesService.class);
-                int requestCode = 3;
                 activityIntent.putExtra("requestCode", requestCode);
                 activityIntent.putExtra("validation", activity);
 
                 activityPendingIntent = PendingIntent.getService(MainActivity.this, requestCode, activityIntent, PendingIntent.FLAG_ONE_SHOT);
 
-                Task<Void> task = arClient.requestActivityUpdates(0, activityPendingIntent);
+                arClient.requestActivityUpdates(0, activityPendingIntent)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Log.e(TAG, "successfully requested");
+                                // arClient.removeActivityUpdates(activityPendingIntent);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.e(TAG, e.getMessage());
+                                // arClient.removeActivityUpdates(activityPendingIntent);
+                            }
+                        });*/
 
-                task.addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.e(TAG, "successfully requested");
-                        // arClient.removeActivityUpdates(activityPendingIntent);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, e.getMessage());
-                        // arClient.removeActivityUpdates(activityPendingIntent);
-                    }
-                });
+                Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
+                        .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
+                            @Override
+                            public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
+                                DetectedActivities detectedActivities = new DetectedActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
+
+                                Log.e(TAG, "awareness called");
+                                Intent fbDbIntent = new Intent("VALIDATION_ACTIVITY_ACTION");
+                                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                                fbDbIntent.putExtra("validation", activity);
+                                sendBroadcast(fbDbIntent, null);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.e(TAG, e.getMessage());
+                            }
+                        });
             }
         });
     }
 
-    @Subscribe()
-    public void removeActivityRecognitionUpdates(String placeholder) {
-        if (placeholder == "REMOVE_ACTIVITY_RECOGNITION") {
+    /*@Subscribe()
+    public void removeActivityRecognitionUpdates(String event) {
+        if (event == "REMOVE_ACTIVITY_RECOGNITION") {
             arClient.removeActivityUpdates(activityPendingIntent);
             Log.e(TAG, "updates successfully removed");
         }
-    }
+    }*/
 
     private void initMobilityDetection() {
         Credentials credentials;

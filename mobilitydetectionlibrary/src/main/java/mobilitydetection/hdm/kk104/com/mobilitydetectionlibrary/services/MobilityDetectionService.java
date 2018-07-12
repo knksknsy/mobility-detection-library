@@ -49,9 +49,9 @@ public class MobilityDetectionService extends Service {
 
     private static final String TAG = MobilityDetectionService.class.getSimpleName();
 
-    private static final long INTERVAL_AR = 1000;
+    private static final long INTERVAL_AR = 1000 * 5;
     private static final long INTERVAL = 1000;
-    private static final long INTERVAL_TEST = 1000;
+    private static final long INTERVAL_LOCATION = 1000 * 60;
 
     IBinder binder = new MobilityDetectionService.LocalBinder();
 
@@ -276,7 +276,7 @@ public class MobilityDetectionService extends Service {
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         // locationRequest.setInterval(INTERVAL);
-        locationRequest.setInterval(INTERVAL_TEST);
+        locationRequest.setInterval(INTERVAL_LOCATION);
         locationRequest.setFastestInterval(INTERVAL);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);

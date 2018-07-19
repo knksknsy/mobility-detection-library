@@ -72,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
 
     // private FirebaseDatabaseStatistic fbStatistic;
 
-    /*private ActivityRecognitionClient arClient;
-    private PendingIntent activityPendingIntent;*/
+    private ActivityRecognitionClient arClient;
+    private PendingIntent activityPendingIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
 
         vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        // arClient = new ActivityRecognitionClient(MainActivity.this);
+        arClient = new ActivityRecognitionClient(MainActivity.this);
 
         // fbStatistic = new FirebaseDatabaseStatistic();
 
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
                 vibe.vibrate(100);
                 final String activity = spinner.getSelectedItem().toString();
 
-                /*int requestCode = 3;
+                int requestCode = 3;
                 Intent activityIntent = new Intent(MainActivity.this, DetectedActivitiesService.class);
                 activityIntent.putExtra("requestCode", requestCode);
                 activityIntent.putExtra("validation", activity);
@@ -182,9 +182,9 @@ public class MainActivity extends AppCompatActivity {
                                 Log.e(TAG, e.getMessage());
                                 // arClient.removeActivityUpdates(activityPendingIntent);
                             }
-                        });*/
+                        });
 
-                Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
+                /*Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
                         .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                             @Override
                             public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
@@ -202,18 +202,18 @@ public class MainActivity extends AppCompatActivity {
                             public void onFailure(@NonNull Exception e) {
                                 Log.e(TAG, e.getMessage());
                             }
-                        });
+                        });*/
             }
         });
     }
 
-    /*@Subscribe()
+    @Subscribe()
     public void removeActivityRecognitionUpdates(String event) {
         if (event == "REMOVE_ACTIVITY_RECOGNITION") {
             arClient.removeActivityUpdates(activityPendingIntent);
             Log.e(TAG, "updates successfully removed");
         }
-    }*/
+    }
 
     private void initMobilityDetection() {
         Credentials credentials;

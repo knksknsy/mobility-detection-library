@@ -66,6 +66,10 @@ public class DetectedActivitiesService extends IntentService {
         fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
         fbDbIntent.putExtra("validation", validation);
         sendBroadcast(fbDbIntent, null);
+
+        Intent intent2 = new Intent("ACTIVITY_DETECTED_ACTION");
+        intent2.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+        sendBroadcast(intent2, null);
     }
 
 }

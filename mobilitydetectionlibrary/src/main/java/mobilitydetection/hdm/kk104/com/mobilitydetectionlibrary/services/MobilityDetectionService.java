@@ -49,7 +49,7 @@ public class MobilityDetectionService extends Service {
 
     private static final String TAG = MobilityDetectionService.class.getSimpleName();
 
-    private static final long INTERVAL_AR = 1000 * 5;
+    private static final long INTERVAL_AR = 1000;
     private static final long INTERVAL = 1000;
     private static final long INTERVAL_LOCATION = 1000 * 60;
 
@@ -94,12 +94,13 @@ public class MobilityDetectionService extends Service {
                 fbStatistic.uploadDetectedActivity(detectedActivities);
             }
             if (action.equals("VALIDATION_ACTIVITY_ACTION")) {
+                EventBus.getDefault().post("REMOVE_ACTIVITY_RECOGNITION");
+
                 String validation = intent.getStringExtra("validation");
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 Log.e(TAG, "validation: " + detectedActivities.getDetectedActivities());
                 fbStatistic.uploadValidation(validation, detectedActivities);
                 fbStatistic.uploadEvent("EVENT");
-                // EventBus.getDefault().post("REMOVE_ACTIVITY_RECOGNITION");
             }
         }
     };

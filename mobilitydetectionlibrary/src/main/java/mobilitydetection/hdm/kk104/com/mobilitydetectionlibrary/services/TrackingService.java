@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Parcelable;
-import android.util.Log;
 
 import com.google.android.gms.location.LocationResult;
 
@@ -32,9 +31,9 @@ public class TrackingService extends IntentService {
             if (location != null) {
                 DetectedLocation coordinate = new DetectedLocation(this, location.getLatitude(), location.getLongitude());
 
-                Intent fbDbintent = new Intent("LOCATION_ACTION");
-                fbDbintent.putExtra(DetectedLocation.class.getSimpleName(), (Parcelable) coordinate);
-                sendBroadcast(fbDbintent, null);
+                Intent locationIntent = new Intent("LOCATION_ACTION");
+                locationIntent.putExtra(DetectedLocation.class.getSimpleName(), (Parcelable) coordinate);
+                sendBroadcast(locationIntent, null);
             }
         }
     }

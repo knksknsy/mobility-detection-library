@@ -5,13 +5,14 @@ import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
-import android.os.Parcelable;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -26,8 +27,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.awareness.Awareness;
-import com.google.android.gms.awareness.snapshot.DetectedActivityResponse;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
@@ -40,21 +39,11 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.FirebaseDatabaseStatistic;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Credentials;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.DetectedActivitiesService;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Util;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -67,10 +56,11 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textActivity, textConfidence, textList;
     private Button btnSend;
+    private Button btnSave;
     private Spinner spinner;
     private Vibrator vibe;
 
-    // private FirebaseDatabaseStatistic fbStatistic;
+    private IntentFilter filter = new IntentFilter();
 
     private ActivityRecognitionClient arClient;
     private PendingIntent activityPendingIntent;
@@ -80,11 +70,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        filter.addAction("ACTIVITY_INTENT");
+        registerReceiver(activitiesReceiver, filter);
+
         vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         arClient = new ActivityRecognitionClient(MainActivity.this);
-
-        // fbStatistic = new FirebaseDatabaseStatistic();
 
         createNotificationChannel();
         initView();
@@ -92,15 +83,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
+    protected void onStop() {
+        super.onStop();
+        Intent intent = new Intent("SAVE_STATISTIC");
+        sendBroadcast(intent, null);
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        EventBus.getDefault().unregister(this);
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(activitiesReceiver);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (filter.countActions() == 0) {
+            filter.addAction("ACTIVITY_INTENT");
+        }
+        registerReceiver(activitiesReceiver, filter);
     }
 
     private void createNotificationChannel() {
@@ -130,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         spinner.setAdapter(spinnerAdapter);
 
         btnSend = findViewById(R.id.btn_send);
+        btnSave = findViewById(R.id.btn_save);
 
         /*// Awareness
         btnSend.setOnClickListener(new View.OnClickListener() {
@@ -205,28 +207,20 @@ public class MainActivity extends AppCompatActivity {
                         });*/
             }
         });
-    }
 
-    @Subscribe()
-    public void removeActivityRecognitionUpdates(String event) {
-        if (event == "REMOVE_ACTIVITY_RECOGNITION") {
-            arClient.removeActivityUpdates(activityPendingIntent);
-            Log.e(TAG, "updates successfully removed");
-        }
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent("SAVE_STATISTIC");
+                sendBroadcast(intent, null);
+            }
+        });
     }
 
     private void initMobilityDetection() {
-        Credentials credentials;
-        try {
-            credentials = new Credentials(Util.getProperty("login", getApplicationContext()), Util.getProperty("password", getApplicationContext()));
-            mobilityDetection = MobilityDetection.getInstance()
-                    .setContext(MainActivity.this)
-                    .setFirebaseCredentials(credentials);
+        mobilityDetection = MobilityDetection.getInstance().setContext(MainActivity.this);
 
-            initiateLocationSettings();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        initiateLocationSettings();
     }
 
     private void initiateLocationSettings() {
@@ -317,77 +311,85 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void handleUserActivity(final ArrayList<DetectedActivity> activities) {
-        ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
-        textActivity.setText("");
-        textConfidence.setText("");
-        textList.setText("");
+    private final BroadcastReceiver activitiesReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals("ACTIVITY_INTENT")) {
+                ArrayList<DetectedActivity> activities = intent.getParcelableArrayListExtra("activities");
+                Log.e(TAG, "activities received: " + activities.size());
 
-        for (DetectedActivity activity : copyActivities) {
-            int type = activity.getType();
-            int confidence = activity.getConfidence();
+                ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
+                textActivity.setText("");
+                textConfidence.setText("");
+                textList.setText("");
 
-            String label = "UNKNOWN";
+                for (DetectedActivity activity : copyActivities) {
+                    int type = activity.getType();
+                    int confidence = activity.getConfidence();
 
-            switch (type) {
-                case DetectedActivity.IN_VEHICLE: {
-                    label = "IN_VEHICLE";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-                case DetectedActivity.ON_BICYCLE: {
-                    label = "ON_BICYCLE";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-                case DetectedActivity.ON_FOOT: {
-                    label = "ON_FOOT";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-                case DetectedActivity.RUNNING: {
-                    label = "RUNNING";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-                case DetectedActivity.STILL: {
-                    label = "STILL";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-                case DetectedActivity.TILTING: {
-                    label = "TILTING";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-                case DetectedActivity.WALKING: {
-                    label = "WALKING";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-                case DetectedActivity.UNKNOWN: {
-                    label = "UNKNOWN";
-                    textList.append(label + ": " + confidence);
-                    textList.append("\n");
-                    break;
-                }
-            }
+                    String label = "UNKNOWN";
 
-            Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
+                    switch (type) {
+                        case DetectedActivity.IN_VEHICLE: {
+                            label = "IN_VEHICLE";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                        case DetectedActivity.ON_BICYCLE: {
+                            label = "ON_BICYCLE";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                        case DetectedActivity.ON_FOOT: {
+                            label = "ON_FOOT";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                        case DetectedActivity.RUNNING: {
+                            label = "RUNNING";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                        case DetectedActivity.STILL: {
+                            label = "STILL";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                        case DetectedActivity.TILTING: {
+                            label = "TILTING";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                        case DetectedActivity.WALKING: {
+                            label = "WALKING";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                        case DetectedActivity.UNKNOWN: {
+                            label = "UNKNOWN";
+                            textList.append(label + ": " + confidence);
+                            textList.append("\n");
+                            break;
+                        }
+                    }
 
-            if (confidence > 75) {
-                textActivity.setText(label);
-                textConfidence.setText("Confidence: " + confidence);
+                    Log.e(TAG, "User activity: " + label + ", Confidence: " + confidence);
+
+                    if (confidence > 75) {
+                        textActivity.setText(label);
+                        textConfidence.setText("Confidence: " + confidence);
+                    }
+                }
             }
         }
-    }
+    };
 
 }

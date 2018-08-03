@@ -7,14 +7,16 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
+
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 
 public class DetectedLocation implements Parcelable, Serializable {
 
@@ -113,10 +115,23 @@ public class DetectedLocation implements Parcelable, Serializable {
     }
 
     private String generateTimestamp() {
-        Date date = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        dateFormat.setTimeZone(TimeZone.getDefault());
+        return Timestamp.generateTimestamp();
+    }
 
-        return dateFormat.format(date);
+    public String getShortTime() {
+        return Timestamp.getTime(timestamp);
+    }
+
+    public JSONObject toJSON() {
+        JSONObject object = new JSONObject();
+        try {
+            object.put("timestamp", this.timestamp);
+            object.put("longitude", this.longitude);
+            object.put("latitude", this.latitude);
+            object.put("detectedAddress", detectedAddress.toJSON());
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+        return object;
     }
 }

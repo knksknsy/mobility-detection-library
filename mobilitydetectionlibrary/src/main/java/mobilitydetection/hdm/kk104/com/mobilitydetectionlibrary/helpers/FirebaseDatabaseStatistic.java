@@ -1,3 +1,4 @@
+/*
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers;
 
 import android.content.Context;
@@ -57,14 +58,16 @@ public class FirebaseDatabaseStatistic {
     public FirebaseDatabaseStatistic(Context context) {
         this.context = context;
         auth = FirebaseAuth.getInstance();
-        /*FirebaseDatabase.getInstance().setPersistenceEnabled(true);*/
+        */
+/*FirebaseDatabase.getInstance().setPersistenceEnabled(true);*//*
+
         dbStatistic = FirebaseDatabase.getInstance().getReference(DB_NAME);
         connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
 
         try {
             loadSharedPreferences();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         }
     }
 
@@ -108,7 +111,7 @@ public class FirebaseDatabaseStatistic {
         try {
             editor.putString(key, ObjectSerializer.serialize(arrayList));
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         }
         editor.apply();
     }
@@ -238,7 +241,6 @@ public class FirebaseDatabaseStatistic {
     private String getDateShort() {
         Date date = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-        dateFormat.setTimeZone(TimeZone.getDefault());
 
         return dateFormat.format(date);
     }
@@ -311,4 +313,4 @@ public class FirebaseDatabaseStatistic {
         }
     }
 
-}
+}*/

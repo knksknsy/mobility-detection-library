@@ -11,17 +11,11 @@ import com.google.android.gms.awareness.Awareness;
 import com.google.android.gms.awareness.fence.FenceState;
 import com.google.android.gms.awareness.snapshot.DetectedActivityResponse;
 import com.google.android.gms.location.DetectedActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
-import org.greenrobot.eventbus.EventBus;
-
-import java.util.ArrayList;
 import java.util.List;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
 public class FenceService extends IntentService {
@@ -253,7 +247,8 @@ public class FenceService extends IntentService {
     }
 
     private void broadcastActivities(List<DetectedActivity> activities) {
-        EventBus.getDefault().post(activities);
+        // todo: replace with broadcastreceiver
+        /*EventBus.getDefault().post(activities);*/
 
         DetectedActivities detectedActivities = new DetectedActivities(activities);
 

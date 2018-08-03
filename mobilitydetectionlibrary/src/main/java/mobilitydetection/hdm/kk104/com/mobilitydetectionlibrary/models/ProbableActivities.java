@@ -2,9 +2,12 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.android.gms.location.DetectedActivity;
-import com.google.firebase.database.Exclude;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,6 +16,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ProbableActivities implements Parcelable, Serializable {
+
+    private static final String TAG = ProbableActivities.class.getSimpleName();
 
     public int IN_VEHICLE;
     public int ON_BICYCLE;
@@ -89,7 +94,6 @@ public class ProbableActivities implements Parcelable, Serializable {
         }
     };
 
-    @Exclude
     public ArrayList<DetectedActivity> getActivities() {
         return activities;
     }
@@ -98,7 +102,6 @@ public class ProbableActivities implements Parcelable, Serializable {
         this.activityList = activityList;
     }
 
-    @Exclude
     public List<DetectedActivity> getActivityList() {
         return activityList;
     }
@@ -107,7 +110,6 @@ public class ProbableActivities implements Parcelable, Serializable {
         this.activities = activities;
     }
 
-    @Exclude
     public DetectedActivity getMostProbableActivity() {
         return activities != null ? activities.get(0) : activityList.get(0);
     }
@@ -216,6 +218,28 @@ public class ProbableActivities implements Parcelable, Serializable {
         });
 
         return activities;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject object = new JSONObject();
+        try {
+            object.put("IN_VEHICLE", IN_VEHICLE);
+            object.put("ON_BICYCLE", ON_BICYCLE);
+            object.put("ON_FOOT", ON_FOOT);
+            object.put("STILL", STILL);
+            object.put("UNKNOWN", UNKNOWN);
+            object.put("TILTING", TILTING);
+            object.put("WALKING", WALKING);
+            object.put("RUNNING", RUNNING);
+
+            object.put("mostProbableType", mostProbableType);
+            object.put("mostProbableConfidence", mostProbableConfidence);
+
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+
+        return object;
     }
 
 }

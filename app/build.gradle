@@ -18,9 +18,9 @@ android {
     }
 }
 
-ext {
+/*ext {
     currentFirebaseVerions = "16.0.1"
-}
+}*/
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -31,16 +31,17 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     implementation (project(':mobilitydetectionlibrary')) {
-        exclude group: 'com.google.firebase'
+        /*exclude group: 'com.google.firebase'*/
     }
 
-    implementation("com.google.firebase:firebase-core:$currentFirebaseVerions")
+    /*implementation("com.google.firebase:firebase-core:$currentFirebaseVerions")
     implementation("com.google.firebase:firebase-database:$currentFirebaseVerions")
-    implementation("com.google.firebase:firebase-auth:$currentFirebaseVerions")
+    implementation("com.google.firebase:firebase-auth:$currentFirebaseVerions")*/
 
     implementation 'com.google.android.gms:play-services-location:15.0.1'
     implementation 'com.google.android.gms:play-services-awareness:15.0.1'
-    implementation 'org.greenrobot:eventbus:3.1.1'
+
+    /*implementation 'org.greenrobot:eventbus:3.1.1'*/
 }
 
 apply plugin: 'com.google.gms.google-services'

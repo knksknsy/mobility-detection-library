@@ -3,10 +3,9 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 import com.google.android.gms.location.DetectedActivity;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
+
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 
 public class Validation implements Serializable {
     private String timestamp;
@@ -55,10 +54,6 @@ public class Validation implements Serializable {
     }
 
     private String generateTimestamp() {
-        Date date = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        dateFormat.setTimeZone(TimeZone.getDefault());
-
-        return dateFormat.format(date);
+        return Timestamp.generateTimestamp();
     }
 }

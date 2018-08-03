@@ -8,8 +8,6 @@ import android.util.Log;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
-import org.greenrobot.eventbus.EventBus;
-
 import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
@@ -46,30 +44,30 @@ public class DetectedActivitiesService extends IntentService {
     }
 
     private void broadcastActivities(ArrayList<DetectedActivity> activities) {
-        /*Intent intent = new Intent("ACTIVITY_INTENT");
+        Intent intent = new Intent("ACTIVITY_INTENT");
         intent.putParcelableArrayListExtra("activities", activities);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);*/
-
-        EventBus.getDefault().post(activities);
+        sendBroadcast(intent, null);
 
         DetectedActivities detectedActivities = new DetectedActivities(activities);
 
-        Intent fbDbIntent = new Intent("ACTIVITY_DETECTED_ACTION");
-        fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
-        sendBroadcast(fbDbIntent, null);
+        broadcastDetectedActivities(detectedActivities);
     }
 
     private void broadcastValidationActivities(String validation, ArrayList<DetectedActivity> activities) {
         DetectedActivities detectedActivities = new DetectedActivities(activities);
 
-        Intent fbDbIntent = new Intent("VALIDATION_ACTIVITY_ACTION");
-        fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
-        fbDbIntent.putExtra("validation", validation);
-        sendBroadcast(fbDbIntent, null);
+        Intent intent = new Intent("VALIDATION_ACTIVITY_ACTION");
+        intent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+        intent.putExtra("validation", validation);
+        sendBroadcast(intent, null);
 
-        Intent intent2 = new Intent("ACTIVITY_DETECTED_ACTION");
-        intent2.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
-        sendBroadcast(intent2, null);
+        broadcastDetectedActivities(detectedActivities);
+    }
+
+    private void broadcastDetectedActivities(DetectedActivities detectedActivities) {
+        Intent intent = new Intent("ACTIVITY_DETECTED_ACTION");
+        intent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+        sendBroadcast(intent, null);
     }
 
 }

@@ -9,8 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -24,24 +22,15 @@ import com.google.android.gms.awareness.fence.AwarenessFence;
 import com.google.android.gms.awareness.fence.DetectedActivityFence;
 import com.google.android.gms.awareness.fence.FenceUpdateRequest;
 import com.google.android.gms.location.ActivityRecognitionClient;
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-
-import org.greenrobot.eventbus.EventBus;
-
-import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.FirebaseDatabaseStatistic;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Credentials;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DatabaseStatistic;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 
@@ -56,7 +45,7 @@ public class MobilityDetectionService extends Service {
     IBinder binder = new MobilityDetectionService.LocalBinder();
 
     private PendingIntent activityPendingIntent, trackingPendingIntent, fencePendingIntent;
-    private FirebaseDatabaseStatistic fbStatistic;
+    private DatabaseStatistic database;
 
     private ActivityRecognitionClient activityRecognitionClient;
     private FenceClient fenceClient;
@@ -79,28 +68,30 @@ public class MobilityDetectionService extends Service {
         return binder;
     }
 
-    private final BroadcastReceiver firebaseReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver databaseReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            if (action.equals("SAVE_STATISTIC")) {
+                Log.e(TAG, "SAVING....");
+                database.writeJSONFile();
+            }
             if (action.equals("LOCATION_ACTION")) {
                 DetectedLocation detectedLocation = intent.getParcelableExtra(DetectedLocation.class.getSimpleName());
                 Log.e(TAG, "detectedLocation: " + detectedLocation.getLatitude() + "," + detectedLocation.getLongitude());
-                fbStatistic.uploadDetectedLocation(detectedLocation);
+                database.writeDetectedLocation(detectedLocation);
             }
             if (action.equals("ACTIVITY_DETECTED_ACTION")) {
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 Log.e(TAG, "detectedActivity: " + detectedActivities.getDetectedActivities());
-                fbStatistic.uploadDetectedActivity(detectedActivities);
+                database.writeDetectedActivity(detectedActivities);
             }
             if (action.equals("VALIDATION_ACTIVITY_ACTION")) {
-                EventBus.getDefault().post("REMOVE_ACTIVITY_RECOGNITION");
-
                 String validation = intent.getStringExtra("validation");
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 Log.e(TAG, "validation: " + detectedActivities.getDetectedActivities());
-                fbStatistic.uploadValidation(validation, detectedActivities);
-                fbStatistic.uploadEvent("EVENT");
+
+                database.writeValidation(validation, detectedActivities);
             }
         }
     };
@@ -109,14 +100,14 @@ public class MobilityDetectionService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        fbStatistic = new FirebaseDatabaseStatistic(this);
-        fbStatistic.uploadEvent("MobilityDetectionService onCreate");
+        database = new DatabaseStatistic(this);
 
+        filter.addAction("SAVE_STATISTIC");
         filter.addAction("LOCATION_ACTION");
         filter.addAction("ACTIVITY_DETECTED_ACTION");
         filter.addAction("VALIDATION_ACTIVITY_ACTION");
 
-        registerReceiver(firebaseReceiver, filter);
+        registerReceiver(databaseReceiver, filter);
 
         activityRecognitionClient = new ActivityRecognitionClient(this);
 
@@ -134,35 +125,35 @@ public class MobilityDetectionService extends Service {
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        fbStatistic.uploadEvent("MobilityDetectionService onStartCommand");
-        Credentials credentials = intent.getParcelableExtra("credentials");
-        loginToFirebase(credentials);
+
+        requestActivityRecognitionUpdates();
+        // requestAwarenessUpdates();
+        // requestLocationUpdates();
+
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // removeActivityUpdates();
-        unregisterReceiver(firebaseReceiver);
-        fbStatistic.uploadEvent("MobilityDetectionService onDestroy");
+        // removeActivityRecognitionUpdates();
+        unregisterReceiver(databaseReceiver);
     }
 
     @Override
     public void onRebind(Intent intent) {
         super.onRebind(intent);
         if (filter.countActions() == 0) {
+            filter.addAction("SAVE_STATISTIC");
             filter.addAction("LOCATION_ACTION");
             filter.addAction("ACTIVITY_DETECTED_ACTION");
             filter.addAction("VALIDATION_ACTIVITY_ACTION");
         }
-        registerReceiver(firebaseReceiver, filter);
-        fbStatistic.uploadEvent("MobilityDetectionService onRebind");
+        registerReceiver(databaseReceiver, filter);
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        fbStatistic.uploadEvent("MobilityDetectionService onUnbind");
         return super.onUnbind(intent);
     }
 
@@ -276,7 +267,6 @@ public class MobilityDetectionService extends Service {
         locationRequest = new LocationRequest();
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        // locationRequest.setInterval(INTERVAL);
         locationRequest.setInterval(INTERVAL_LOCATION);
         locationRequest.setFastestInterval(INTERVAL);
 
@@ -300,6 +290,7 @@ public class MobilityDetectionService extends Service {
         }
     }
 
+    // todo
     protected BroadcastReceiver stopReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -308,6 +299,7 @@ public class MobilityDetectionService extends Service {
         }
     };
 
+    // todo
     private void buildNotification() {
         String stop = "stop";
         registerReceiver(stopReceiver, new IntentFilter(stop));
@@ -322,28 +314,5 @@ public class MobilityDetectionService extends Service {
         startForeground(1, builder.build());
     }
 
-    private void loginToFirebase(Credentials credentials) {
-        Log.e(TAG, "login: " + credentials.getLogin() + ", password: " + credentials.getPassword());
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(credentials.getLogin(), credentials.getPassword())
-                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        task.addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.e(TAG, "Error: " + e);
-                            }
-                        });
-                        if (task.isSuccessful()) {
-                            requestActivityRecognitionUpdates();
-                            // requestAwarenessUpdates();
-                            requestLocationUpdates();
-
-                        } else {
-                            Log.e(TAG, "Firebase authentication failed");
-                        }
-                    }
-                });
-    }
 }
 

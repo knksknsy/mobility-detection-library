@@ -21,9 +21,9 @@ android {
     }
 }
 
-ext {
+/*ext {
     currentFirebaseVersion = "16.0.1"
-}
+}*/
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -35,13 +35,13 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    compileOnly("com.google.firebase:firebase-core:$currentFirebaseVersion")
+    /*compileOnly("com.google.firebase:firebase-core:$currentFirebaseVersion")
     compileOnly("com.google.firebase:firebase-database:$currentFirebaseVersion")
-    compileOnly("com.google.firebase:firebase-auth:$currentFirebaseVersion")
+    compileOnly("com.google.firebase:firebase-auth:$currentFirebaseVersion")*/
 
     implementation 'com.google.android.gms:play-services-location:15.0.1'
     implementation 'com.google.android.gms:play-services-awareness:15.0.1'
-    implementation 'org.greenrobot:eventbus:3.1.1'
 
-    implementation 'com.google.code.gson:gson:2.8.5'
+    /*implementation 'org.greenrobot:eventbus:3.1.1'
+    implementation 'com.google.code.gson:gson:2.8.5'*/
 }

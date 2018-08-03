@@ -3,7 +3,6 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary;
 import android.content.Context;
 import android.content.Intent;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Credentials;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.MobilityDetectionService;
 
 public class MobilityDetection {
@@ -12,20 +11,10 @@ public class MobilityDetection {
 
     private static final MobilityDetection mobilityDetection = new MobilityDetection();
 
-    private Credentials firebaseCredentials;
     private Context context;
 
     private MobilityDetection() {
 
-    }
-
-    public Credentials getFirebaseCredentials() {
-        return firebaseCredentials;
-    }
-
-    public MobilityDetection setFirebaseCredentials(Credentials credentials) {
-        this.firebaseCredentials = credentials;
-        return this;
     }
 
     public Context getContext() {
@@ -44,7 +33,6 @@ public class MobilityDetection {
     public void startMobilityDetection() throws NullPointerException {
         if (context != null) {
             Intent intent = new Intent(context, MobilityDetectionService.class);
-            intent.putExtra("credentials", firebaseCredentials);
             context.startService(intent);
         } else {
             throw new NullPointerException("Context is not defined.");

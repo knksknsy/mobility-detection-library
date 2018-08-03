@@ -3,11 +3,17 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 import android.location.Address;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.List;
 
 public class DetectedAddress implements Parcelable, Serializable {
+
+    private static final String TAG = DetectedAddress.class.getSimpleName();
 
     private String address;
     private String city;
@@ -105,5 +111,20 @@ public class DetectedAddress implements Parcelable, Serializable {
 
     public void setFeatureName(String featureName) {
         this.featureName = featureName;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject object = new JSONObject();
+        try {
+            object.put("address", this.address);
+            object.put("city", this.city);
+            object.put("state", this.state);
+            object.put("country", this.country);
+            object.put("postalCode", this.postalCode);
+            object.put("featureName", this.featureName);
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+        return object;
     }
 }

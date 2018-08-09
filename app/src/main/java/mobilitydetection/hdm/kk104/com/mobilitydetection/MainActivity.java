@@ -42,8 +42,9 @@ import com.google.android.gms.tasks.Task;
 import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.DetectedActivitiesService;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.ValidationService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        filter.addAction("ACTIVITY_INTENT");
+        filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         registerReceiver(activitiesReceiver, filter);
 
         vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        Intent intent = new Intent("SAVE_STATISTIC");
+        Intent intent = new Intent(Actions.SAVE_DATA_ACTION);
         sendBroadcast(intent, null);
     }
 
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (filter.countActions() == 0) {
-            filter.addAction("ACTIVITY_INTENT");
+            filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         }
         registerReceiver(activitiesReceiver, filter);
     }
@@ -137,14 +138,17 @@ public class MainActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String activity = spinner.getSelectedItem().toString();
-                // todo outsource
+                vibe.vibrate(100);
+                final String validation = spinner.getSelectedItem().toString();
                 Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
                         .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                             @Override
                             public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                List<DetectedActivity> detectedActivity = detectedActivityResponse.getActivityRecognitionResult().getProbableActivities();
-                                fbStatistic.uploadValidation(activity, detectedActivity);
+                                DetectedActivities detectedActivities = new DetectedActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
+                                Intent intent = new Intent(Actions.ACTIVITY_VALIDATED_ACTION);
+                                intent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                                intent.putExtra("validation", validation);
+                                sendBroadcast(intent);
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
@@ -163,55 +167,16 @@ public class MainActivity extends AppCompatActivity {
                 vibe.vibrate(100);
                 final String activity = spinner.getSelectedItem().toString();
 
-                int requestCode = 3;
-                Intent activityIntent = new Intent(MainActivity.this, DetectedActivitiesService.class);
-                activityIntent.putExtra("requestCode", requestCode);
-                activityIntent.putExtra("validation", activity);
-
-                activityPendingIntent = PendingIntent.getService(MainActivity.this, requestCode, activityIntent, PendingIntent.FLAG_ONE_SHOT);
-
-                arClient.requestActivityUpdates(0, activityPendingIntent)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                Log.e(TAG, "successfully requested");
-                                // arClient.removeActivityUpdates(activityPendingIntent);
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.e(TAG, e.getMessage());
-                                // arClient.removeActivityUpdates(activityPendingIntent);
-                            }
-                        });
-
-                /*Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
-                        .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
-                            @Override
-                            public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                DetectedActivities detectedActivities = new DetectedActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-
-                                Log.e(TAG, "awareness called");
-                                Intent fbDbIntent = new Intent("VALIDATION_ACTIVITY_ACTION");
-                                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
-                                fbDbIntent.putExtra("validation", activity);
-                                sendBroadcast(fbDbIntent, null);
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.e(TAG, e.getMessage());
-                            }
-                        });*/
+                Intent intent = new Intent(Actions.VALIDATE_ACTIVITY_ACTION);
+                intent.putExtra("validation", activity);
+                sendBroadcast(intent, null);
             }
         });
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent("SAVE_STATISTIC");
+                Intent intent = new Intent(Actions.SAVE_DATA_ACTION);
                 sendBroadcast(intent, null);
             }
         });
@@ -315,9 +280,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals("ACTIVITY_INTENT")) {
+            if (action.equals(Actions.ACTIVITY_LIST_ACTION)) {
+                Log.e(TAG, Actions.ACTIVITY_LIST_ACTION);
+
                 ArrayList<DetectedActivity> activities = intent.getParcelableArrayListExtra("activities");
-                Log.e(TAG, "activities received: " + activities.size());
 
                 ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
                 textActivity.setText("");

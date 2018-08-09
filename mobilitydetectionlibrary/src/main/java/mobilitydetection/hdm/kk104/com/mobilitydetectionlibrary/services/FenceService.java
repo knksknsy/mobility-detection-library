@@ -14,8 +14,11 @@ import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
 public class FenceService extends IntentService {
@@ -36,18 +39,20 @@ public class FenceService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         FenceState fenceState = FenceState.extract(intent);
 
-        if (TextUtils.equals(fenceState.getFenceKey(), "stillActivityFenceKey")) {
+        Log.e(TAG, "onHandleIntent called");
+
+        /*if (TextUtils.equals(fenceState.getFenceKey(), "stillActivityFenceKey")) {
             switch (fenceState.getCurrentState()) {
                 case FenceState.TRUE:
                     Awareness.getSnapshotClient(this).getDetectedActivity()
                             .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                                 @Override
                                 public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                    /*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
+                                    *//*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
                                     Log.e(TAG, "Activity: " + Activities.getActivityType(activity.getType()) + ", Confidence: " + activity.getConfidence());
                                     if (activity.getConfidence() >= 65) {
                                         broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-                                    }*/
+                                    }*//*
                                     broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
                                 }
                             })
@@ -74,11 +79,11 @@ public class FenceService extends IntentService {
                             .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                                 @Override
                                 public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                    /*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
+                                    *//*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
                                     Log.e(TAG, "Activity: " + Activities.getActivityType(activity.getType()) + ", Confidence: " + activity.getConfidence());
                                     if (activity.getConfidence() >= 65) {
                                         broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-                                    }*/
+                                    }*//*
                                     broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
                                 }
                             })
@@ -105,11 +110,11 @@ public class FenceService extends IntentService {
                             .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                                 @Override
                                 public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                    /*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
+                                    *//*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
                                     Log.e(TAG, "Activity: " + Activities.getActivityType(activity.getType()) + ", Confidence: " + activity.getConfidence());
                                     if (activity.getConfidence() >= 65) {
                                         broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-                                    }*/
+                                    }*//*
                                     broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
                                 }
                             })
@@ -136,11 +141,11 @@ public class FenceService extends IntentService {
                             .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                                 @Override
                                 public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                    /*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
+                                    *//*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
                                     Log.e(TAG, "Activity: " + Activities.getActivityType(activity.getType()) + ", Confidence: " + activity.getConfidence());
                                     if (activity.getConfidence() >= 65) {
                                         broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-                                    }*/
+                                    }*//*
                                     broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
                                 }
                             })
@@ -167,11 +172,11 @@ public class FenceService extends IntentService {
                             .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                                 @Override
                                 public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                    /*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
+                                    *//*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
                                     Log.e(TAG, "Activity: " + Activities.getActivityType(activity.getType()) + ", Confidence: " + activity.getConfidence());
                                     if (activity.getConfidence() >= 65) {
                                         broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-                                    }*/
+                                    }*//*
                                     broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
                                 }
                             })
@@ -198,11 +203,11 @@ public class FenceService extends IntentService {
                             .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
                                 @Override
                                 public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                    /*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
+                                    *//*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
                                     Log.e(TAG, "Activity: " + Activities.getActivityType(activity.getType()) + ", Confidence: " + activity.getConfidence());
                                     if (activity.getConfidence() >= 65) {
                                         broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-                                    }*/
+                                    }*//*
                                     broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
                                 }
                             })
@@ -220,10 +225,6 @@ public class FenceService extends IntentService {
                     Log.e(TAG, "vehicleActivityFenceKey > UNKNOWN");
                     break;
             }
-        }
-
-        /*if (TextUtils.equals(fenceState.getFenceKey(), "stillActivityFenceKey")) {
-
         }
 
         if (TextUtils.equals(fenceState.getFenceKey(), "slowActivityFenceKey")) {
@@ -244,18 +245,53 @@ public class FenceService extends IntentService {
 
         }*/
 
+        if (TextUtils.equals(fenceState.getFenceKey(), "activityFenceKey")) {
+            switch (fenceState.getCurrentState()) {
+                case FenceState.TRUE:
+                    Log.e(TAG, "activityFenceKey > TRUE");
+                    Awareness.getSnapshotClient(this).getDetectedActivity()
+                            .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
+                                @Override
+                                public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
+                                    /*DetectedActivity activity = detectedActivityResponse.getActivityRecognitionResult().getMostProbableActivity();
+                                    Log.e(TAG, "Activity: " + Activities.getActivityType(activity.getType()) + ", Confidence: " + activity.getConfidence());
+                                    if (activity.getConfidence() >= 65) {
+                                        broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
+                                    }*/
+                                    broadcastActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.e(TAG, e.getMessage());
+                                }
+                            });
+                    break;
+                case FenceState.FALSE:
+                    Log.e(TAG, "activityFenceKey > FALSE");
+                    break;
+                case FenceState.UNKNOWN:
+                    Log.e(TAG, "activityFenceKey > UNKNOWN");
+                    break;
+            }
+        }
+
     }
 
     private void broadcastActivities(List<DetectedActivity> activities) {
-        // todo: replace with broadcastreceiver
-        /*EventBus.getDefault().post(activities);*/
+        Intent intent = new Intent(Actions.ACTIVITY_LIST_ACTION);
+
+        intent.putParcelableArrayListExtra("activities", (ArrayList<DetectedActivity>) activities);
+        sendBroadcast(intent, null);
 
         DetectedActivities detectedActivities = new DetectedActivities(activities);
+        broadcastDetectedActivities(detectedActivities);
+    }
 
-        Intent fbDbIntent = new Intent("ACTIVITY_DETECTED_ACTION");
-        fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
-        sendBroadcast(fbDbIntent, null);
-
-
+    private void broadcastDetectedActivities(DetectedActivities detectedActivities) {
+        Intent intent = new Intent(Actions.ACTIVITY_DETECTED_ACTION);
+        intent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+        sendBroadcast(intent, null);
     }
 }

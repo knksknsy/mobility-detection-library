@@ -1,5 +1,7 @@
+/*
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils;
 
+*/
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,8 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *//*
+
 
 import android.os.Parcelable;
 
@@ -75,4 +78,4 @@ public class ObjectSerializer {
         return bytes;
     }
 
-}
+}*/

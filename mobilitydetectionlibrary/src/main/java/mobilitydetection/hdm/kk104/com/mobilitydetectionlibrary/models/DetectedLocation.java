@@ -3,6 +3,7 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -27,18 +28,21 @@ public class DetectedLocation implements Parcelable, Serializable {
     private String timestamp;
     private double latitude;
     private double longitude;
+    private Location location;
     private DetectedAddress detectedAddress;
 
-    public DetectedLocation(Context context, double latitude, double longitude) {
+    public DetectedLocation(Context context, Location location) {
         this.context = context;
         this.timestamp = generateTimestamp();
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.location = location;
+        this.latitude = location.getLatitude();
+        this.longitude = location.getLongitude();
         this.detectedAddress = detectAddress(this.latitude, this.longitude);
     }
 
     public DetectedLocation(Parcel in) {
         timestamp = in.readString();
+        location = in.readParcelable(Location.class.getClassLoader());
         latitude = in.readDouble();
         longitude = in.readDouble();
         detectedAddress = in.readParcelable(DetectedAddress.class.getClassLoader());
@@ -52,6 +56,7 @@ public class DetectedLocation implements Parcelable, Serializable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(timestamp);
+        dest.writeParcelable(location, flags);
         dest.writeDouble(latitude);
         dest.writeDouble(longitude);
         dest.writeParcelable(detectedAddress, flags);
@@ -89,6 +94,14 @@ public class DetectedLocation implements Parcelable, Serializable {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
     }
 
     public DetectedAddress getDetectedAddress() {

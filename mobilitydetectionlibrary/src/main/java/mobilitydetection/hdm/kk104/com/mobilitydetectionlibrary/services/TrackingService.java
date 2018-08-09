@@ -4,9 +4,11 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.android.gms.location.LocationResult;
 
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 
 public class TrackingService extends IntentService {
@@ -29,9 +31,9 @@ public class TrackingService extends IntentService {
             LocationResult locationResult = LocationResult.extractResult(intent);
             Location location = locationResult.getLastLocation();
             if (location != null) {
-                DetectedLocation coordinate = new DetectedLocation(this, location.getLatitude(), location.getLongitude());
+                DetectedLocation coordinate = new DetectedLocation(this, location);
 
-                Intent locationIntent = new Intent("LOCATION_ACTION");
+                Intent locationIntent = new Intent(Actions.LOCATION_ACTION);
                 locationIntent.putExtra(DetectedLocation.class.getSimpleName(), (Parcelable) coordinate);
                 sendBroadcast(locationIntent, null);
             }

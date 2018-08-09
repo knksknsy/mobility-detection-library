@@ -1,5 +1,6 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 
+import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.DetectedActivity;
 
 public class Activities {
@@ -11,6 +12,9 @@ public class Activities {
     public static String TILTING = "TILTING";
     public static String WALKING = "WALKING";
     public static String RUNNING = "RUNNING";
+
+    public static String ENTER = "ENTER";
+    public static String EXIT = "EXIT";
 
     final public static String[] activities = new String[]{IN_VEHICLE, ON_BICYCLE, ON_FOOT, STILL, UNKNOWN, TILTING, WALKING, RUNNING};
 
@@ -43,5 +47,18 @@ public class Activities {
                 break;
         }
         return activity;
+    }
+
+    public static String getTransitionType(int type) {
+        String sType = "";
+        switch (type) {
+            case ActivityTransition.ACTIVITY_TRANSITION_ENTER:
+                sType = Activities.ENTER;
+                break;
+            case ActivityTransition.ACTIVITY_TRANSITION_EXIT:
+                sType = Activities.EXIT;
+                break;
+        }
+        return sType;
     }
 }

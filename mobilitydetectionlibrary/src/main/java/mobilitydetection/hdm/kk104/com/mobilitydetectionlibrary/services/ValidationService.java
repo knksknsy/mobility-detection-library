@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
-public class DetectedActivitiesService extends IntentService {
+public class ValidationService extends IntentService {
 
     private static final String TAG = DetectedActivitiesService.class.getSimpleName();
 
-    public DetectedActivitiesService() {
+    public ValidationService() {
         super(TAG);
     }
 
@@ -29,34 +29,20 @@ public class DetectedActivitiesService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        /*int requestCode = intent.getIntExtra("requestCode", -1);
-        String validationActivity = intent.getStringExtra("validation");*/
+        String validationActivity = intent.getStringExtra("validation");
         if (ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
-            /*if (requestCode == 4) {
-                Log.e(TAG, "validation activity: " + validationActivity);
-                broadcastValidationActivities(validationActivity, detectedActivities);
-            } else if (requestCode == 0) {
-                broadcastActivities(detectedActivities);
-            }*/
-            broadcastActivities(detectedActivities);
+            Log.e(TAG, "ValidationService onHandleIntent: " + validationActivity);
+            broadcastValidationActivities(validationActivity, detectedActivities);
         }
     }
 
-    private void broadcastActivities(ArrayList<DetectedActivity> activities) {
-        Intent intent = new Intent(Actions.ACTIVITY_LIST_ACTION);
-        intent.putParcelableArrayListExtra("activities", activities);
-        sendBroadcast(intent, null);
-
+    private void broadcastValidationActivities(String validation, ArrayList<DetectedActivity> activities) {
         DetectedActivities detectedActivities = new DetectedActivities(activities);
-
-        broadcastDetectedActivities(detectedActivities);
-    }
-
-    private void broadcastDetectedActivities(DetectedActivities detectedActivities) {
-        Intent intent = new Intent(Actions.ACTIVITY_DETECTED_ACTION);
+        Intent intent = new Intent(Actions.ACTIVITY_VALIDATED_ACTION);
         intent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+        intent.putExtra("validation", validation);
         sendBroadcast(intent, null);
     }
 

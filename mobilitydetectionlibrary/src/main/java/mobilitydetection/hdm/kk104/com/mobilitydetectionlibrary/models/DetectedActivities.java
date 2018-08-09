@@ -1,5 +1,7 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 
+import android.content.Context;
+import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -21,6 +23,7 @@ public class DetectedActivities implements Parcelable, Serializable {
 
     private String timestamp;
     private ProbableActivities probableActivities;
+    private DetectedLocation detectedLocation;
 
     public DetectedActivities(ArrayList<DetectedActivity> detectedActivities) {
         this.timestamp = generateTimestamp();
@@ -32,9 +35,22 @@ public class DetectedActivities implements Parcelable, Serializable {
         this.probableActivities = new ProbableActivities(detectedActivities);
     }
 
+    public DetectedActivities(ArrayList<DetectedActivity> detectedActivities, Context context, Location location) {
+        this.timestamp = generateTimestamp();
+        this.probableActivities = new ProbableActivities(detectedActivities);
+        this.detectedLocation = new DetectedLocation(context, location);
+    }
+
+    public DetectedActivities(List<DetectedActivity> detectedActivities, Context context, Location location) {
+        this.timestamp = generateTimestamp();
+        this.probableActivities = new ProbableActivities(detectedActivities);
+        this.detectedLocation = new DetectedLocation(context, location);
+    }
+
     public DetectedActivities(Parcel in) {
         timestamp = in.readString();
         probableActivities = in.readParcelable(getClass().getClassLoader());
+        detectedLocation = in.readParcelable(getClass().getClassLoader());
     }
 
     @Override
@@ -46,6 +62,7 @@ public class DetectedActivities implements Parcelable, Serializable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(timestamp);
         dest.writeParcelable(probableActivities, flags);
+        dest.writeParcelable(detectedLocation, flags);
     }
 
     public static final Parcelable.Creator<DetectedActivities> CREATOR = new Parcelable.Creator<DetectedActivities>() {
@@ -78,6 +95,14 @@ public class DetectedActivities implements Parcelable, Serializable {
         this.probableActivities = probableActivities;
     }
 
+    public DetectedLocation getDetectedLocation() {
+        return detectedLocation;
+    }
+
+    public void setDetectedLocation(DetectedLocation detectedLocation) {
+        this.detectedLocation = detectedLocation;
+    }
+
     private String generateTimestamp() {
         return Timestamp.generateTimestamp();
     }
@@ -87,6 +112,9 @@ public class DetectedActivities implements Parcelable, Serializable {
         try {
             object.put("timestamp", this.timestamp);
             object.put("detectedActivities", probableActivities.toJSON());
+            if (detectedLocation != null) {
+                object.put("detectedLocation", detectedLocation.toJSON());
+            }
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }

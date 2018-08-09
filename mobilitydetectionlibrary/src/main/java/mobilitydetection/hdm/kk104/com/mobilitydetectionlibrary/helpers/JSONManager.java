@@ -14,26 +14,27 @@ import java.io.InputStreamReader;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.TransitionedActivity;
 
-public class DatabaseStatistic {
+public class JSONManager {
 
-    private static final String TAG = DatabaseStatistic.class.getSimpleName();
+    private static final String TAG = JSONManager.class.getSimpleName();
 
     private Context context;
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
-    private String fileName = "statistic";
 
     private final String DB_NAME = "statistic";
     private final String LOCATION = "location";
     private final String ACTIVITIES = "activities";
     private final String VALIDATION = "validation";
+    private final String TRANSITIONS = "transitions";
 
-    private JSONObject statistic;
+    private JSONObject root;
 
     private String shortDate;
 
-    public DatabaseStatistic(Context context) {
+    public JSONManager(Context context) {
         this.context = context;
         shortDate = getDateShort();
         readJSONFile();
@@ -41,17 +42,19 @@ public class DatabaseStatistic {
 
     public void writeJSONFile() {
         try {
-            fileOutputStream = context.openFileOutput(fileName, Context.MODE_PRIVATE);
-            fileOutputStream.write(statistic.toString().getBytes());
+            fileOutputStream = context.openFileOutput(DB_NAME, Context.MODE_PRIVATE);
+            fileOutputStream.write(root.toString().getBytes());
             fileOutputStream.close();
+            Log.e(TAG, "SAVED");
         } catch (IOException e) {
             Log.e(TAG, e.getMessage());
+
         }
     }
 
     public void readJSONFile() {
         try {
-            fileInputStream = context.openFileInput(fileName);
+            fileInputStream = context.openFileInput(DB_NAME);
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             StringBuilder stringBuilder = new StringBuilder();
@@ -61,52 +64,48 @@ public class DatabaseStatistic {
             }
 
             if (stringBuilder.toString().length() > 0) {
-                statistic = new JSONObject(stringBuilder.toString());
-                if (!statistic.getJSONObject(DB_NAME).has(shortDate)) {
-                    initializeDay();
+                root = new JSONObject(stringBuilder.toString());
+                if (!root.getJSONObject(DB_NAME).has(shortDate)) {
+                    JSONObject data = new JSONObject();
+                    JSONObject activities = new JSONObject();
+                    JSONObject location = new JSONObject();
+                    JSONObject validation = new JSONObject();
+                    JSONObject transitions = new JSONObject();
+
+                    data.put(ACTIVITIES, activities);
+                    data.put(LOCATION, location);
+                    data.put(VALIDATION, validation);
+                    data.put(TRANSITIONS, transitions);
+                    root.getJSONObject(DB_NAME).put(shortDate, data);
                 }
             } else {
-                statistic = null;
+                root = null;
             }
         } catch (IOException e) {
-            initializeStatistic();
+            initializeJSON();
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
     }
 
-    public void initializeStatistic() {
+    public void initializeJSON() {
         try {
-            if (statistic == null) {
-                statistic = new JSONObject();
+            if (root == null) {
+                root = new JSONObject();
             }
             JSONObject day = new JSONObject();
             JSONObject data = new JSONObject();
             JSONObject activities = new JSONObject();
             JSONObject location = new JSONObject();
             JSONObject validation = new JSONObject();
+            JSONObject transitions = new JSONObject();
 
             data.put(ACTIVITIES, activities);
             data.put(LOCATION, location);
             data.put(VALIDATION, validation);
+            data.put(TRANSITIONS, transitions);
             day.put(shortDate, data);
-            statistic.put(DB_NAME, day);
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
-    public void initializeDay() {
-        try {
-            JSONObject data = new JSONObject();
-            JSONObject activities = new JSONObject();
-            JSONObject location = new JSONObject();
-            JSONObject validation = new JSONObject();
-
-            data.put(ACTIVITIES, activities);
-            data.put(LOCATION, location);
-            data.put(VALIDATION, validation);
-            statistic.getJSONObject(DB_NAME).put(shortDate, data);
+            root.put(DB_NAME, day);
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
@@ -114,7 +113,7 @@ public class DatabaseStatistic {
 
     public void writeDetectedActivity(final DetectedActivities detectedActivities) {
         try {
-            statistic.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(ACTIVITIES).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(ACTIVITIES).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
@@ -122,8 +121,8 @@ public class DatabaseStatistic {
 
     public void writeValidation(final String activity, final DetectedActivities detectedActivities) {
         try {
-            statistic.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
-            statistic.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).getJSONObject(detectedActivities.getShortTime()).put("activity", activity);
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).getJSONObject(detectedActivities.getShortTime()).put("activity", activity);
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
@@ -131,7 +130,15 @@ public class DatabaseStatistic {
 
     public void writeDetectedLocation(final DetectedLocation detectedLocation) {
         try {
-            statistic.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(LOCATION).put(detectedLocation.getShortTime(), detectedLocation.toJSON());
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(LOCATION).put(detectedLocation.getShortTime(), detectedLocation.toJSON());
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    public void writeTransitionedActivity(final TransitionedActivity transitionedActivity) {
+        try {
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(TRANSITIONS).put(transitionedActivity.getShortTime(), transitionedActivity.toJSON());
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }

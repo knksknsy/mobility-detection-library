@@ -1,6 +1,5 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
-import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -11,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Binder;
+import android.os.Build;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Parcelable;
@@ -20,11 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
-import com.google.android.gms.location.ActivityTransition;
-import com.google.android.gms.location.ActivityTransitionRequest;
-import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -33,16 +29,11 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONManager;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.ActivityTransitionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.TransitionedActivity;
 
 public class MobilityDetectionService extends Service {
 
@@ -82,13 +73,12 @@ public class MobilityDetectionService extends Service {
     public void onRebind(Intent intent) {
         super.onRebind(intent);
         if (filter.countActions() == 0) {
-            filter.addAction("STOP_MOBILITY_DETECTION_ACTION");
-            filter.addAction(Actions.SAVE_DATA_ACTION);
+            filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
             filter.addAction(Actions.LOCATION_ACTION);
             filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
             filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
             filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
-            filter.addAction(Actions.VALIDATE_ACTIVITY_ACTION);
+            filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         }
         registerReceiver(databaseReceiver, filter);
     }
@@ -104,60 +94,60 @@ public class MobilityDetectionService extends Service {
         }
     }
 
+    private boolean checkPermission() {
+        if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+        return true;
+    }
+
     private final BroadcastReceiver databaseReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
             String action = intent.getAction();
-            if (action.equals(Actions.SAVE_DATA_ACTION)) {
-                // todo: moved to saveData() method
-            }
-            if (action.equals(Actions.LOCATION_ACTION)) {
-                Log.e(TAG, Actions.LOCATION_ACTION);
-                DetectedLocation detectedLocation = intent.getParcelableExtra(DetectedLocation.class.getSimpleName());
-                jsonManager.writeDetectedLocation(detectedLocation);
-            }
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
 
-                /*DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                jsonManager.writeDetectedActivity(detectedActivities);*/
+                DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
-                int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
-
-                if (permission == PackageManager.PERMISSION_GRANTED) {
-                    fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
-                        @Override
-                        public void onLocationResult(LocationResult locationResult) {
-                            super.onLocationResult(locationResult);
-
-                            DetectedActivities detectedActivities;
-
-                            if (locationResult != null) {
-                                Location location = locationResult.getLastLocation();
-                                DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
-
-                                detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                                detectedActivities.setDetectedLocation(detectedLocation);
-                            } else {
-                                detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                            }
-
-                            jsonManager.writeDetectedActivity(detectedActivities);
-                            Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
-                            i.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
-                            sendBroadcast(i, null);
-
-                            fusedLocationProviderClientTransition.removeLocationUpdates(this);
-                        }
-
-                        @Override
-                        public void onLocationAvailability(LocationAvailability locationAvailability) {
-                            super.onLocationAvailability(locationAvailability);
-                        }
-                    }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
+                String previousActivity;
+                if (jsonManager.countActivityTransitions() > 0) {
+                    previousActivity = jsonManager.readLastActivityTransition();
                 } else {
-                    DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                    jsonManager.writeDetectedActivity(detectedActivities);
+                    previousActivity = new String();
+                }
+
+                String currentActivity = detectedActivities.getProbableActivities().getActivity();
+
+                if (checkPermission()) {
+                    if (!currentActivity.isEmpty() && !previousActivity.equals(currentActivity)) {
+                        fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
+                            @Override
+                            public void onLocationResult(LocationResult locationResult) {
+                                super.onLocationResult(locationResult);
+
+                                DetectedActivities detectedActivities;
+
+                                if (locationResult != null) {
+                                    Location location = locationResult.getLastLocation();
+                                    DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+
+                                    detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                    detectedActivities.setDetectedLocation(detectedLocation);
+                                } else {
+                                    detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                }
+                                jsonManager.writeActivityTransition(detectedActivities);
+                                Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+                                i.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                                sendBroadcast(i, null);
+
+                                fusedLocationProviderClientTransition.removeLocationUpdates(this);
+                            }
+                        }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
+                    }
                 }
             }
             if (action.equals(Actions.ACTIVITY_VALIDATED_ACTION)) {
@@ -167,9 +157,7 @@ public class MobilityDetectionService extends Service {
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 jsonManager.writeValidation(validation, detectedActivities);*/
 
-                /*int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
-
-                if (permission == PackageManager.PERMISSION_GRANTED) {
+                /*if (checkPermission()) {
                     fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
@@ -207,12 +195,11 @@ public class MobilityDetectionService extends Service {
             if (action.equals(Actions.ACTIVITY_TRANSITIONED_ACTION)) {
                 /*Log.e(TAG, Actions.ACTIVITY_TRANSITIONED_ACTION);
 
-                 *//*TransitionedActivity transitionedActivity = intent.getParcelableExtra(TransitionedActivity.class.getSimpleName());
-                jsonManager.writeTransitionedActivity(transitionedActivity);*//*
+                TransitionedActivity transitionedActivity = intent.getParcelableExtra(TransitionedActivity.class.getSimpleName());
+                jsonManager.writeTransitionedActivity(transitionedActivity);
 
-                int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
 
-                if (permission == PackageManager.PERMISSION_GRANTED) {
+                if (checkPermission()) {
                     fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
@@ -245,58 +232,18 @@ public class MobilityDetectionService extends Service {
                     jsonManager.writeTransitionedActivity(transitionedActivity);
                 }*/
             }
-            if (action.equals("STOP_MOBILITY_DETECTION_ACTION")) {
-                Log.e(TAG, "STOP_MOBILITY_DETECTION_ACTION");
+            if (action.equals(Actions.LOCATION_ACTION)) {
+                Log.e(TAG, Actions.LOCATION_ACTION);
+                /*DetectedLocation detectedLocation = intent.getParcelableExtra(DetectedLocation.class.getSimpleName());
+                jsonManager.writeDetectedLocation(detectedLocation);*/
+            }
+            if (action.equals(Actions.STOP_MOBILITY_DETECTION_ACTION)) {
+                Log.e(TAG, Actions.STOP_MOBILITY_DETECTION_ACTION);
                 unregisterReceiver(databaseReceiver);
                 stopSelf();
             }
-            if (action.equals(Actions.VALIDATE_ACTIVITY_ACTION)) {
-                // todo: moved to validateActivity(String activity) method
-            }
         }
     };
-
-    public void validateActivity(String activity) {
-        Log.e(TAG, Actions.VALIDATE_ACTIVITY_ACTION);
-        int requestCode = 4;
-        Intent validationIntent = new Intent(this, ValidationService.class);
-        validationIntent.putExtra("validation", activity);
-
-        PendingIntent validationPendingIntent = PendingIntent.getService(this, requestCode, validationIntent, PendingIntent.FLAG_ONE_SHOT);
-
-        activityRecognitionClient.requestActivityUpdates(0, validationPendingIntent)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.e(TAG, "requestActivityUpdates onSuccess");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, e.getMessage());
-                    }
-                });
-
-                /*Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
-                        .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
-                            @Override
-                            public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                                DetectedActivities detectedActivities = new DetectedActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
-
-                                Intent fbDbIntent = new Intent("VALIDATION_ACTIVITY_ACTION");
-                                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
-                                fbDbIntent.putExtra("validation", activity);
-                                sendBroadcast(fbDbIntent, null);
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.e(TAG, e.getMessage());
-                            }
-                        });*/
-    }
 
     public void saveData() {
         Log.e(TAG, Actions.SAVE_DATA_ACTION);
@@ -309,13 +256,16 @@ public class MobilityDetectionService extends Service {
 
         jsonManager = new JSONManager(this);
 
-        filter.addAction("STOP_MOBILITY_DETECTION_ACTION");
-        filter.addAction(Actions.SAVE_DATA_ACTION);
+        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
+        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
+        sendBroadcast(transitionsLoadedIntent, null);
+
+        filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
         filter.addAction(Actions.LOCATION_ACTION);
         filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
         filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
         filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
-        filter.addAction(Actions.VALIDATE_ACTIVITY_ACTION);
+        filter.addAction(Actions.ACTIVITY_LIST_ACTION);
 
         registerReceiver(databaseReceiver, filter);
 
@@ -339,8 +289,8 @@ public class MobilityDetectionService extends Service {
         super.onStartCommand(intent, flags, startId);
 
         requestActivityRecognitionUpdates();
-        // requestActivityRecognitionTransitionUpdates();
         requestTransitionLocationUpdates();
+        // requestActivityRecognitionTransitionUpdates();
         // requestAwarenessUpdates();
         // requestTrackingLocationUpdates();
 
@@ -363,6 +313,135 @@ public class MobilityDetectionService extends Service {
         // removeActivityRecognitionUpdates();
         unregisterReceiver(databaseReceiver);
     }
+
+    public void requestActivityRecognitionUpdates() {
+        Task<Void> task = activityRecognitionClient.requestActivityUpdates(INTERVAL_AR, activityPendingIntent);
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                // Toast.makeText(getApplicationContext(), "Successfully requested activity updates", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // Toast.makeText(getApplicationContext(), "Requesting activity updates failed to start", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void buildNotification() {
+        Intent stopIntent = new Intent(Actions.STOP_MOBILITY_DETECTION_ACTION);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 4, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle(getText(R.string.app_name))
+                .setContentText(getText(R.string.tracking_enabled_notify))
+                .setOngoing(true)
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .build();
+        startForeground(1, notification);
+    }
+
+    /*public void requestAwarenessUpdates() {
+     *//*SnapshotClient snapshotClient = Awareness.getSnapshotClient(this);
+
+        Task<DetectedActivityResponse> snapshotTask = snapshotClient.getDetectedActivity();
+
+        snapshotTask.addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
+            @Override
+            public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
+                ActivityRecognitionResult result = detectedActivityResponse.getActivityRecognitionResult();
+                ArrayList<DetectedActivity> activities = (ArrayList<DetectedActivity>) result.getProbableActivities();
+
+                Intent intent = new Intent(Actions.ACTIVITY_LIST_ACTION);
+                intent.putParcelableArrayListExtra("activities", activities);
+                LocalBroadcastManager.getInstance(MobilityDetectionService.this).sendBroadcast(intent);
+
+                DetectedActivities detectedActivities = new DetectedActivities(activities);
+
+                Intent fbDbIntent = new Intent(Actions.ACTIVITY_DETECTED_ACTION);
+                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
+                sendBroadcast(fbDbIntent, null);
+            }
+        });
+
+        snapshotTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });*//*
+
+     *//*AwarenessFence stillFence = DetectedActivityFence.starting(DetectedActivityFence.STILL);
+        AwarenessFence footFence = DetectedActivityFence.starting(DetectedActivityFence.ON_FOOT);
+        AwarenessFence walkingFence = DetectedActivityFence.starting(DetectedActivityFence.WALKING);
+        AwarenessFence runningFence = DetectedActivityFence.starting(DetectedActivityFence.RUNNING);
+        AwarenessFence bicycleFence = DetectedActivityFence.starting(DetectedActivityFence.ON_BICYCLE);
+        AwarenessFence vehicleFence = DetectedActivityFence.starting(DetectedActivityFence.IN_VEHICLE);
+        AwarenessFence unknownFence = DetectedActivityFence.starting(DetectedActivityFence.UNKNOWN);
+
+        *//**//*AwarenessFence slowActivityFence = AwarenessFence.or(walkingFence, runningFence, footFence);
+        AwarenessFence fastActivityFence = AwarenessFence.or(bicycleFence, vehicleFence);*//**//*
+
+        AwarenessFence activityFence = AwarenessFence.or(stillFence, footFence, walkingFence, runningFence, bicycleFence, vehicleFence, unknownFence);
+
+        fenceClient = Awareness.getFenceClient(this);
+
+        FenceUpdateRequest fenceRequest = new FenceUpdateRequest.Builder()
+                *//**//*.addFence("stillActivityFenceKey", stillFence, fencePendingIntent)
+                .addFence("footActivityFenceKey", footFence, fencePendingIntent)
+                .addFence("walkingActivityFenceKey", walkingFence, fencePendingIntent)
+                .addFence("runningActivityFenceKey", runningFence, fencePendingIntent)
+                .addFence("bicycleActivityFenceKey", bicycleFence, fencePendingIntent)
+                .addFence("vehicleActivityFenceKey", vehicleFence, fencePendingIntent)
+                .addFence("slowActivityFenceKey", slowActivityFence, fencePendingIntent)
+                .addFence("fastActivityFenceKey", fastActivityFence, fencePendingIntent)*//**//*
+                .addFence("activityFenceKey", activityFence, fencePendingIntent)
+                .build();
+        Task<Void> task = fenceClient.updateFences(fenceRequest);
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.e(TAG, "FenceUpdateRequest successfully requested");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, "FenceUpdateRequest has failed + " + e);
+            }
+        });*//*
+    }*/
+
+    /*private void requestTrackingLocationUpdates() {
+        locationRequestTracking = new LocationRequest();
+
+        locationRequestTracking.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequestTracking.setInterval(INTERVAL_LOCATION);
+        locationRequestTracking.setFastestInterval(INTERVAL);
+
+        fusedLocationProviderClientTracking = LocationServices.getFusedLocationProviderClient(this);
+
+        if (checkPermission()) {
+            Task<Void> task = fusedLocationProviderClientTracking.requestLocationUpdates(locationRequestTracking, trackingPendingIntent);
+
+            task.addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    Log.e(TAG, "Location listener successful.");
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.e(TAG, "Location listener failed.");
+                }
+            });
+        }
+    }*/
 
     /*public void requestActivityRecognitionTransitionUpdates() {
         List<ActivityTransition> transitions = new ArrayList<>();
@@ -426,25 +505,49 @@ public class MobilityDetectionService extends Service {
                 });
     }*/
 
-    public void requestActivityRecognitionUpdates() {
-        Task<Void> task = activityRecognitionClient.requestActivityUpdates(INTERVAL_AR, activityPendingIntent);
+    /*public void validateActivity(String activity) {
+        Log.e(TAG, Actions.VALIDATE_ACTIVITY_ACTION);
+        int requestCode = 4;
+        Intent validationIntent = new Intent(this, ValidationService.class);
+        validationIntent.putExtra("validation", activity);
 
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                // Toast.makeText(getApplicationContext(), "Successfully requested activity updates", Toast.LENGTH_SHORT).show();
-            }
-        });
+        PendingIntent validationPendingIntent = PendingIntent.getService(this, requestCode, validationIntent, PendingIntent.FLAG_ONE_SHOT);
 
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                // Toast.makeText(getApplicationContext(), "Requesting activity updates failed to start", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+        activityRecognitionClient.requestActivityUpdates(0, validationPendingIntent)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.e(TAG, "requestActivityUpdates onSuccess");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, e.getMessage());
+                    }
+                });
 
-    public void removeActivityRecognitionUpdates() {
+                *//*Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
+                        .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
+                            @Override
+                            public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
+                                DetectedActivities detectedActivities = new DetectedActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
+
+                                Intent fbDbIntent = new Intent("VALIDATION_ACTIVITY_ACTION");
+                                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                                fbDbIntent.putExtra("validation", activity);
+                                sendBroadcast(fbDbIntent, null);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.e(TAG, e.getMessage());
+                            }
+                        });*//*
+    }*/
+
+    /*public void removeActivityRecognitionUpdates() {
         Task<Void> task = activityRecognitionClient.removeActivityUpdates(activityPendingIntent);
 
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -460,120 +563,7 @@ public class MobilityDetectionService extends Service {
                 // Toast.makeText(getApplicationContext(), "Failed to remove activity updates!", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    public void requestAwarenessUpdates() {
-        /*SnapshotClient snapshotClient = Awareness.getSnapshotClient(this);
-
-        Task<DetectedActivityResponse> snapshotTask = snapshotClient.getDetectedActivity();
-
-        snapshotTask.addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
-            @Override
-            public void onSuccess(DetectedActivityResponse detectedActivityResponse) {
-                ActivityRecognitionResult result = detectedActivityResponse.getActivityRecognitionResult();
-                ArrayList<DetectedActivity> activities = (ArrayList<DetectedActivity>) result.getProbableActivities();
-
-                Intent intent = new Intent(Actions.ACTIVITY_LIST_ACTION);
-                intent.putParcelableArrayListExtra("activities", activities);
-                LocalBroadcastManager.getInstance(MobilityDetectionService.this).sendBroadcast(intent);
-
-                DetectedActivities detectedActivities = new DetectedActivities(activities);
-
-                Intent fbDbIntent = new Intent(Actions.ACTIVITY_DETECTED_ACTION);
-                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
-                sendBroadcast(fbDbIntent, null);
-            }
-        });
-
-        snapshotTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-            }
-        });*/
-
-        /*AwarenessFence stillFence = DetectedActivityFence.starting(DetectedActivityFence.STILL);
-        AwarenessFence footFence = DetectedActivityFence.starting(DetectedActivityFence.ON_FOOT);
-        AwarenessFence walkingFence = DetectedActivityFence.starting(DetectedActivityFence.WALKING);
-        AwarenessFence runningFence = DetectedActivityFence.starting(DetectedActivityFence.RUNNING);
-        AwarenessFence bicycleFence = DetectedActivityFence.starting(DetectedActivityFence.ON_BICYCLE);
-        AwarenessFence vehicleFence = DetectedActivityFence.starting(DetectedActivityFence.IN_VEHICLE);
-        AwarenessFence unknownFence = DetectedActivityFence.starting(DetectedActivityFence.UNKNOWN);
-
-        *//*AwarenessFence slowActivityFence = AwarenessFence.or(walkingFence, runningFence, footFence);
-        AwarenessFence fastActivityFence = AwarenessFence.or(bicycleFence, vehicleFence);*//*
-
-        AwarenessFence activityFence = AwarenessFence.or(stillFence, footFence, walkingFence, runningFence, bicycleFence, vehicleFence, unknownFence);
-
-        fenceClient = Awareness.getFenceClient(this);
-
-        FenceUpdateRequest fenceRequest = new FenceUpdateRequest.Builder()
-                *//*.addFence("stillActivityFenceKey", stillFence, fencePendingIntent)
-                .addFence("footActivityFenceKey", footFence, fencePendingIntent)
-                .addFence("walkingActivityFenceKey", walkingFence, fencePendingIntent)
-                .addFence("runningActivityFenceKey", runningFence, fencePendingIntent)
-                .addFence("bicycleActivityFenceKey", bicycleFence, fencePendingIntent)
-                .addFence("vehicleActivityFenceKey", vehicleFence, fencePendingIntent)
-                .addFence("slowActivityFenceKey", slowActivityFence, fencePendingIntent)
-                .addFence("fastActivityFenceKey", fastActivityFence, fencePendingIntent)*//*
-                .addFence("activityFenceKey", activityFence, fencePendingIntent)
-                .build();
-        Task<Void> task = fenceClient.updateFences(fenceRequest);
-
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                Log.e(TAG, "FenceUpdateRequest successfully requested");
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.e(TAG, "FenceUpdateRequest has failed + " + e);
-            }
-        });*/
-    }
-
-    /*private void requestTrackingLocationUpdates() {
-        locationRequestTracking = new LocationRequest();
-
-        locationRequestTracking.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequestTracking.setInterval(INTERVAL_LOCATION);
-        locationRequestTracking.setFastestInterval(INTERVAL);
-
-        fusedLocationProviderClientTracking = LocationServices.getFusedLocationProviderClient(this);
-        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-
-        if (permission == PackageManager.PERMISSION_GRANTED) {
-            Task<Void> task = fusedLocationProviderClientTracking.requestLocationUpdates(locationRequestTracking, trackingPendingIntent);
-
-            task.addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                    Log.e(TAG, "Location listener successful.");
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.e(TAG, "Location listener failed.");
-                }
-            });
-        }
     }*/
-
-    // todo
-    private void buildNotification() {
-        Intent stopIntent = new Intent("STOP_MOBILITY_DETECTION_ACTION");
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 4, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Notification notification = new Notification.Builder(this)
-                .setContentTitle(getText(R.string.app_name))
-                .setContentText(getText(R.string.tracking_enabled_notify))
-                .setOngoing(true)
-                .setContentIntent(pendingIntent)
-                .setSmallIcon(R.drawable.ic_stat_name)
-                .build();
-        startForeground(1, notification);
-    }
 
 }
 

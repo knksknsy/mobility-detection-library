@@ -25,6 +25,10 @@ public class DetectedActivities implements Parcelable, Serializable {
     private ProbableActivities probableActivities;
     private DetectedLocation detectedLocation;
 
+    public DetectedActivities() {
+
+    }
+
     public DetectedActivities(ArrayList<DetectedActivity> detectedActivities) {
         this.timestamp = generateTimestamp();
         this.probableActivities = new ProbableActivities(detectedActivities);

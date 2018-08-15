@@ -7,6 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.util.Log;
+
+import com.google.android.gms.location.DetectedActivity;
+
+import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.ActivityTransitionListener;
@@ -38,6 +43,8 @@ public class MobilityDetection {
     public MobilityDetection setContext(Context context) {
         this.context = context;
         filter.addAction(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+        filter.addAction(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
+        filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         return this;
     }
 
@@ -50,9 +57,24 @@ public class MobilityDetection {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action.equals(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION)) {
+                Log.e(TAG, Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 if (transitionListener != null) {
                     transitionListener.onTransitioned(detectedActivities);
+                }
+            }
+            if (action.equals(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION)) {
+                Log.e(TAG, Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
+                ArrayList<DetectedActivities> detectedActivities = intent.getParcelableArrayListExtra("activities");
+                if (transitionListener != null) {
+                    transitionListener.onTransitionsLoaded(detectedActivities);
+                }
+            }
+            if (action.equals(Actions.ACTIVITY_LIST_ACTION)) {
+                Log.e(TAG, Actions.ACTIVITY_LIST_ACTION);
+                ArrayList<DetectedActivity> activities = intent.getParcelableArrayListExtra("activities");
+                if (transitionListener != null) {
+                    transitionListener.onActivityDetected(activities);
                 }
             }
         }

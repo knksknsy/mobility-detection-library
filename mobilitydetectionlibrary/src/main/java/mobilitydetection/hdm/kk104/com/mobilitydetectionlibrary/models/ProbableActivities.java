@@ -38,6 +38,10 @@ public class ProbableActivities implements Parcelable, Serializable {
 
     private String activity;
 
+    public ProbableActivities() {
+
+    }
+
     public ProbableActivities(ArrayList<DetectedActivity> activities) {
         initProbableActivities(activities);
         this.activities = sortActivitiesByConfidence(activities);
@@ -312,11 +316,11 @@ public class ProbableActivities implements Parcelable, Serializable {
         if (RUNNING >= 70) {
             activity = Activities.RUNNING;
         }
-        if (WALKING >= 95) {
-            activity = Activities.WALKING;
-        }
         if (ON_FOOT >= 95) {
             activity = Activities.ON_FOOT;
+        }
+        if (WALKING >= 95) {
+            activity = Activities.WALKING;
         }
         if (ON_BICYCLE >= 70) {
             activity = Activities.ON_BICYCLE;
@@ -338,6 +342,10 @@ public class ProbableActivities implements Parcelable, Serializable {
 
             object.put("mostProbableType", mostProbableType);
             object.put("mostProbableConfidence", mostProbableConfidence);
+
+            if (!activity.isEmpty()) {
+                object.put("activity", activity);
+            }
 
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());

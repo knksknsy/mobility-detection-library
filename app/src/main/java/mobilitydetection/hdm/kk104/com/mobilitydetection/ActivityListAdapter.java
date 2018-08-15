@@ -58,9 +58,8 @@ public class ActivityListAdapter extends ArrayAdapter<DetectedActivities> {
 
                 if (location != null) {
                     String locationText;
-                    if (detectedActivities.getDetectedLocation() != null) {
-                        locationText = detectedActivities.getDetectedLocation().getDetectedAddress().getAddress() + "\n"
-                                + detectedActivities.getDetectedLocation().getDetectedAddress().getPostalCode() + " " + detectedActivities.getDetectedLocation().getDetectedAddress().getCity();
+                    if (detectedActivities.getDetectedLocation() != null && detectedActivities.getDetectedLocation().getDetectedAddress() != null) {
+                        locationText = detectedActivities.getDetectedLocation().getDetectedAddress().getAddress();
                     } else {
                         locationText = "lat: " + String.valueOf(detectedActivities.getDetectedLocation().getLatitude()) + ", long: " + String.valueOf(detectedActivities.getDetectedLocation().getLongitude());
                     }

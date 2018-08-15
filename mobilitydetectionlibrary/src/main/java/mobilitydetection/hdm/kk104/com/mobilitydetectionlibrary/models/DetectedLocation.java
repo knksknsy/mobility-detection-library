@@ -31,6 +31,10 @@ public class DetectedLocation implements Parcelable, Serializable {
     private Location location;
     private DetectedAddress detectedAddress;
 
+    public DetectedLocation() {
+
+    }
+
     public DetectedLocation(Context context, Location location) {
         this.context = context;
         this.timestamp = generateTimestamp();

@@ -1,11 +1,8 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
 import android.app.IntentService;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Parcelable;
-import android.os.ResultReceiver;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
@@ -19,8 +16,6 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedA
 public class ValidationService extends IntentService {
 
     private static final String TAG = DetectedActivitiesService.class.getSimpleName();
-
-    public static final int VALIDATION_SUCCESS = 1;
 
     public ValidationService() {
         super(TAG);

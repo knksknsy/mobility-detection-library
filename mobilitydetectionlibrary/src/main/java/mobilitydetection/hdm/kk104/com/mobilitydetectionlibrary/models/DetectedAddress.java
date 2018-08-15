@@ -22,6 +22,10 @@ public class DetectedAddress implements Parcelable, Serializable {
     private String postalCode;
     private String featureName;
 
+    public DetectedAddress() {
+
+    }
+
     public DetectedAddress(List<Address> address) {
         this.address = address.get(0).getAddressLine(0);
         this.city = address.get(0).getLocality();

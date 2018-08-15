@@ -58,8 +58,7 @@ public class FirebaseDatabaseStatistic {
     public FirebaseDatabaseStatistic(Context context) {
         this.context = context;
         auth = FirebaseAuth.getInstance();
-        */
-/*FirebaseDatabase.getInstance().setPersistenceEnabled(true);*//*
+FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
         dbStatistic = FirebaseDatabase.getInstance().getReference(DB_NAME);
         connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
@@ -313,4 +312,5 @@ public class FirebaseDatabaseStatistic {
         }
     }
 
-}*/
+}
+*/

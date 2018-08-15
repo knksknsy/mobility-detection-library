@@ -3,7 +3,6 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Parcelable;
-import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
@@ -40,6 +39,7 @@ public class DetectedActivitiesService extends IntentService {
             } else if (requestCode == 0) {
                 broadcastActivities(detectedActivities);
             }*/
+
             broadcastActivities(detectedActivities);
         }
     }

@@ -15,7 +15,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;

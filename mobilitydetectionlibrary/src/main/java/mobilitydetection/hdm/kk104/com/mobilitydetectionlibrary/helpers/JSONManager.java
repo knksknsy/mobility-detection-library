@@ -3,6 +3,7 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -11,10 +12,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedAddress;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.TransitionedActivity;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities;
 
 public class JSONManager {
 
@@ -70,7 +73,7 @@ public class JSONManager {
                     JSONObject activities = new JSONObject();
                     JSONObject location = new JSONObject();
                     JSONObject validation = new JSONObject();
-                    JSONObject transitions = new JSONObject();
+                    JSONArray transitions = new JSONArray();
 
                     data.put(ACTIVITIES, activities);
                     data.put(LOCATION, location);
@@ -98,7 +101,7 @@ public class JSONManager {
             JSONObject activities = new JSONObject();
             JSONObject location = new JSONObject();
             JSONObject validation = new JSONObject();
-            JSONObject transitions = new JSONObject();
+            JSONArray transitions = new JSONArray();
 
             data.put(ACTIVITIES, activities);
             data.put(LOCATION, location);
@@ -136,13 +139,77 @@ public class JSONManager {
         }
     }
 
-    public void writeTransitionedActivity(final TransitionedActivity transitionedActivity) {
+    public ArrayList<DetectedActivities> getActivityTransitions() {
+        ArrayList<DetectedActivities> detectedActivities = new ArrayList<>();
+        try {
+            JSONArray transitions = root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS);
+            for (int i = 0; i <= transitions.length(); i++) {
+                JSONObject object = transitions.getJSONObject(i);
+
+                DetectedActivities activity = new DetectedActivities();
+                activity.setTimestamp(object.getString("timestamp"));
+                ProbableActivities probableActivity = new ProbableActivities();
+                probableActivity.setActivity(object.getJSONObject("detectedActivities").getString("activity"));
+                activity.setProbableActivities(probableActivity);
+                DetectedLocation detectedLocation = new DetectedLocation();
+                detectedLocation.setLatitude(object.getJSONObject("detectedLocation").getDouble("latitude"));
+                detectedLocation.setLongitude(object.getJSONObject("detectedLocation").getDouble("longitude"));
+                if (object.getJSONObject("detectedLocation").has("detectedAddress")) {
+                    DetectedAddress detectedAddress = new DetectedAddress();
+                    detectedAddress.setAddress(object.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("address"));
+                    detectedLocation.setDetectedAddress(detectedAddress);
+                }
+                activity.setDetectedLocation(detectedLocation);
+
+                detectedActivities.add(activity);
+            }
+        } catch (JSONException e) {
+            e.getMessage();
+        }
+        return detectedActivities;
+    }
+
+    public int countActivityTransitions() {
+        int count = 0;
+        try {
+            JSONArray transitions = root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS);
+            count = transitions.length();
+        } catch (JSONException e) {
+            e.getMessage();
+        }
+        return count;
+    }
+
+    public String readLastActivityTransition() {
+        try {
+            JSONArray transitions = root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS);
+            if (transitions.length() > 0) {
+                JSONObject transition = transitions.getJSONObject(transitions.length() - 1);
+                return transition.getJSONObject("detectedActivities").getString("activity");
+            } else {
+                return "";
+            }
+        } catch (JSONException e) {
+            e.getMessage();
+        }
+        return "";
+    }
+
+    public void writeActivityTransition(final DetectedActivities detectedActivities) {
+        try {
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS).put(detectedActivities.toJSON());
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    /*public void writeTransitionedActivity(final TransitionedActivity transitionedActivity) {
         try {
             root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(TRANSITIONS).put(transitionedActivity.getShortTime(), transitionedActivity.toJSON());
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
-    }
+    }*/
 
     private String getDateShort() {
         return Timestamp.getDate();

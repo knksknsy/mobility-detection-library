@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Parcelable;
-import android.util.Log;
 
 import com.google.android.gms.location.LocationResult;
 

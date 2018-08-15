@@ -1,6 +1,5 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
 
-import android.location.LocationManager;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;

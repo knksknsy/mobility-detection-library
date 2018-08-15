@@ -9,8 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Binder;
+import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -21,7 +24,10 @@ import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.ActivityTransitionRequest;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -33,6 +39,7 @@ import java.util.List;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONManager;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.ActivityTransitionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.TransitionedActivity;
@@ -43,7 +50,7 @@ public class MobilityDetectionService extends Service {
 
     private static final long INTERVAL_AR = 1000;
     private static final long INTERVAL = 1000;
-    private static final long INTERVAL_LOCATION = 1000; // * 60;
+    private static final long INTERVAL_LOCATION = 1000 * 60;
 
     IBinder binder = new MobilityDetectionService.LocalBinder();
 
@@ -55,13 +62,40 @@ public class MobilityDetectionService extends Service {
     // private PendingIntent fencePendingIntent;
 
     private ActivityRecognitionClient activityRecognitionClient;
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private LocationRequest locationRequest;
+    // private FusedLocationProviderClient fusedLocationProviderClientTracking;
+    // private LocationRequest locationRequestTracking;
+    private FusedLocationProviderClient fusedLocationProviderClientTransition;
+    private LocationRequest locationRequestTransition;
     // private FenceClient fenceClient;
 
     private IntentFilter filter = new IntentFilter();
 
     public MobilityDetectionService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        super.onRebind(intent);
+        if (filter.countActions() == 0) {
+            filter.addAction("STOP_MOBILITY_DETECTION_ACTION");
+            filter.addAction(Actions.SAVE_DATA_ACTION);
+            filter.addAction(Actions.LOCATION_ACTION);
+            filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
+            filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
+            filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
+            filter.addAction(Actions.VALIDATE_ACTIVITY_ACTION);
+        }
+        registerReceiver(databaseReceiver, filter);
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return super.onUnbind(intent);
     }
 
     public class LocalBinder extends Binder {
@@ -70,18 +104,12 @@ public class MobilityDetectionService extends Service {
         }
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return binder;
-    }
-
     private final BroadcastReceiver databaseReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
             String action = intent.getAction();
             if (action.equals(Actions.SAVE_DATA_ACTION)) {
-                Log.e(TAG, Actions.SAVE_DATA_ACTION);
-                jsonManager.writeJSONFile();
+                // todo: moved to saveData() method
             }
             if (action.equals(Actions.LOCATION_ACTION)) {
                 Log.e(TAG, Actions.LOCATION_ACTION);
@@ -91,13 +119,13 @@ public class MobilityDetectionService extends Service {
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
 
-                DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                jsonManager.writeDetectedActivity(detectedActivities);
+                /*DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                jsonManager.writeDetectedActivity(detectedActivities);*/
 
-                /*int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+                int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
 
                 if (permission == PackageManager.PERMISSION_GRANTED) {
-                    fusedLocationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+                    fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
                             super.onLocationResult(locationResult);
@@ -115,8 +143,11 @@ public class MobilityDetectionService extends Service {
                             }
 
                             jsonManager.writeDetectedActivity(detectedActivities);
+                            Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+                            i.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                            sendBroadcast(i, null);
 
-                            fusedLocationProviderClient.removeLocationUpdates(this);
+                            fusedLocationProviderClientTransition.removeLocationUpdates(this);
                         }
 
                         @Override
@@ -127,19 +158,19 @@ public class MobilityDetectionService extends Service {
                 } else {
                     DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                     jsonManager.writeDetectedActivity(detectedActivities);
-                }*/
+                }
             }
             if (action.equals(Actions.ACTIVITY_VALIDATED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_VALIDATED_ACTION);
 
-                String validation = intent.getStringExtra("validation");
+                /*String validation = intent.getStringExtra("validation");
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                jsonManager.writeValidation(validation, detectedActivities);
+                jsonManager.writeValidation(validation, detectedActivities);*/
 
                 /*int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
 
                 if (permission == PackageManager.PERMISSION_GRANTED) {
-                    fusedLocationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+                    fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
                             super.onLocationResult(locationResult);
@@ -159,7 +190,7 @@ public class MobilityDetectionService extends Service {
 
                             jsonManager.writeValidation(validation, detectedActivities);
 
-                            fusedLocationProviderClient.removeLocationUpdates(this);
+                            fusedLocationProviderClientTransition.removeLocationUpdates(this);
                         }
 
                         @Override
@@ -174,15 +205,15 @@ public class MobilityDetectionService extends Service {
                 }*/
             }
             if (action.equals(Actions.ACTIVITY_TRANSITIONED_ACTION)) {
-                Log.e(TAG, Actions.ACTIVITY_TRANSITIONED_ACTION);
+                /*Log.e(TAG, Actions.ACTIVITY_TRANSITIONED_ACTION);
 
-                TransitionedActivity transitionedActivity = intent.getParcelableExtra(TransitionedActivity.class.getSimpleName());
-                jsonManager.writeTransitionedActivity(transitionedActivity);
+                 *//*TransitionedActivity transitionedActivity = intent.getParcelableExtra(TransitionedActivity.class.getSimpleName());
+                jsonManager.writeTransitionedActivity(transitionedActivity);*//*
 
-                /*int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+                int permission = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
 
                 if (permission == PackageManager.PERMISSION_GRANTED) {
-                    fusedLocationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+                    fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
                             super.onLocationResult(locationResult);
@@ -201,7 +232,7 @@ public class MobilityDetectionService extends Service {
 
                             jsonManager.writeTransitionedActivity(transitionedActivity);
 
-                            fusedLocationProviderClient.removeLocationUpdates(this);
+                            fusedLocationProviderClientTransition.removeLocationUpdates(this);
                         }
 
                         @Override
@@ -220,26 +251,32 @@ public class MobilityDetectionService extends Service {
                 stopSelf();
             }
             if (action.equals(Actions.VALIDATE_ACTIVITY_ACTION)) {
-                Log.e(TAG, Actions.VALIDATE_ACTIVITY_ACTION);
-                int requestCode = 4;
-                Intent validationIntent = new Intent(MobilityDetectionService.this, ValidationService.class);
-                validationIntent.putExtra("validation", intent.getStringExtra("validation"));
+                // todo: moved to validateActivity(String activity) method
+            }
+        }
+    };
 
-                PendingIntent validationPendingIntent = PendingIntent.getService(MobilityDetectionService.this, requestCode, validationIntent, PendingIntent.FLAG_ONE_SHOT);
+    public void validateActivity(String activity) {
+        Log.e(TAG, Actions.VALIDATE_ACTIVITY_ACTION);
+        int requestCode = 4;
+        Intent validationIntent = new Intent(this, ValidationService.class);
+        validationIntent.putExtra("validation", activity);
 
-                activityRecognitionClient.requestActivityUpdates(0, validationPendingIntent)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                Log.e(TAG, "requestActivityUpdates onSuccess");
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.e(TAG, e.getMessage());
-                            }
-                        });
+        PendingIntent validationPendingIntent = PendingIntent.getService(this, requestCode, validationIntent, PendingIntent.FLAG_ONE_SHOT);
+
+        activityRecognitionClient.requestActivityUpdates(0, validationPendingIntent)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.e(TAG, "requestActivityUpdates onSuccess");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, e.getMessage());
+                    }
+                });
 
                 /*Awareness.getSnapshotClient(getApplicationContext()).getDetectedActivity()
                         .addOnSuccessListener(new OnSuccessListener<DetectedActivityResponse>() {
@@ -259,9 +296,12 @@ public class MobilityDetectionService extends Service {
                                 Log.e(TAG, e.getMessage());
                             }
                         });*/
-            }
-        }
-    };
+    }
+
+    public void saveData() {
+        Log.e(TAG, Actions.SAVE_DATA_ACTION);
+        jsonManager.writeJSONFile();
+    }
 
     @Override
     public void onCreate() {
@@ -300,48 +340,28 @@ public class MobilityDetectionService extends Service {
 
         requestActivityRecognitionUpdates();
         // requestActivityRecognitionTransitionUpdates();
-        // initLocationProvider();
+        requestTransitionLocationUpdates();
         // requestAwarenessUpdates();
-        // requestLocationUpdates();
+        // requestTrackingLocationUpdates();
 
         return START_STICKY;
     }
 
-    /*public void initLocationProvider() {
-        locationRequest = new LocationRequest();
+    public void requestTransitionLocationUpdates() {
+        locationRequestTransition = new LocationRequest();
 
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(0);
-        locationRequest.setFastestInterval(0);
+        locationRequestTransition.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequestTransition.setInterval(1000);
+        locationRequestTransition.setFastestInterval(1000);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-    }*/
+        fusedLocationProviderClientTransition = LocationServices.getFusedLocationProviderClient(this);
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         // removeActivityRecognitionUpdates();
         unregisterReceiver(databaseReceiver);
-    }
-
-    @Override
-    public void onRebind(Intent intent) {
-        super.onRebind(intent);
-        if (filter.countActions() == 0) {
-            filter.addAction("STOP_MOBILITY_DETECTION_ACTION");
-            filter.addAction(Actions.SAVE_DATA_ACTION);
-            filter.addAction(Actions.LOCATION_ACTION);
-            filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
-            filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
-            filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
-            filter.addAction(Actions.VALIDATE_ACTIVITY_ACTION);
-        }
-        registerReceiver(databaseReceiver, filter);
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        return super.onUnbind(intent);
     }
 
     /*public void requestActivityRecognitionTransitionUpdates() {
@@ -513,18 +533,18 @@ public class MobilityDetectionService extends Service {
         });*/
     }
 
-    /*private void requestLocationUpdates() {
-        locationRequest = new LocationRequest();
+    /*private void requestTrackingLocationUpdates() {
+        locationRequestTracking = new LocationRequest();
 
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(INTERVAL_LOCATION);
-        locationRequest.setFastestInterval(INTERVAL);
+        locationRequestTracking.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequestTracking.setInterval(INTERVAL_LOCATION);
+        locationRequestTracking.setFastestInterval(INTERVAL);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationProviderClientTracking = LocationServices.getFusedLocationProviderClient(this);
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
         if (permission == PackageManager.PERMISSION_GRANTED) {
-            Task<Void> task = fusedLocationProviderClient.requestLocationUpdates(locationRequest, trackingPendingIntent);
+            Task<Void> task = fusedLocationProviderClientTracking.requestLocationUpdates(locationRequestTracking, trackingPendingIntent);
 
             task.addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override

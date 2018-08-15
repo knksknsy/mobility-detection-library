@@ -23,6 +23,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,7 +44,9 @@ import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.ActivityTransitionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.ValidationService;
 
 public class MainActivity extends AppCompatActivity {
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CHECK_LOCATION_SETTINGS = 200;
 
     private TextView textActivity, textConfidence, textList;
+    private ListView activityListView;
     private Button btnSend;
     private Button btnSave;
     private Spinner spinner;
@@ -65,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityRecognitionClient arClient;
     private PendingIntent activityPendingIntent;
+
+    private ArrayList<DetectedActivities> activities;
+    private ActivityListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +138,11 @@ public class MainActivity extends AppCompatActivity {
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, activityItems);
         spinner.setAdapter(spinnerAdapter);
 
+        activities = new ArrayList<>();
+        activityListView = findViewById(R.id.activity_list_view);
+        adapter = new ActivityListAdapter(this, activities);
+        activityListView.setAdapter(adapter);
+
         btnSend = findViewById(R.id.btn_send);
         btnSave = findViewById(R.id.btn_save);
 
@@ -166,24 +178,35 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 vibe.vibrate(100);
                 final String activity = spinner.getSelectedItem().toString();
+                mobilityDetection.mobilityDetectionService.validateActivity(activity);
 
-                Intent intent = new Intent(Actions.VALIDATE_ACTIVITY_ACTION);
+                /*Intent intent = new Intent(Actions.VALIDATE_ACTIVITY_ACTION);
                 intent.putExtra("validation", activity);
-                sendBroadcast(intent, null);
+                sendBroadcast(intent, null);*/
             }
         });
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Actions.SAVE_DATA_ACTION);
-                sendBroadcast(intent, null);
+                mobilityDetection.mobilityDetectionService.saveData();
+                /*Intent intent = new Intent(Actions.SAVE_DATA_ACTION);
+                sendBroadcast(intent, null);*/
             }
         });
     }
 
     private void initMobilityDetection() {
         mobilityDetection = MobilityDetection.getInstance().setContext(MainActivity.this);
+
+        mobilityDetection.setTransitionListener(new ActivityTransitionListener() {
+            @Override
+            public void onTransitioned(DetectedActivities activity) {
+                if (!activity.getProbableActivities().getActivity().isEmpty()) {
+                    adapter.add(activity);
+                }
+            }
+        });
 
         initiateLocationSettings();
     }

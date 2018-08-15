@@ -87,11 +87,11 @@ public class DetectedActivities implements Parcelable, Serializable {
         return Timestamp.getTime(timestamp);
     }
 
-    public ProbableActivities getDetectedActivities() {
+    public ProbableActivities getProbableActivities() {
         return probableActivities;
     }
 
-    public void setDetectedActivities(ProbableActivities probableActivities) {
+    public void setProbableActivities(ProbableActivities probableActivities) {
         this.probableActivities = probableActivities;
     }
 
@@ -119,5 +119,9 @@ public class DetectedActivities implements Parcelable, Serializable {
             Log.e(TAG, e.getMessage());
         }
         return object;
+    }
+
+    public void evaluateActivity() {
+
     }
 }

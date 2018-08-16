@@ -13,8 +13,8 @@ public class DetectedActivitiesEvaluation {
             public final static double median_deviation = 7.0;
             public final static double lower_quartile = 10.0;
             public final static double upper_quartile = 29.0;
-            public final static double quartile_distance = 19.0;
-            public final static double semi_quartile_distance = 9.5;
+            public final static double quartile_distance = upper_quartile - lower_quartile;
+            public final static double semi_quartile_distance = quartile_distance / 2;
         }
 
         public static class InVehicle {
@@ -25,8 +25,40 @@ public class DetectedActivitiesEvaluation {
             public final static double median_deviation = 9.0;
             public final static double lower_quartile = 11.0;
             public final static double upper_quartile = 31.0;
-            public final static double quartile_distance = 20.0;
-            public final static double semi_quartile_distance = 10.0;
+            public final static double quartile_distance = upper_quartile - lower_quartile;
+            public final static double semi_quartile_distance = quartile_distance / 2;
+        }
+
+        public static boolean checkState(final int IN_VEHICLE_CONFIDENCE, final int STILL_CONFIDENCE) {
+            return (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2
+                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2
+                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2
+                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2
+                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2
+                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2
+                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2
+                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2
+                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2);
         }
     }
 
@@ -39,8 +71,8 @@ public class DetectedActivitiesEvaluation {
             public final static double median_deviation = 9.0;
             public final static double lower_quartile = 4.0;
             public final static double upper_quartile = 24.0;
-            public final static double quartile_distance = 20.0;
-            public final static double semi_quartile_distance = 10.0;
+            public final static double quartile_distance = upper_quartile - lower_quartile;
+            public final static double semi_quartile_distance = quartile_distance / 2;
         }
 
         public static class InVehicle {
@@ -51,8 +83,40 @@ public class DetectedActivitiesEvaluation {
             public final static double median_deviation = 20.0;
             public final static double lower_quartile = 13.0;
             public final static double upper_quartile = 69.0;
-            public final static double quartile_distance = 56.0;
-            public final static double semi_quartile_distance = 28.0;
+            public final static double quartile_distance = upper_quartile - lower_quartile;
+            public final static double semi_quartile_distance = quartile_distance / 2;
+        }
+
+        public static boolean checkState(final int IN_VEHICLE_CONFIDENCE, final int STILL_CONFIDENCE) {
+            return (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2
+                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2
+                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2
+                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2
+                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2
+                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2
+                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2
+                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2
+                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2);
         }
     }
 
@@ -65,8 +129,8 @@ public class DetectedActivitiesEvaluation {
             public final static double median_deviation = 10.0;
             public final static double lower_quartile = 16.0;
             public final static double upper_quartile = 38.0;
-            public final static double quartile_distance = 22.0;
-            public final static double semi_quartile_distance = 11.0;
+            public final static double quartile_distance = upper_quartile - lower_quartile;
+            public final static double semi_quartile_distance = quartile_distance / 2;
         }
 
         public static class InVehicle {
@@ -77,9 +141,40 @@ public class DetectedActivitiesEvaluation {
             public final static double median_deviation = 5.0;
             public final static double lower_quartile = 12.0;
             public final static double upper_quartile = 25.0;
-            public final static double quartile_distance = 13.0;
-            public final static double semi_quartile_distance = 6.5;
+            public final static double quartile_distance = upper_quartile - lower_quartile;
+            public final static double semi_quartile_distance = quartile_distance / 2;
+        }
 
+        public static boolean checkState(final int IN_VEHICLE_CONFIDENCE, final int STILL_CONFIDENCE) {
+            return (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2
+                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2
+                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2
+                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2
+                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2
+                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2
+                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2)
+
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2
+                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2
+                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2);
         }
     }
 }

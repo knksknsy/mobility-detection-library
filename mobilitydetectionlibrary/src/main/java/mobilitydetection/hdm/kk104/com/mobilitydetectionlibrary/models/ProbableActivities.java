@@ -258,73 +258,38 @@ public class ProbableActivities implements Parcelable, Serializable {
 
     public String evaluateActivity() {
         String activity = new String();
-        // Acceleration
-        if ((IN_VEHICLE >= DetectedActivitiesEvaluation.Acceleration.InVehicle.average - DetectedActivitiesEvaluation.Acceleration.InVehicle.std_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.Acceleration.InVehicle.average + DetectedActivitiesEvaluation.Acceleration.InVehicle.std_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.Acceleration.Still.average - DetectedActivitiesEvaluation.Acceleration.Still.std_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.Acceleration.Still.average + DetectedActivitiesEvaluation.Acceleration.Still.std_deviation / 2)
-                || (IN_VEHICLE >= DetectedActivitiesEvaluation.Acceleration.InVehicle.average - DetectedActivitiesEvaluation.Acceleration.InVehicle.mean_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.Acceleration.InVehicle.average + DetectedActivitiesEvaluation.Acceleration.InVehicle.mean_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.Acceleration.Still.average - DetectedActivitiesEvaluation.Acceleration.Still.mean_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.Acceleration.Still.average + DetectedActivitiesEvaluation.Acceleration.Still.mean_deviation / 2)
-                || (IN_VEHICLE >= DetectedActivitiesEvaluation.Acceleration.InVehicle.median - DetectedActivitiesEvaluation.Acceleration.InVehicle.median_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.Acceleration.InVehicle.median + DetectedActivitiesEvaluation.Acceleration.InVehicle.median_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.Acceleration.Still.median - DetectedActivitiesEvaluation.Acceleration.Still.median_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.Acceleration.Still.median + DetectedActivitiesEvaluation.Acceleration.Still.median_deviation / 2)) {
-            activity = Activities.IN_VEHICLE;
-        }
-        // Deceleration
-        if ((IN_VEHICLE >= DetectedActivitiesEvaluation.Deceleration.InVehicle.average - DetectedActivitiesEvaluation.Deceleration.InVehicle.std_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.Deceleration.InVehicle.average + DetectedActivitiesEvaluation.Deceleration.InVehicle.std_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.Deceleration.Still.average - DetectedActivitiesEvaluation.Deceleration.Still.std_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.Deceleration.Still.average + DetectedActivitiesEvaluation.Deceleration.Still.std_deviation / 2)
-                || (IN_VEHICLE >= DetectedActivitiesEvaluation.Deceleration.InVehicle.average - DetectedActivitiesEvaluation.Deceleration.InVehicle.mean_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.Deceleration.InVehicle.average + DetectedActivitiesEvaluation.Deceleration.InVehicle.mean_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.Deceleration.Still.average - DetectedActivitiesEvaluation.Deceleration.Still.mean_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.Deceleration.Still.average + DetectedActivitiesEvaluation.Deceleration.Still.mean_deviation / 2)
-                || (IN_VEHICLE >= DetectedActivitiesEvaluation.Deceleration.InVehicle.median - DetectedActivitiesEvaluation.Deceleration.InVehicle.median_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.Deceleration.InVehicle.median + DetectedActivitiesEvaluation.Deceleration.InVehicle.median_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.Deceleration.Still.median - DetectedActivitiesEvaluation.Deceleration.Still.median_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.Deceleration.Still.median + DetectedActivitiesEvaluation.Deceleration.Still.median_deviation / 2)) {
-            activity = Activities.STILL;
-        }
-        // InVehicleMotion
-        if ((IN_VEHICLE >= DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.average - DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.std_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.average + DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.std_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.InVehicleMotion.Still.average - DetectedActivitiesEvaluation.InVehicleMotion.Still.std_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.InVehicleMotion.Still.average + DetectedActivitiesEvaluation.InVehicleMotion.Still.std_deviation / 2)
-                || (IN_VEHICLE >= DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.average - DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.mean_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.average + DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.mean_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.InVehicleMotion.Still.average - DetectedActivitiesEvaluation.InVehicleMotion.Still.mean_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.InVehicleMotion.Still.average + DetectedActivitiesEvaluation.InVehicleMotion.Still.mean_deviation / 2)
-                || (IN_VEHICLE >= DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.median - DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.median_deviation / 2
-                && IN_VEHICLE <= DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.median + DetectedActivitiesEvaluation.InVehicleMotion.InVehicle.median_deviation / 2
-                && STILL >= DetectedActivitiesEvaluation.InVehicleMotion.Still.median - DetectedActivitiesEvaluation.InVehicleMotion.Still.median_deviation / 2
-                && STILL <= DetectedActivitiesEvaluation.InVehicleMotion.Still.median + DetectedActivitiesEvaluation.InVehicleMotion.Still.median_deviation / 2)) {
-            activity = Activities.IN_VEHICLE;
-        }
 
-        if (IN_VEHICLE >= 80) {
-            activity = Activities.IN_VEHICLE;
-        }
-        if (STILL >= 90) {
-            activity = Activities.STILL;
-        }
-        if (UNKNOWN >= 80) {
-            activity = Activities.UNKNOWN;
-        }
-        if (RUNNING >= 80) {
-            activity = Activities.RUNNING;
-        }
         if (ON_FOOT >= 80) {
             activity = Activities.ON_FOOT;
         }
         if (WALKING >= 80) {
             activity = Activities.WALKING;
         }
+
+        if (STILL >= 90) {
+            activity = Activities.STILL;
+        } else if (DetectedActivitiesEvaluation.Deceleration.checkState(IN_VEHICLE, STILL)) {
+            activity = Activities.STILL;
+        }
+
+        if (IN_VEHICLE >= 80) {
+            activity = Activities.IN_VEHICLE;
+        } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(IN_VEHICLE, STILL)) {
+            activity = Activities.IN_VEHICLE;
+        } else if (DetectedActivitiesEvaluation.Acceleration.checkState(IN_VEHICLE, STILL)) {
+            activity = Activities.IN_VEHICLE;
+        }
+
+        if (UNKNOWN >= 80) {
+            activity = Activities.UNKNOWN;
+        }
+        if (RUNNING >= 80) {
+            activity = Activities.RUNNING;
+        }
         if (ON_BICYCLE >= 80) {
             activity = Activities.ON_BICYCLE;
         }
+
         return activity;
     }
 

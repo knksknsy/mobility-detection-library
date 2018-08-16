@@ -110,6 +110,33 @@ public class MobilityDetectionService extends Service {
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
 
+                /*if (checkPermission()) {
+                    fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
+                        @Override
+                        public void onLocationResult(LocationResult locationResult) {
+                            super.onLocationResult(locationResult);
+
+                            DetectedActivities detectedActivities;
+
+                            if (locationResult != null) {
+                                Location location = locationResult.getLastLocation();
+                                DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+
+                                detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                detectedActivities.setDetectedLocation(detectedLocation);
+                            } else {
+                                detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                            }
+                            jsonManager.writeActivityTransition(detectedActivities);
+                            Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+                            i.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                            sendBroadcast(i, null);
+
+                            fusedLocationProviderClientTransition.removeLocationUpdates(this);
+                        }
+                    }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
+                }*/
+
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
                 String previousActivity;

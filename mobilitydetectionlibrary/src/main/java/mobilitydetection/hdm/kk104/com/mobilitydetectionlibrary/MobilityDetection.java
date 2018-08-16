@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.google.android.gms.location.DetectedActivity;
@@ -101,7 +102,7 @@ public class MobilityDetection {
     public void startMobilityDetection() throws NullPointerException {
         if (context != null) {
             Intent intent = new Intent(context, MobilityDetectionService.class);
-            context.startService(intent);
+            ContextCompat.startForegroundService(context, intent);
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
             context.registerReceiver(activityTransitionedReceiver, filter);
         } else {

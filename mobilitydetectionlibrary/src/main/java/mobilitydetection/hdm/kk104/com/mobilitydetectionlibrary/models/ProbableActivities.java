@@ -307,22 +307,22 @@ public class ProbableActivities implements Parcelable, Serializable {
         if (IN_VEHICLE >= 80) {
             activity = Activities.IN_VEHICLE;
         }
-        if (STILL >= 95) {
+        if (STILL >= 90) {
             activity = Activities.STILL;
         }
-        if (UNKNOWN >= 70) {
+        if (UNKNOWN >= 80) {
             activity = Activities.UNKNOWN;
         }
-        if (RUNNING >= 70) {
+        if (RUNNING >= 80) {
             activity = Activities.RUNNING;
         }
-        if (ON_FOOT >= 95) {
+        if (ON_FOOT >= 80) {
             activity = Activities.ON_FOOT;
         }
-        if (WALKING >= 95) {
+        if (WALKING >= 80) {
             activity = Activities.WALKING;
         }
-        if (ON_BICYCLE >= 70) {
+        if (ON_BICYCLE >= 80) {
             activity = Activities.ON_BICYCLE;
         }
         return activity;

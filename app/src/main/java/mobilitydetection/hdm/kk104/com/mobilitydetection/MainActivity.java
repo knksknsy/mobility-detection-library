@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView activityList;
     private ListView activityListView;
     // private Button btnSend;
-    private Button btnSave;
+    private Button btnSave, btnDelete;
     // private Spinner spinner;
     private Vibrator vibe;
 
@@ -122,6 +122,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mobilityDetection.mobilityDetectionService.saveData();
+            }
+        });
+
+        btnDelete = findViewById(R.id.btn_delete);
+        btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adapter.clear();
             }
         });
 

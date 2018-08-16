@@ -82,49 +82,4 @@ public class DetectedActivitiesEvaluation {
 
         }
     }
-
-    public static void evaluate(final DetectedActivities detectedActivities) {
-        if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average - Acceleration.InVehicle.std_deviation / 2
-                && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average + Acceleration.InVehicle.std_deviation / 2) {
-
-        } else if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average - Acceleration.InVehicle.mean_deviation / 2
-                && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average + Acceleration.InVehicle.mean_deviation / 2) {
-
-        } else if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.median - Acceleration.InVehicle.median_deviation / 2
-                && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.median + Acceleration.InVehicle.median_deviation / 2) {
-
-        } else if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.quartile_distance - Acceleration.InVehicle.semi_quartile_distance / 2
-                && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.quartile_distance + Acceleration.InVehicle.semi_quartile_distance / 2) {
-
-        }
-
-    }
-
-    public static void evaluateAcceleration(final DetectedActivities detectedActivities) {
-
-    }
-
-    public static void evaluateInVehicleMotion(final DetectedActivities detectedActivities) {
-
-    }
-
-    public static void evaluateDeceleration(final DetectedActivities detectedActivities) {
-
-    }
-
-    public static void evaluateWalking(final DetectedActivities detectedActivities) {
-
-    }
-
-    public static void evaluateRunning(final DetectedActivities detectedActivities) {
-
-    }
-
-    public static void evaluateOnBicycle(final DetectedActivities detectedActivities) {
-
-    }
-
-    public static void evaluateStill(final DetectedActivities detectedActivities) {
-
-    }
 }

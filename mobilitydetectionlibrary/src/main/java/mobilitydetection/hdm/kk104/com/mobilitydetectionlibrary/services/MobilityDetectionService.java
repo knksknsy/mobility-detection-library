@@ -110,7 +110,7 @@ public class MobilityDetectionService extends Service {
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
 
-                /*if (checkPermission()) {
+                if (checkPermission()) {
                     fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
@@ -135,9 +135,9 @@ public class MobilityDetectionService extends Service {
                             fusedLocationProviderClientTransition.removeLocationUpdates(this);
                         }
                     }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
-                }*/
+                }
 
-                DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                /*DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
                 String previousActivity;
                 if (jsonManager.countActivityTransitions() > 0) {
@@ -175,7 +175,7 @@ public class MobilityDetectionService extends Service {
                             }
                         }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
                     }
-                }
+                }*/
             }
             if (action.equals(Actions.ACTIVITY_VALIDATED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_VALIDATED_ACTION);

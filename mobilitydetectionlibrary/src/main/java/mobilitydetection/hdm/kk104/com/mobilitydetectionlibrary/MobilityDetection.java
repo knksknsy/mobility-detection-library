@@ -46,6 +46,7 @@ public class MobilityDetection {
         filter.addAction(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
         filter.addAction(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
         filter.addAction(Actions.ACTIVITY_LIST_ACTION);
+        filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
         return this;
     }
 
@@ -76,6 +77,13 @@ public class MobilityDetection {
                 ArrayList<DetectedActivity> activities = intent.getParcelableArrayListExtra("activities");
                 if (transitionListener != null) {
                     transitionListener.onActivityDetected(activities);
+                }
+            }
+            if (action.equals(Actions.STOP_MOBILITY_DETECTION_ACTION)) {
+                Log.e(TAG, Actions.STOP_MOBILITY_DETECTION_ACTION);
+                stopMobilityDetection();
+                if (transitionListener != null) {
+                    transitionListener.onStopService();
                 }
             }
         }
@@ -112,11 +120,13 @@ public class MobilityDetection {
 
     public void stopMobilityDetection() throws NullPointerException {
         if (context != null) {
+            mobilityDetectionService.saveData();
             Intent intent = new Intent(context, MobilityDetectionService.class);
             context.stopService(intent);
             context.unbindService(serviceConnection);
             context.unregisterReceiver(activityTransitionedReceiver);
             serviceBound = false;
+            Log.e(TAG, "service stopped");
         } else {
             throw new NullPointerException("Context is not defined.");
         }

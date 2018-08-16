@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        mobilityDetection.mobilityDetectionService.saveData();
     }
 
     @Override
@@ -148,6 +147,11 @@ public class MainActivity extends AppCompatActivity {
         mobilityDetection = MobilityDetection.getInstance().setContext(MainActivity.this);
 
         mobilityDetection.setTransitionListener(new ActivityTransitionListener() {
+            @Override
+            public void onStopService() {
+                finish();
+            }
+
             @Override
             public void onTransitioned(DetectedActivities activity) {
                 adapter.add(activity);

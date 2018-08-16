@@ -1,5 +1,6 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -16,6 +17,7 @@ import android.os.IBinder;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -73,7 +75,6 @@ public class MobilityDetectionService extends Service {
     public void onRebind(Intent intent) {
         super.onRebind(intent);
         if (filter.countActions() == 0) {
-            filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
             filter.addAction(Actions.LOCATION_ACTION);
             filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
             filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
@@ -264,11 +265,6 @@ public class MobilityDetectionService extends Service {
                 /*DetectedLocation detectedLocation = intent.getParcelableExtra(DetectedLocation.class.getSimpleName());
                 jsonManager.writeDetectedLocation(detectedLocation);*/
             }
-            if (action.equals(Actions.STOP_MOBILITY_DETECTION_ACTION)) {
-                Log.e(TAG, Actions.STOP_MOBILITY_DETECTION_ACTION);
-                unregisterReceiver(databaseReceiver);
-                stopSelf();
-            }
         }
     };
 
@@ -287,7 +283,6 @@ public class MobilityDetectionService extends Service {
         transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
         sendBroadcast(transitionsLoadedIntent, null);
 
-        filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
         filter.addAction(Actions.LOCATION_ACTION);
         filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
         filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
@@ -307,8 +302,6 @@ public class MobilityDetectionService extends Service {
         // trackingPendingIntent = PendingIntent.getService(this, 1, trackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // transitionPendingIntent = PendingIntent.getService(this, 3, transitionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // fencePendingIntent = PendingIntent.getService(this, 2, fenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        buildNotification();
     }
 
     @Override
@@ -320,6 +313,8 @@ public class MobilityDetectionService extends Service {
         // requestActivityRecognitionTransitionUpdates();
         // requestAwarenessUpdates();
         // requestTrackingLocationUpdates();
+
+        buildNotification();
 
         return START_STICKY;
     }
@@ -360,17 +355,16 @@ public class MobilityDetectionService extends Service {
     }
 
     private void buildNotification() {
-        Intent stopIntent = new Intent(Actions.STOP_MOBILITY_DETECTION_ACTION);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 4, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(Actions.STOP_MOBILITY_DETECTION_ACTION);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 4, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Notification notification = new Notification.Builder(this)
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(getApplicationContext(), getString(R.string.notification_id))
                 .setContentTitle(getText(R.string.app_name))
                 .setContentText(getText(R.string.tracking_enabled_notify))
                 .setOngoing(true)
                 .setContentIntent(pendingIntent)
-                .setSmallIcon(R.drawable.ic_stat_name)
-                .build();
-        startForeground(1, notification);
+                .setSmallIcon(R.drawable.ic_stat_name);
+        startForeground(1, notification.build());
     }
 
     /*public void requestAwarenessUpdates() {

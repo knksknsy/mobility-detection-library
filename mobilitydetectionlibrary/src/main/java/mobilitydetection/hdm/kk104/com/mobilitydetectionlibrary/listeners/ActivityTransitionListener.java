@@ -13,4 +13,6 @@ public interface ActivityTransitionListener {
     void onTransitionsLoaded(ArrayList<DetectedActivities> activities);
 
     void onActivityDetected(ArrayList<DetectedActivity> activities);
+
+    void onStopService();
 }

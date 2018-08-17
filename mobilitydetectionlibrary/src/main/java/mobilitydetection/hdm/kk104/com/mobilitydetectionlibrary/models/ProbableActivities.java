@@ -242,20 +242,6 @@ public class ProbableActivities implements Parcelable, Serializable {
         return activities;
     }
 
-    /*if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average - Acceleration.InVehicle.std_deviation / 2
-            && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average + Acceleration.InVehicle.std_deviation / 2) {
-
-    } else if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average - Acceleration.InVehicle.mean_deviation / 2
-            && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.average + Acceleration.InVehicle.mean_deviation / 2) {
-
-    } else if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.median - Acceleration.InVehicle.median_deviation / 2
-            && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.median + Acceleration.InVehicle.median_deviation / 2) {
-
-    } else if (detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.quartile_distance - Acceleration.InVehicle.semi_quartile_distance / 2
-            && detectedActivities.getProbableActivities().IN_VEHICLE >= Acceleration.InVehicle.quartile_distance + Acceleration.InVehicle.semi_quartile_distance / 2) {
-
-    }*/
-
     public String evaluateActivity() {
         String activity = new String();
 
@@ -268,15 +254,15 @@ public class ProbableActivities implements Parcelable, Serializable {
 
         if (STILL >= 90) {
             activity = Activities.STILL;
-        } else if (DetectedActivitiesEvaluation.Deceleration.checkState(IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.Deceleration.checkState(UNKNOWN, IN_VEHICLE, STILL)) {
             activity = Activities.STILL;
         }
 
         if (IN_VEHICLE >= 80) {
             activity = Activities.IN_VEHICLE;
-        } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(UNKNOWN, IN_VEHICLE, STILL)) {
             activity = Activities.IN_VEHICLE;
-        } else if (DetectedActivitiesEvaluation.Acceleration.checkState(IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.Acceleration.checkState(UNKNOWN, IN_VEHICLE, STILL)) {
             activity = Activities.IN_VEHICLE;
         }
 

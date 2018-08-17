@@ -11,13 +11,12 @@ import com.google.android.gms.location.DetectedActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 
-public class DetectedActivities implements Parcelable, Serializable {
+public class DetectedActivities implements Parcelable {
 
     private static final String TAG = DetectedActivities.class.getSimpleName();
 
@@ -36,7 +35,7 @@ public class DetectedActivities implements Parcelable, Serializable {
 
     public DetectedActivities(List<DetectedActivity> detectedActivities) {
         this.timestamp = generateTimestamp();
-        this.probableActivities = new ProbableActivities(detectedActivities);
+        this.probableActivities = new ProbableActivities((ArrayList<DetectedActivity>) detectedActivities);
     }
 
     public DetectedActivities(ArrayList<DetectedActivity> detectedActivities, Context context, Location location) {
@@ -47,7 +46,7 @@ public class DetectedActivities implements Parcelable, Serializable {
 
     public DetectedActivities(List<DetectedActivity> detectedActivities, Context context, Location location) {
         this.timestamp = generateTimestamp();
-        this.probableActivities = new ProbableActivities(detectedActivities);
+        this.probableActivities = new ProbableActivities((ArrayList<DetectedActivity>) detectedActivities);
         this.detectedLocation = new DetectedLocation(context, location);
     }
 
@@ -123,9 +122,5 @@ public class DetectedActivities implements Parcelable, Serializable {
             Log.e(TAG, e.getMessage());
         }
         return object;
-    }
-
-    public void evaluateActivity() {
-
     }
 }

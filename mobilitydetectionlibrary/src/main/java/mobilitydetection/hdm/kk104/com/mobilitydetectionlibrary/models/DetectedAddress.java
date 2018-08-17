@@ -8,10 +8,9 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.List;
 
-public class DetectedAddress implements Parcelable, Serializable {
+public class DetectedAddress implements Parcelable {
 
     private static final String TAG = DetectedAddress.class.getSimpleName();
 

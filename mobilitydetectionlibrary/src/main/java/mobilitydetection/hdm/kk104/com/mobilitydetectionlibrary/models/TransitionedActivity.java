@@ -10,11 +10,9 @@ import com.google.android.gms.location.ActivityTransitionResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
-
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 
-public class TransitionedActivity implements Parcelable, Serializable {
+public class TransitionedActivity implements Parcelable {
 
     private static final String TAG = TransitionedActivity.class.getSimpleName();
 

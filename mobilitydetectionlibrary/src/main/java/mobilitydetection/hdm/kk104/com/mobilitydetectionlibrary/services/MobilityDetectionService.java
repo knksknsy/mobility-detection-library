@@ -149,8 +149,9 @@ public class MobilityDetectionService extends Service {
 
                 String currentActivity = detectedActivities.getProbableActivities().getActivity();
 
-                if (checkPermission()) {
-                    if (!currentActivity.isEmpty() && !previousActivity.equals(currentActivity)) {
+
+                if (!currentActivity.isEmpty() && !previousActivity.equals(currentActivity)) {
+                    if (checkPermission()) {
                         fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                             @Override
                             public void onLocationResult(LocationResult locationResult) {

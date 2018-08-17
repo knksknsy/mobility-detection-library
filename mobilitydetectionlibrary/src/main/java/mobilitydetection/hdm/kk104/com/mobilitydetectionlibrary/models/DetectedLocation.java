@@ -12,14 +12,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 
-public class DetectedLocation implements Parcelable, Serializable {
+public class DetectedLocation implements Parcelable {
 
     private static final String TAG = DetectedLocation.class.getSimpleName();
 

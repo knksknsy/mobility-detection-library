@@ -9,15 +9,13 @@ import com.google.android.gms.location.DetectedActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DetectedActivitiesEvaluation;
 
-public class ProbableActivities implements Parcelable, Serializable {
+public class ProbableActivities implements Parcelable {
 
     private static final String TAG = ProbableActivities.class.getSimpleName();
 
@@ -34,7 +32,6 @@ public class ProbableActivities implements Parcelable, Serializable {
     public int mostProbableConfidence;
 
     private ArrayList<DetectedActivity> activities;
-    private List<DetectedActivity> activityList;
 
     private String activity;
 
@@ -45,16 +42,6 @@ public class ProbableActivities implements Parcelable, Serializable {
     public ProbableActivities(ArrayList<DetectedActivity> activities) {
         initProbableActivities(activities);
         this.activities = sortActivitiesByConfidence(activities);
-
-        mostProbableType = Activities.getActivityType(getMostProbableActivity().getType());
-        mostProbableConfidence = getMostProbableActivity().getConfidence();
-
-        activity = evaluateActivity();
-    }
-
-    public ProbableActivities(List<DetectedActivity> activities) {
-        initProbableActivities(activities);
-        this.activityList = sortActivitiesByConfidence(activities);
 
         mostProbableType = Activities.getActivityType(getMostProbableActivity().getType());
         mostProbableConfidence = getMostProbableActivity().getConfidence();
@@ -112,20 +99,12 @@ public class ProbableActivities implements Parcelable, Serializable {
         return activities;
     }
 
-    public void setActivityList(List<DetectedActivity> activityList) {
-        this.activityList = activityList;
-    }
-
-    public List<DetectedActivity> getActivityList() {
-        return activityList;
-    }
-
     public void setActivities(ArrayList<DetectedActivity> activities) {
         this.activities = activities;
     }
 
     public DetectedActivity getMostProbableActivity() {
-        return activities != null ? activities.get(0) : activityList.get(0);
+        return activities.get(0);
     }
 
     public String getActivity() {
@@ -178,60 +157,7 @@ public class ProbableActivities implements Parcelable, Serializable {
         }
     }
 
-    private void initProbableActivities(final List<DetectedActivity> activities) {
-        for (DetectedActivity activity : activities) {
-            int type = activity.getType();
-            int confidence = activity.getConfidence();
-
-            switch (type) {
-                case DetectedActivity.IN_VEHICLE: {
-                    IN_VEHICLE = confidence;
-                    break;
-                }
-                case DetectedActivity.ON_BICYCLE: {
-                    ON_BICYCLE = confidence;
-                    break;
-                }
-                case DetectedActivity.ON_FOOT: {
-                    ON_FOOT = confidence;
-                    break;
-                }
-                case DetectedActivity.STILL: {
-                    STILL = confidence;
-                    break;
-                }
-                case DetectedActivity.UNKNOWN: {
-                    UNKNOWN = confidence;
-                    break;
-                }
-                case DetectedActivity.TILTING: {
-                    TILTING = confidence;
-                    break;
-                }
-                case DetectedActivity.WALKING: {
-                    WALKING = confidence;
-                    break;
-                }
-                case DetectedActivity.RUNNING: {
-                    RUNNING = confidence;
-                    break;
-                }
-            }
-        }
-    }
-
     private ArrayList<DetectedActivity> sortActivitiesByConfidence(ArrayList<DetectedActivity> activities) {
-        Collections.sort(activities, new Comparator<DetectedActivity>() {
-            @Override
-            public int compare(DetectedActivity o1, DetectedActivity o2) {
-                return Integer.compare(o2.getConfidence(), o1.getConfidence());
-            }
-        });
-
-        return activities;
-    }
-
-    private List<DetectedActivity> sortActivitiesByConfidence(List<DetectedActivity> activities) {
         Collections.sort(activities, new Comparator<DetectedActivity>() {
             @Override
             public int compare(DetectedActivity o1, DetectedActivity o2) {

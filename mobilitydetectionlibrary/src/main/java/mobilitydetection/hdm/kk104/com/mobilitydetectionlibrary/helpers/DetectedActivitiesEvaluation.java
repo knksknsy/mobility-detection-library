@@ -1,7 +1,5 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
-
 public class DetectedActivitiesEvaluation {
 
     public static class Acceleration {

@@ -56,7 +56,7 @@ public class DetectedActivitiesService extends IntentService {
 
     private void broadcastDetectedActivities(DetectedActivities detectedActivities) {
         Intent intent = new Intent(Actions.ACTIVITY_DETECTED_ACTION);
-        intent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+        intent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
         sendBroadcast(intent, null);
     }
 

@@ -130,7 +130,7 @@ public class MobilityDetectionService extends Service {
                             }
                             jsonManager.writeActivityTransition(detectedActivities);
                             Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
-                            i.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                            i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
                             sendBroadcast(i, null);
 
                             fusedLocationProviderClientTransition.removeLocationUpdates(this);
@@ -170,7 +170,7 @@ public class MobilityDetectionService extends Service {
                                 }
                                 jsonManager.writeActivityTransition(detectedActivities);
                                 Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
-                                i.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                                i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
                                 sendBroadcast(i, null);
 
                                 fusedLocationProviderClientTransition.removeLocationUpdates(this);
@@ -556,7 +556,7 @@ public class MobilityDetectionService extends Service {
                                 DetectedActivities detectedActivities = new DetectedActivities(detectedActivityResponse.getActivityRecognitionResult().getProbableActivities());
 
                                 Intent fbDbIntent = new Intent("VALIDATION_ACTIVITY_ACTION");
-                                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+                                fbDbIntent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
                                 fbDbIntent.putExtra("validation", activity);
                                 sendBroadcast(fbDbIntent, null);
                             }

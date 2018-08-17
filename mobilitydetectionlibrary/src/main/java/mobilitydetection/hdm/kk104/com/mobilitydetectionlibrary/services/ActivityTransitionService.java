@@ -80,7 +80,7 @@ public class ActivityTransitionService extends IntentService {
 
     private void broadcastTransition(TransitionedActivity activity) {
         Intent intent = new Intent(Actions.ACTIVITY_TRANSITIONED_ACTION);
-        intent.putExtra(TransitionedActivity.class.getSimpleName(), (Parcelable) activity);
+        intent.putExtra(TransitionedActivity.class.getSimpleName(), activity);
         sendBroadcast(intent, null);
     }
 

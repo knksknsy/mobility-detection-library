@@ -43,7 +43,7 @@ public class ValidationService extends IntentService {
     private void broadcastValidationActivities(String validation, ArrayList<DetectedActivity> activities) {
         DetectedActivities detectedActivities = new DetectedActivities(activities);
         Intent intent = new Intent(Actions.ACTIVITY_VALIDATED_ACTION);
-        intent.putExtra(DetectedActivities.class.getSimpleName(), (Parcelable) detectedActivities);
+        intent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
         intent.putExtra("validation", validation);
         sendBroadcast(intent, null);
     }

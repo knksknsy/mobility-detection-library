@@ -33,7 +33,7 @@ public class TrackingService extends IntentService {
                 DetectedLocation coordinate = new DetectedLocation(this, location);
 
                 Intent locationIntent = new Intent(Actions.LOCATION_ACTION);
-                locationIntent.putExtra(DetectedLocation.class.getSimpleName(), (Parcelable) coordinate);
+                locationIntent.putExtra(DetectedLocation.class.getSimpleName(), coordinate);
                 sendBroadcast(locationIntent, null);
             }
         }

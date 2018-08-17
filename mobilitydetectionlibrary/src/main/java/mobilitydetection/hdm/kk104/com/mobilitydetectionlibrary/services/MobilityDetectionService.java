@@ -23,6 +23,7 @@ import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -36,6 +37,7 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Action
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONManager;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities;
 
 public class MobilityDetectionService extends Service {
 
@@ -140,17 +142,11 @@ public class MobilityDetectionService extends Service {
 
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
-                String previousActivity;
-                if (jsonManager.countActivityTransitions() > 0) {
-                    previousActivity = jsonManager.readLastActivityTransition();
-                } else {
-                    previousActivity = new String();
-                }
+                DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
 
-                String currentActivity = detectedActivities.getProbableActivities().getActivity();
+                String enteredActivity = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
 
-
-                if (!currentActivity.isEmpty() && !previousActivity.equals(currentActivity)) {
+                if (!enteredActivity.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivity)) {
                     if (checkPermission()) {
                         fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                             @Override
@@ -169,6 +165,7 @@ public class MobilityDetectionService extends Service {
                                     detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                                 }
                                 jsonManager.writeActivityTransition(detectedActivities);
+                                jsonManager.writeJSONFile();
                                 Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
                                 i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
                                 sendBroadcast(i, null);

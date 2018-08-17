@@ -10,10 +10,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DetectedActivitiesEvaluation;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 
 public class ProbableActivities implements Parcelable {
 
@@ -33,7 +35,7 @@ public class ProbableActivities implements Parcelable {
 
     private ArrayList<DetectedActivity> activities;
 
-    private String activity;
+    private String activity = new String();
 
     public ProbableActivities() {
 
@@ -45,8 +47,6 @@ public class ProbableActivities implements Parcelable {
 
         mostProbableType = Activities.getActivityType(getMostProbableActivity().getType());
         mostProbableConfidence = getMostProbableActivity().getConfidence();
-
-        activity = evaluateActivity();
     }
 
     public ProbableActivities(Parcel in) {
@@ -103,7 +103,7 @@ public class ProbableActivities implements Parcelable {
         this.activities = activities;
     }
 
-    public DetectedActivity getMostProbableActivity() {
+    private DetectedActivity getMostProbableActivity() {
         return activities.get(0);
     }
 
@@ -168,7 +168,17 @@ public class ProbableActivities implements Parcelable {
         return activities;
     }
 
-    public String evaluateActivity() {
+    public String evaluateActivity(final DetectedActivities exitedActivity, final DetectedActivities enteredActivity) {
+        /*if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
+            long exitedTime = Timestamp.getDate(exitedActivity.getTimestamp()).getTimeInMillis();
+            long enteredTime = Timestamp.getDate(enteredActivity.getTimestamp()).getTimeInMillis();
+
+            long diff = enteredTime - exitedTime;
+            long interval = 1000 * 60;
+
+            // todo
+        }*/
+
         String activity = new String();
 
         if (ON_FOOT >= 80) {
@@ -178,7 +188,7 @@ public class ProbableActivities implements Parcelable {
             activity = Activities.WALKING;
         }
 
-        if (STILL >= 90) {
+        if (STILL >= 80) {
             activity = Activities.STILL;
         } else if (DetectedActivitiesEvaluation.Deceleration.checkState(UNKNOWN, IN_VEHICLE, STILL)) {
             activity = Activities.STILL;
@@ -201,6 +211,8 @@ public class ProbableActivities implements Parcelable {
         if (ON_BICYCLE >= 80) {
             activity = Activities.ON_BICYCLE;
         }
+
+        setActivity(activity);
 
         return activity;
     }

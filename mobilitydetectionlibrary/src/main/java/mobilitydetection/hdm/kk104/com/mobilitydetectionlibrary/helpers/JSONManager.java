@@ -144,22 +144,9 @@ public class JSONManager {
         try {
             JSONArray transitions = root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS);
             for (int i = 0; i <= transitions.length(); i++) {
-                JSONObject object = transitions.getJSONObject(i);
+                JSONObject transition = transitions.getJSONObject(i);
 
-                DetectedActivities activity = new DetectedActivities();
-                activity.setTimestamp(object.getString("timestamp"));
-                ProbableActivities probableActivity = new ProbableActivities();
-                probableActivity.setActivity(object.getJSONObject("detectedActivities").getString("activity"));
-                activity.setProbableActivities(probableActivity);
-                DetectedLocation detectedLocation = new DetectedLocation();
-                detectedLocation.setLatitude(object.getJSONObject("detectedLocation").getDouble("latitude"));
-                detectedLocation.setLongitude(object.getJSONObject("detectedLocation").getDouble("longitude"));
-                if (object.getJSONObject("detectedLocation").has("detectedAddress")) {
-                    DetectedAddress detectedAddress = new DetectedAddress();
-                    detectedAddress.setAddress(object.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("address"));
-                    detectedLocation.setDetectedAddress(detectedAddress);
-                }
-                activity.setDetectedLocation(detectedLocation);
+                DetectedActivities activity = initActivityTransition(transition);
 
                 detectedActivities.add(activity);
             }
@@ -180,19 +167,44 @@ public class JSONManager {
         return count;
     }
 
-    public String readLastActivityTransition() {
+    public DetectedActivities getLastActivityTransition() {
         try {
             JSONArray transitions = root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS);
             if (transitions.length() > 0) {
                 JSONObject transition = transitions.getJSONObject(transitions.length() - 1);
-                return transition.getJSONObject("detectedActivities").getString("activity");
+
+                DetectedActivities activity = initActivityTransition(transition);
+                return activity;
             } else {
-                return "";
+                return new DetectedActivities();
             }
         } catch (JSONException e) {
             e.getMessage();
         }
-        return "";
+        return new DetectedActivities();
+    }
+
+    private DetectedActivities initActivityTransition(JSONObject transition) {
+        try {
+            DetectedActivities activity = new DetectedActivities();
+            activity.setTimestamp(transition.getString("timestamp"));
+            ProbableActivities probableActivity = new ProbableActivities();
+            probableActivity.setActivity(transition.getJSONObject("detectedActivities").getString("activity"));
+            activity.setProbableActivities(probableActivity);
+            DetectedLocation detectedLocation = new DetectedLocation();
+            detectedLocation.setLatitude(transition.getJSONObject("detectedLocation").getDouble("latitude"));
+            detectedLocation.setLongitude(transition.getJSONObject("detectedLocation").getDouble("longitude"));
+            if (transition.getJSONObject("detectedLocation").has("detectedAddress")) {
+                DetectedAddress detectedAddress = new DetectedAddress();
+                detectedAddress.setAddress(transition.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("address"));
+                detectedLocation.setDetectedAddress(detectedAddress);
+            }
+            activity.setDetectedLocation(detectedLocation);
+            return activity;
+        } catch (JSONException e) {
+            e.getMessage();
+        }
+        return new DetectedActivities();
     }
 
     public void writeActivityTransition(final DetectedActivities detectedActivities) {

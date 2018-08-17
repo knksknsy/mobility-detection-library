@@ -37,7 +37,7 @@ import com.google.android.gms.tasks.Task;
 import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.ActivityTransitionListener;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
     private void initMobilityDetection() {
         mobilityDetection = MobilityDetection.getInstance().setContext(MainActivity.this);
 
-        mobilityDetection.setTransitionListener(new ActivityTransitionListener() {
+        mobilityDetection.setListener(new MobilityDetectionListener() {
             @Override
             public void onStopService() {
                 finish();

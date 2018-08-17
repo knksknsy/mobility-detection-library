@@ -15,13 +15,13 @@ import com.google.android.gms.location.DetectedActivity;
 import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.ActivityTransitionListener;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.MobilityDetectionService;
 
 public class MobilityDetection {
 
-    private ActivityTransitionListener transitionListener;
+    private MobilityDetectionListener transitionListener;
 
     private static final String TAG = MobilityDetection.class.getSimpleName();
 
@@ -50,7 +50,7 @@ public class MobilityDetection {
         return this;
     }
 
-    public void setTransitionListener(ActivityTransitionListener listener) {
+    public void setListener(MobilityDetectionListener listener) {
         this.transitionListener = listener;
     }
 

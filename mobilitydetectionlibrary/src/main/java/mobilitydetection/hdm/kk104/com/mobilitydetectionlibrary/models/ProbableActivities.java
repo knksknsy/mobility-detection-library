@@ -190,15 +190,15 @@ public class ProbableActivities implements Parcelable {
 
         if (STILL >= 80) {
             activity = Activities.STILL;
-        } else if (DetectedActivitiesEvaluation.Deceleration.checkState(UNKNOWN, IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.Deceleration.checkState(IN_VEHICLE, STILL)) {
             activity = Activities.STILL;
         }
 
         if (IN_VEHICLE >= 80) {
             activity = Activities.IN_VEHICLE;
-        } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(UNKNOWN, IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(IN_VEHICLE, STILL)) {
             activity = Activities.IN_VEHICLE;
-        } else if (DetectedActivitiesEvaluation.Acceleration.checkState(UNKNOWN, IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.Acceleration.checkState(IN_VEHICLE, STILL)) {
             activity = Activities.IN_VEHICLE;
         }
 

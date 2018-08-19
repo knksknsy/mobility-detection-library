@@ -10,7 +10,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 
@@ -169,17 +168,20 @@ public class ProbableActivities implements Parcelable {
     }
 
     public String evaluateActivity(final DetectedActivities exitedActivity, final DetectedActivities enteredActivity) {
-        /*if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
+        String activity = new String();
+        /*boolean exitedStill = false;
+
+        if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
             long exitedTime = Timestamp.getDate(exitedActivity.getTimestamp()).getTimeInMillis();
             long enteredTime = Timestamp.getDate(enteredActivity.getTimestamp()).getTimeInMillis();
 
             long diff = enteredTime - exitedTime;
             long interval = 1000 * 60;
 
-            // todo
+            if (diff <= interval && enteredActivity.getProbableActivities().STILL >= 70) {
+                exitedStill = true;
+            }
         }*/
-
-        String activity = new String();
 
         if (ON_FOOT >= 80) {
             activity = Activities.ON_FOOT;
@@ -192,9 +194,11 @@ public class ProbableActivities implements Parcelable {
             activity = Activities.STILL;
         } else if (DetectedActivitiesEvaluation.Deceleration.checkState(IN_VEHICLE, STILL)) {
             activity = Activities.STILL;
-        }
+        }/* else if (exitedStill && DetectedActivitiesEvaluation.Deceleration.checkState(IN_VEHICLE, (double) STILL * 0.8)) {
+            activity = Activities.STILL;
+        }*/
 
-        if (IN_VEHICLE >= 80) {
+        if (IN_VEHICLE >= 69) {
             activity = Activities.IN_VEHICLE;
         } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(IN_VEHICLE, STILL)) {
             activity = Activities.IN_VEHICLE;

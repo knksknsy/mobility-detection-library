@@ -21,13 +21,11 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.Mobilit
 
 public class MobilityDetection {
 
-    private MobilityDetectionListener transitionListener;
-
     private static final String TAG = MobilityDetection.class.getSimpleName();
-
     private static final MobilityDetection mobilityDetection = new MobilityDetection();
 
     private Context context;
+    private MobilityDetectionListener listener;
 
     public MobilityDetectionService mobilityDetectionService;
     private boolean serviceBound = false;
@@ -37,11 +35,11 @@ public class MobilityDetection {
     private MobilityDetection() {
     }
 
-    public Context getContext() {
-        return context;
+    public static MobilityDetection getInstance() {
+        return mobilityDetection;
     }
 
-    public MobilityDetection setContext(Context context) {
+    private MobilityDetection setContext(Context context) {
         this.context = context;
         filter.addAction(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
         filter.addAction(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
@@ -50,40 +48,41 @@ public class MobilityDetection {
         return this;
     }
 
-    public void setListener(MobilityDetectionListener listener) {
-        this.transitionListener = listener;
+    private MobilityDetection setListener(MobilityDetectionListener listener) {
+        this.listener = listener;
+        return this;
     }
 
-    private final BroadcastReceiver activityTransitionedReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver listenerReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action.equals(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                if (transitionListener != null) {
-                    transitionListener.onTransitioned(detectedActivities);
+                if (listener != null) {
+                    listener.onTransitioned(detectedActivities);
                 }
             }
             if (action.equals(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
                 ArrayList<DetectedActivities> detectedActivities = intent.getParcelableArrayListExtra("activities");
-                if (transitionListener != null) {
-                    transitionListener.onTransitionsLoaded(detectedActivities);
+                if (listener != null) {
+                    listener.onTransitionsLoaded(detectedActivities);
                 }
             }
             if (action.equals(Actions.ACTIVITY_LIST_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_LIST_ACTION);
                 ArrayList<DetectedActivity> activities = intent.getParcelableArrayListExtra("activities");
-                if (transitionListener != null) {
-                    transitionListener.onActivityDetected(activities);
+                if (listener != null) {
+                    listener.onActivityDetected(activities);
                 }
             }
             if (action.equals(Actions.STOP_MOBILITY_DETECTION_ACTION)) {
                 Log.e(TAG, Actions.STOP_MOBILITY_DETECTION_ACTION);
                 stopMobilityDetection();
-                if (transitionListener != null) {
-                    transitionListener.onStopService();
+                if (listener != null) {
+                    listener.onStopService();
                 }
             }
         }
@@ -103,16 +102,12 @@ public class MobilityDetection {
         }
     };
 
-    public static MobilityDetection getInstance() {
-        return mobilityDetection;
-    }
-
     public void startMobilityDetection() throws NullPointerException {
         if (context != null) {
             Intent intent = new Intent(context, MobilityDetectionService.class);
             ContextCompat.startForegroundService(context, intent);
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-            context.registerReceiver(activityTransitionedReceiver, filter);
+            context.registerReceiver(listenerReceiver, filter);
         } else {
             throw new NullPointerException("Context is not defined.");
         }
@@ -124,11 +119,33 @@ public class MobilityDetection {
             Intent intent = new Intent(context, MobilityDetectionService.class);
             context.stopService(intent);
             context.unbindService(serviceConnection);
-            context.unregisterReceiver(activityTransitionedReceiver);
+            context.unregisterReceiver(listenerReceiver);
             serviceBound = false;
-            Log.e(TAG, "service stopped");
         } else {
             throw new NullPointerException("Context is not defined.");
+        }
+    }
+
+    public static class Builder {
+        private Context context;
+        private MobilityDetectionListener listener;
+
+        public Builder() {
+
+        }
+
+        public Builder setContext(Context context) {
+            this.context = context;
+            return this;
+        }
+
+        public Builder setListener(MobilityDetectionListener listener) {
+            this.listener = listener;
+            return this;
+        }
+
+        public MobilityDetection build() {
+            return MobilityDetection.getInstance().setContext(context).setListener(listener);
         }
     }
 

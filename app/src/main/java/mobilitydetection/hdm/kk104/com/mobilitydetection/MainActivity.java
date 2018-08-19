@@ -87,6 +87,11 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
     }
 
+    @Override
+    public void onBackPressed() {
+
+    }
+
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
@@ -144,79 +149,80 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initMobilityDetection() {
-        mobilityDetection = MobilityDetection.getInstance().setContext(MainActivity.this);
+        mobilityDetection = new MobilityDetection.Builder()
+                .setContext(MainActivity.this)
+                .setListener(new MobilityDetectionListener() {
+                    @Override
+                    public void onStopService() {
+                        finish();
+                    }
 
-        mobilityDetection.setListener(new MobilityDetectionListener() {
-            @Override
-            public void onStopService() {
-                finish();
-            }
+                    @Override
+                    public void onTransitioned(DetectedActivities activity) {
+                        adapter.add(activity);
+                    }
 
-            @Override
-            public void onTransitioned(DetectedActivities activity) {
-                adapter.add(activity);
-            }
+                    @Override
+                    public void onTransitionsLoaded(ArrayList<DetectedActivities> activities) {
+                        adapter.clear();
+                        adapter.addAll(activities);
+                    }
 
-            @Override
-            public void onTransitionsLoaded(ArrayList<DetectedActivities> activities) {
-                adapter.clear();
-                adapter.addAll(activities);
-            }
+                    @Override
+                    public void onActivityDetected(ArrayList<DetectedActivity> activities) {
+                        ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
+                        activityList.setText("");
 
-            @Override
-            public void onActivityDetected(ArrayList<DetectedActivity> activities) {
-                ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
-                activityList.setText("");
+                        for (DetectedActivity activity : copyActivities) {
+                            int type = activity.getType();
+                            int confidence = activity.getConfidence();
 
-                for (DetectedActivity activity : copyActivities) {
-                    int type = activity.getType();
-                    int confidence = activity.getConfidence();
-
-                    switch (type) {
-                        case DetectedActivity.IN_VEHICLE: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.IN_VEHICLE) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
-                        }
-                        case DetectedActivity.ON_BICYCLE: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.ON_BICYCLE) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
-                        }
-                        case DetectedActivity.ON_FOOT: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.ON_FOOT) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
-                        }
-                        case DetectedActivity.RUNNING: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.RUNNING) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
-                        }
-                        case DetectedActivity.STILL: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.STILL) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
-                        }
-                        case DetectedActivity.TILTING: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.TILTING) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
-                        }
-                        case DetectedActivity.WALKING: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.WALKING) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
-                        }
-                        case DetectedActivity.UNKNOWN: {
-                            activityList.append(Activities.getActivityType(DetectedActivity.UNKNOWN) + ": " + confidence);
-                            activityList.append("\n");
-                            break;
+                            switch (type) {
+                                case DetectedActivity.IN_VEHICLE: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.IN_VEHICLE) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                                case DetectedActivity.ON_BICYCLE: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.ON_BICYCLE) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                                case DetectedActivity.ON_FOOT: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.ON_FOOT) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                                case DetectedActivity.RUNNING: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.RUNNING) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                                case DetectedActivity.STILL: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.STILL) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                                case DetectedActivity.TILTING: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.TILTING) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                                case DetectedActivity.WALKING: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.WALKING) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                                case DetectedActivity.UNKNOWN: {
+                                    activityList.append(Activities.getActivityType(DetectedActivity.UNKNOWN) + ": " + confidence);
+                                    activityList.append("\n");
+                                    break;
+                                }
+                            }
                         }
                     }
-                }
-            }
-        });
+                })
+                .build();
 
         initiateLocationSettings();
     }

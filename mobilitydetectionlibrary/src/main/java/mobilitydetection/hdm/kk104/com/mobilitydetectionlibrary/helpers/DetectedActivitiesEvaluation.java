@@ -28,35 +28,35 @@ public class DetectedActivitiesEvaluation {
         }
 
         public static boolean checkState(final int IN_VEHICLE_CONFIDENCE, final int STILL_CONFIDENCE) {
-            return (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2
-                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2
-                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2)
+            return (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2 // 17.2
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2 // 30.2
+                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2 // 14
+                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2) // 25.6
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2
-                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2
-                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2 // 15.7
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2 // 31.7
+                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2 // 12.65
+                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2) // 26.95
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2
-                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2
-                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2 // 15.5
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2 // 24.5
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2 // 15.5
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2) // 22.5
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2
-                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2
-                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2 // 14.5
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2 // 23.5
+                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2 // 11.5
+                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2) // 18.5
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2
-                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2
-                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2 // 14
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2 // 24
+                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2 // 10.25
+                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2) // 19.75
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2
-                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2
-                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2);
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2 // 13.5
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2 // 26.5
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2 // 13.2
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2); // 24.8
         }
     }
 
@@ -86,35 +86,35 @@ public class DetectedActivitiesEvaluation {
         }
 
         public static boolean checkState(final int IN_VEHICLE_CONFIDENCE, final int STILL_CONFIDENCE) {
-            return (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2
-                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2
-                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2)
+            return (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2 // 46
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2 // 66
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2 // 15.5
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2) // 29
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2
-                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2
-                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2 // 42.5
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2 // 69.5
+                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2 // 13
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2) // 27
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2
-                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2
-                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2 // 27.1
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2 // 54.1
+                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2 // 9.5
+                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2) // 23.5
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2
-                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2
-                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2 // 25.3
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2 // 55.9
+                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2 // 7.45
+                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2) // 22.55
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2
-                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2
-                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2)
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2 // 20
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2 // 40
+                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2 // 5.5
+                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2) // 14.5
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2
-                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2
-                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2);
+                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2 // 16
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2 // 44
+                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2 // 5
+                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2); // 15
         }
     }
 
@@ -144,35 +144,35 @@ public class DetectedActivitiesEvaluation {
         }
 
         public static boolean checkState(final int IN_VEHICLE_CONFIDENCE, final int STILL_CONFIDENCE) {
-            return (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2
-                    && STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2
-                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2)
+            return (STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2 // 21.25
+                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2 // 34.15
+                    && IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2 // 14.95
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2) // 24.45
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.mean_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.mean_deviation / 2
-                    && STILL_CONFIDENCE >= Still.average - Still.mean_deviation / 2
-                    && STILL_CONFIDENCE <= Still.average + Still.mean_deviation / 2)
+                    || (STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2 // 20
+                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2 // 30
+                    && IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2 // 12.5
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2) // 17.5
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.median_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.median_deviation / 2
-                    && STILL_CONFIDENCE >= Still.median - Still.median_deviation / 2
-                    && STILL_CONFIDENCE <= Still.median + Still.median_deviation / 2)
+                    || (STILL_CONFIDENCE >= Still.average - Still.std_deviation / 2 // 19.55
+                    && STILL_CONFIDENCE <= Still.average + Still.std_deviation / 2 // 35.85
+                    && IN_VEHICLE_CONFIDENCE >= InVehicle.average - InVehicle.std_deviation / 2 // 13.5
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.average + InVehicle.std_deviation / 2) // 25.9
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2
-                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2
-                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2)
+                    || (STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2 // 19.5
+                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2 // 30.5
+                    && IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2 // 11.75
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2) // 18.25
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2
-                    && STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2
-                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2)
+                    || (STILL_CONFIDENCE >= Still.quartile_distance - Still.median_deviation / 2 // 17
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.median_deviation / 2 // 27
+                    && IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.median_deviation / 2 // 10.5
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.median_deviation / 2) // 15.5
 
-                    || (IN_VEHICLE_CONFIDENCE >= InVehicle.median - InVehicle.semi_quartile_distance / 2
-                    && IN_VEHICLE_CONFIDENCE <= InVehicle.median + InVehicle.semi_quartile_distance / 2
-                    && STILL_CONFIDENCE >= Still.median - Still.semi_quartile_distance / 2
-                    && STILL_CONFIDENCE <= Still.median + Still.semi_quartile_distance / 2);
+                    || (STILL_CONFIDENCE >= Still.quartile_distance - Still.mean_deviation / 2 // 15.55
+                    && STILL_CONFIDENCE <= Still.quartile_distance + Still.mean_deviation / 2 // 28.45
+                    && IN_VEHICLE_CONFIDENCE >= InVehicle.quartile_distance - InVehicle.mean_deviation / 2 // 8.25
+                    && IN_VEHICLE_CONFIDENCE <= InVehicle.quartile_distance + InVehicle.mean_deviation / 2); // 17.75
         }
     }
 }

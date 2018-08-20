@@ -1,7 +1,5 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
-import android.app.Activity;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -14,7 +12,6 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -23,7 +20,6 @@ import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -37,7 +33,6 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Action
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONManager;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities;
 
 public class MobilityDetectionService extends Service {
 
@@ -65,7 +60,62 @@ public class MobilityDetectionService extends Service {
 
     private IntentFilter filter = new IntentFilter();
 
+    private boolean receiverInProgress = false;
+
     public MobilityDetectionService() {
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        jsonManager = new JSONManager(this);
+
+        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
+        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
+        sendBroadcast(transitionsLoadedIntent, null);
+
+        filter.addAction(Actions.LOCATION_ACTION);
+        filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
+        filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
+        filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
+        filter.addAction(Actions.ACTIVITY_LIST_ACTION);
+
+        registerReceiver(receiver, filter);
+
+        activityRecognitionClient = new ActivityRecognitionClient(this);
+
+        Intent activityIntent = new Intent(this, DetectedActivitiesService.class);
+        // Intent trackingIntent = new Intent(this, TrackingService.class);
+        // Intent transitionIntent = new Intent(this, ActivityTransitionService.class);
+        // Intent fenceIntent = new Intent(this, FenceService.class);
+
+        activityPendingIntent = PendingIntent.getService(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // trackingPendingIntent = PendingIntent.getService(this, 1, trackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // transitionPendingIntent = PendingIntent.getService(this, 3, transitionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // fencePendingIntent = PendingIntent.getService(this, 2, fenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    @Override
+    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
+
+        requestActivityRecognitionUpdates();
+        requestTransitionLocationUpdates();
+        // requestActivityRecognitionTransitionUpdates();
+        // requestAwarenessUpdates();
+        // requestTrackingLocationUpdates();
+
+        buildNotification();
+
+        return START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // removeActivityRecognitionUpdates();
+        unregisterReceiver(receiver);
     }
 
     @Override
@@ -83,7 +133,7 @@ public class MobilityDetectionService extends Service {
             filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
             filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         }
-        registerReceiver(databaseReceiver, filter);
+        registerReceiver(receiver, filter);
     }
 
     @Override
@@ -97,23 +147,14 @@ public class MobilityDetectionService extends Service {
         }
     }
 
-    private boolean checkPermission() {
-        if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-        return true;
-    }
-
-    private final BroadcastReceiver databaseReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
             String action = intent.getAction();
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
-                Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
-
-                /*if (checkPermission()) {
+                if (!receiverInProgress) {
+                    Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
+                    /*if (checkPermission()) {
                     fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
@@ -140,39 +181,42 @@ public class MobilityDetectionService extends Service {
                     }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
                 }*/
 
-                DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                    DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
-                DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
+                    DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
 
-                String enteredActivity = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
+                    String enteredActivity = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
 
-                if (!enteredActivity.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivity)) {
-                    if (checkPermission()) {
-                        fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
-                            @Override
-                            public void onLocationResult(LocationResult locationResult) {
-                                super.onLocationResult(locationResult);
+                    if (!enteredActivity.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivity)) {
+                        receiverInProgress = true;
+                        if (checkPermission()) {
+                            fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
+                                @Override
+                                public void onLocationResult(LocationResult locationResult) {
+                                    super.onLocationResult(locationResult);
 
-                                DetectedActivities detectedActivities;
+                                    DetectedActivities detectedActivities;
 
-                                if (locationResult != null) {
-                                    Location location = locationResult.getLastLocation();
-                                    DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+                                    if (locationResult != null) {
+                                        Location location = locationResult.getLastLocation();
+                                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
 
-                                    detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                                    detectedActivities.setDetectedLocation(detectedLocation);
-                                } else {
-                                    detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                        detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                        detectedActivities.setDetectedLocation(detectedLocation);
+                                    } else {
+                                        detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                    }
+                                    jsonManager.writeActivityTransition(detectedActivities);
+                                    jsonManager.writeJSONFile();
+                                    Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+                                    i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
+                                    sendBroadcast(i, null);
+
+                                    fusedLocationProviderClientTransition.removeLocationUpdates(this);
+                                    receiverInProgress = false;
                                 }
-                                jsonManager.writeActivityTransition(detectedActivities);
-                                jsonManager.writeJSONFile();
-                                Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
-                                i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
-                                sendBroadcast(i, null);
-
-                                fusedLocationProviderClientTransition.removeLocationUpdates(this);
-                            }
-                        }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
+                            }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
+                        }
                     }
                 }
             }
@@ -266,72 +310,29 @@ public class MobilityDetectionService extends Service {
         }
     };
 
+    private boolean checkPermission() {
+        if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+        return true;
+    }
+
     public void saveData() {
         Log.e(TAG, Actions.SAVE_DATA_ACTION);
         jsonManager.writeJSONFile();
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        jsonManager = new JSONManager(this);
-
-        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
-        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
-        sendBroadcast(transitionsLoadedIntent, null);
-
-        filter.addAction(Actions.LOCATION_ACTION);
-        filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
-        filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
-        filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
-        filter.addAction(Actions.ACTIVITY_LIST_ACTION);
-
-        registerReceiver(databaseReceiver, filter);
-
-        activityRecognitionClient = new ActivityRecognitionClient(this);
-
-        Intent activityIntent = new Intent(this, DetectedActivitiesService.class);
-        // Intent trackingIntent = new Intent(this, TrackingService.class);
-        // Intent transitionIntent = new Intent(this, ActivityTransitionService.class);
-        // Intent fenceIntent = new Intent(this, FenceService.class);
-
-        activityPendingIntent = PendingIntent.getService(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        // trackingPendingIntent = PendingIntent.getService(this, 1, trackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        // transitionPendingIntent = PendingIntent.getService(this, 3, transitionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        // fencePendingIntent = PendingIntent.getService(this, 2, fenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    @Override
-    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
-
-        requestActivityRecognitionUpdates();
-        requestTransitionLocationUpdates();
-        // requestActivityRecognitionTransitionUpdates();
-        // requestAwarenessUpdates();
-        // requestTrackingLocationUpdates();
-
-        buildNotification();
-
-        return START_STICKY;
-    }
-
     public void requestTransitionLocationUpdates() {
         locationRequestTransition = new LocationRequest();
 
-        locationRequestTransition.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequestTransition.setInterval(1000);
-        locationRequestTransition.setFastestInterval(1000);
+        locationRequestTransition.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setInterval(1000)
+                .setFastestInterval(1000)
+                .setMaxWaitTime(5000);
 
         fusedLocationProviderClientTransition = LocationServices.getFusedLocationProviderClient(this);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        // removeActivityRecognitionUpdates();
-        unregisterReceiver(databaseReceiver);
     }
 
     public void requestActivityRecognitionUpdates() {

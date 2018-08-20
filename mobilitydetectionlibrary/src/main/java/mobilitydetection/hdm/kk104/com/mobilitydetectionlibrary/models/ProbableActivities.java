@@ -169,19 +169,25 @@ public class ProbableActivities implements Parcelable {
 
     public String evaluateActivity(final DetectedActivities exitedActivity, final DetectedActivities enteredActivity) {
         String activity = new String();
-        /*boolean exitedStill = false;
+        boolean exitedActivityStill = false;
+        boolean exitedActivityVehicle = false;
 
-        if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
+        if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL) || exitedActivity.getProbableActivities().getActivity().equals(Activities.IN_VEHICLE)) {
             long exitedTime = Timestamp.getDate(exitedActivity.getTimestamp()).getTimeInMillis();
             long enteredTime = Timestamp.getDate(enteredActivity.getTimestamp()).getTimeInMillis();
 
             long diff = enteredTime - exitedTime;
             long interval = 1000 * 60;
 
-            if (diff <= interval && enteredActivity.getProbableActivities().STILL >= 70) {
-                exitedStill = true;
+            if (diff <= interval) {
+                if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL) && enteredActivity.getProbableActivities().STILL >= 70) {
+                    exitedActivityStill = true;
+                }
+                if (exitedActivity.getProbableActivities().getActivity().equals(Activities.IN_VEHICLE)) {
+                    exitedActivityVehicle = true;
+                }
             }
-        }*/
+        }
 
         if (ON_FOOT >= 80) {
             activity = Activities.ON_FOOT;
@@ -192,17 +198,26 @@ public class ProbableActivities implements Parcelable {
 
         if (STILL >= 80) {
             activity = Activities.STILL;
-        } else if (DetectedActivitiesEvaluation.Deceleration.checkState(IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.Deceleration.checkState(enteredActivity.getProbableActivities())) {
             activity = Activities.STILL;
-        }/* else if (exitedStill && DetectedActivitiesEvaluation.Deceleration.checkState(IN_VEHICLE, (double) STILL * 0.8)) {
+        }
+
+        if (exitedActivityStill) {
+            final ProbableActivities probableActivities = enteredActivity.getProbableActivities();
+            probableActivities.STILL = probableActivities.STILL - 15;
+            if (DetectedActivitiesEvaluation.Deceleration.checkState(probableActivities)) {
+                activity = Activities.STILL;
+            }
+        }
+        if (exitedActivityVehicle && enteredActivity.getProbableActivities().STILL >= 50) {
             activity = Activities.STILL;
-        }*/
+        }
 
         if (IN_VEHICLE >= 69) {
             activity = Activities.IN_VEHICLE;
-        } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.InVehicleMotion.checkState(enteredActivity.getProbableActivities())) {
             activity = Activities.IN_VEHICLE;
-        } else if (DetectedActivitiesEvaluation.Acceleration.checkState(IN_VEHICLE, STILL)) {
+        } else if (DetectedActivitiesEvaluation.Acceleration.checkState(enteredActivity.getProbableActivities())) {
             activity = Activities.IN_VEHICLE;
         }
 

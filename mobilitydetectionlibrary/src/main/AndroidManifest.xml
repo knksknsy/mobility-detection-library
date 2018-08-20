@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary">
 
@@ -6,19 +7,17 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application>
-
         <meta-data
             android:name="com.google.android.awareness.API_KEY"
             android:value="API_KEY" />
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="API_KEY" />
-
         <meta-data
             android:name="com.google.android.nearby.messages.API_KEY"
             android:value="API_KEY" />
@@ -26,22 +25,21 @@
         <service
             android:name=".services.DetectedActivitiesService"
             android:exported="false" />
-
         <service
             android:name=".services.ValidationService"
             android:exported="false" />
-
         <service
             android:name=".services.TrackingService"
             android:exported="false" />
-
         <service
             android:name=".services.ActivityTransitionService"
             android:exported="false" />
 
-        <!--<service
+        <!--
+            <service
             android:name=".services.FenceService"
-            android:exported="false" />-->
+            android:exported="false" />
+        -->
 
         <service android:name=".services.MobilityDetectionService" />
 

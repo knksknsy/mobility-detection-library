@@ -221,6 +221,11 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
+
+                    @Override
+                    public void onBatteryManager() {
+                        vibe.vibrate(1000);
+                    }
                 })
                 .build();
 

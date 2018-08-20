@@ -15,4 +15,6 @@ public interface MobilityDetectionListener {
     void onActivityDetected(ArrayList<DetectedActivity> activities);
 
     void onStopService();
+
+    void onBatteryManager();
 }

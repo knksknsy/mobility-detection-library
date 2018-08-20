@@ -45,6 +45,7 @@ public class MobilityDetection {
         filter.addAction(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
         filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
+        filter.addAction(Actions.POWER_CONNECTION_ACTION);
         return this;
     }
 
@@ -83,6 +84,16 @@ public class MobilityDetection {
                 stopMobilityDetection();
                 if (listener != null) {
                     listener.onStopService();
+                }
+            }
+            if (action.equals(Actions.POWER_CONNECTION_ACTION)) {
+                Log.e(TAG, Actions.POWER_CONNECTION_ACTION);
+                intent.getBooleanExtra("usbCharge", false);
+                intent.getBooleanExtra("acCharge", false);
+                mobilityDetectionService.isCharging = intent.getBooleanExtra("isCharging", false);
+                mobilityDetectionService.changeConfiguration();
+                if (listener != null) {
+                    listener.onBatteryManager();
                 }
             }
         }

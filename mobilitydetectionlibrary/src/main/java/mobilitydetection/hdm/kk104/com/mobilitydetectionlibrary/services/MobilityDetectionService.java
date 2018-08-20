@@ -1,7 +1,5 @@
 package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
-import android.app.Activity;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -10,11 +8,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -23,7 +25,6 @@ import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -37,7 +38,6 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Action
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONManager;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities;
 
 public class MobilityDetectionService extends Service {
 
@@ -65,6 +65,14 @@ public class MobilityDetectionService extends Service {
 
     private IntentFilter filter = new IntentFilter();
 
+    public boolean isCharging, isWifiConnected, isInGeofence;
+
+    public void changeConfiguration() {
+        Log.e(TAG, "isCharging: " + isCharging);
+        Log.e(TAG, "isWifiConnected: " + isWifiConnected);
+        Log.e(TAG, "isInGeofence: " + isInGeofence);
+    }
+
     public MobilityDetectionService() {
     }
 
@@ -82,8 +90,11 @@ public class MobilityDetectionService extends Service {
             filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
             filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
             filter.addAction(Actions.ACTIVITY_LIST_ACTION);
+            filter.addAction(Intent.ACTION_POWER_CONNECTED);
+            filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+            filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         }
-        registerReceiver(databaseReceiver, filter);
+        registerReceiver(receiver, filter);
     }
 
     @Override
@@ -106,10 +117,43 @@ public class MobilityDetectionService extends Service {
         return true;
     }
 
-    private final BroadcastReceiver databaseReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, final Intent intent) {
             String action = intent.getAction();
+            if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                int connectionType = intent.getIntExtra(ConnectivityManager.EXTRA_NETWORK_TYPE, -1);
+                boolean isWifi = connectionType == ConnectivityManager.TYPE_WIFI;
+                Log.e(TAG, "WIFI connected: " + isWifi);
+                ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+                if (info != null && info.getType() == ConnectivityManager.TYPE_WIFI) {
+                    if (info.isConnected()) {
+                        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                        String ssid = wifiInfo.getSSID();
+
+                        Log.e(TAG, "SSID: " + ssid);
+                    }
+                }
+            }
+            if (action.equals(Intent.ACTION_POWER_CONNECTED) || action.equals(Intent.ACTION_POWER_DISCONNECTED)) {
+                int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == BatteryManager.BATTERY_STATUS_FULL;
+
+                int chargePlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
+                boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
+
+                // todo: change configuration on MobilityDetectionConfigurator
+
+                Intent i = new Intent(Actions.POWER_CONNECTION_ACTION);
+                i.putExtra("isCharging", isCharging);
+                i.putExtra("usbCharge", usbCharge);
+                i.putExtra("acCharge", acCharge);
+                context.sendBroadcast(i, null);
+            }
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
                 Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
 
@@ -281,13 +325,20 @@ public class MobilityDetectionService extends Service {
         transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
         sendBroadcast(transitionsLoadedIntent, null);
 
+        isCharging = false;
+        isWifiConnected = false;
+        isInGeofence = false;
+
         filter.addAction(Actions.LOCATION_ACTION);
         filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
         filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
         filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
         filter.addAction(Actions.ACTIVITY_LIST_ACTION);
+        filter.addAction(Intent.ACTION_POWER_CONNECTED);
+        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 
-        registerReceiver(databaseReceiver, filter);
+        registerReceiver(receiver, filter);
 
         activityRecognitionClient = new ActivityRecognitionClient(this);
 
@@ -331,7 +382,7 @@ public class MobilityDetectionService extends Service {
     public void onDestroy() {
         super.onDestroy();
         // removeActivityRecognitionUpdates();
-        unregisterReceiver(databaseReceiver);
+        unregisterReceiver(receiver);
     }
 
     public void requestActivityRecognitionUpdates() {

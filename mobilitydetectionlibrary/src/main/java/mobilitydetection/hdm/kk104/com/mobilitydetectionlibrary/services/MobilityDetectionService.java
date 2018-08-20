@@ -65,6 +65,7 @@ public class MobilityDetectionService extends Service {
 
     private IntentFilter filter = new IntentFilter();
 
+    private boolean receiverInProgress = false;
     public boolean isCharging, isWifiConnected, isInGeofence;
 
     public void changeConfiguration() {
@@ -74,6 +75,66 @@ public class MobilityDetectionService extends Service {
     }
 
     public MobilityDetectionService() {
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        isCharging = false;
+        isWifiConnected = false;
+        isInGeofence = false;
+
+        jsonManager = new JSONManager(this);
+
+        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
+        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
+        sendBroadcast(transitionsLoadedIntent, null);
+
+        filter.addAction(Actions.LOCATION_ACTION);
+        filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
+        filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
+        filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
+        filter.addAction(Actions.ACTIVITY_LIST_ACTION);
+        filter.addAction(Intent.ACTION_POWER_CONNECTED);
+        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+
+        registerReceiver(receiver, filter);
+
+        activityRecognitionClient = new ActivityRecognitionClient(this);
+
+        Intent activityIntent = new Intent(this, DetectedActivitiesService.class);
+        // Intent trackingIntent = new Intent(this, TrackingService.class);
+        // Intent transitionIntent = new Intent(this, ActivityTransitionService.class);
+        // Intent fenceIntent = new Intent(this, FenceService.class);
+
+        activityPendingIntent = PendingIntent.getService(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // trackingPendingIntent = PendingIntent.getService(this, 1, trackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // transitionPendingIntent = PendingIntent.getService(this, 3, transitionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // fencePendingIntent = PendingIntent.getService(this, 2, fenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    @Override
+    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
+
+        requestActivityRecognitionUpdates();
+        requestTransitionLocationUpdates();
+        // requestActivityRecognitionTransitionUpdates();
+        // requestAwarenessUpdates();
+        // requestTrackingLocationUpdates();
+
+        buildNotification();
+
+        return START_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // removeActivityRecognitionUpdates();
+        unregisterReceiver(receiver);
     }
 
     @Override
@@ -155,9 +216,9 @@ public class MobilityDetectionService extends Service {
                 context.sendBroadcast(i, null);
             }
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
-                Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
-
-                /*if (checkPermission()) {
+                if (!receiverInProgress) {
+                    Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
+                    /*if (checkPermission()) {
                     fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult locationResult) {
@@ -184,39 +245,42 @@ public class MobilityDetectionService extends Service {
                     }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
                 }*/
 
-                DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                    DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
-                DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
+                    DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
 
-                String enteredActivity = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
+                    String enteredActivity = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
 
-                if (!enteredActivity.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivity)) {
-                    if (checkPermission()) {
-                        fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
-                            @Override
-                            public void onLocationResult(LocationResult locationResult) {
-                                super.onLocationResult(locationResult);
+                    if (!enteredActivity.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivity)) {
+                        receiverInProgress = true;
+                        if (checkPermission()) {
+                            fusedLocationProviderClientTransition.requestLocationUpdates(locationRequestTransition, new LocationCallback() {
+                                @Override
+                                public void onLocationResult(LocationResult locationResult) {
+                                    super.onLocationResult(locationResult);
 
-                                DetectedActivities detectedActivities;
+                                    DetectedActivities detectedActivities;
 
-                                if (locationResult != null) {
-                                    Location location = locationResult.getLastLocation();
-                                    DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+                                    if (locationResult != null) {
+                                        Location location = locationResult.getLastLocation();
+                                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
 
-                                    detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                                    detectedActivities.setDetectedLocation(detectedLocation);
-                                } else {
-                                    detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                        detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                        detectedActivities.setDetectedLocation(detectedLocation);
+                                    } else {
+                                        detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+                                    }
+                                    jsonManager.writeActivityTransition(detectedActivities);
+                                    jsonManager.writeJSONFile();
+                                    Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+                                    i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
+                                    sendBroadcast(i, null);
+
+                                    fusedLocationProviderClientTransition.removeLocationUpdates(this);
+                                    receiverInProgress = false;
                                 }
-                                jsonManager.writeActivityTransition(detectedActivities);
-                                jsonManager.writeJSONFile();
-                                Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
-                                i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
-                                sendBroadcast(i, null);
-
-                                fusedLocationProviderClientTransition.removeLocationUpdates(this);
-                            }
-                        }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
+                            }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
+                        }
                     }
                 }
             }
@@ -315,74 +379,15 @@ public class MobilityDetectionService extends Service {
         jsonManager.writeJSONFile();
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        jsonManager = new JSONManager(this);
-
-        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
-        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
-        sendBroadcast(transitionsLoadedIntent, null);
-
-        isCharging = false;
-        isWifiConnected = false;
-        isInGeofence = false;
-
-        filter.addAction(Actions.LOCATION_ACTION);
-        filter.addAction(Actions.ACTIVITY_DETECTED_ACTION);
-        filter.addAction(Actions.ACTIVITY_VALIDATED_ACTION);
-        filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
-        filter.addAction(Actions.ACTIVITY_LIST_ACTION);
-        filter.addAction(Intent.ACTION_POWER_CONNECTED);
-        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
-        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-
-        registerReceiver(receiver, filter);
-
-        activityRecognitionClient = new ActivityRecognitionClient(this);
-
-        Intent activityIntent = new Intent(this, DetectedActivitiesService.class);
-        // Intent trackingIntent = new Intent(this, TrackingService.class);
-        // Intent transitionIntent = new Intent(this, ActivityTransitionService.class);
-        // Intent fenceIntent = new Intent(this, FenceService.class);
-
-        activityPendingIntent = PendingIntent.getService(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        // trackingPendingIntent = PendingIntent.getService(this, 1, trackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        // transitionPendingIntent = PendingIntent.getService(this, 3, transitionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        // fencePendingIntent = PendingIntent.getService(this, 2, fenceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    @Override
-    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
-
-        requestActivityRecognitionUpdates();
-        requestTransitionLocationUpdates();
-        // requestActivityRecognitionTransitionUpdates();
-        // requestAwarenessUpdates();
-        // requestTrackingLocationUpdates();
-
-        buildNotification();
-
-        return START_STICKY;
-    }
-
     public void requestTransitionLocationUpdates() {
         locationRequestTransition = new LocationRequest();
 
-        locationRequestTransition.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequestTransition.setInterval(1000);
-        locationRequestTransition.setFastestInterval(1000);
+        locationRequestTransition.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setInterval(1000)
+                .setFastestInterval(1000)
+                .setMaxWaitTime(5000);
 
         fusedLocationProviderClientTransition = LocationServices.getFusedLocationProviderClient(this);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        // removeActivityRecognitionUpdates();
-        unregisterReceiver(receiver);
     }
 
     public void requestActivityRecognitionUpdates() {

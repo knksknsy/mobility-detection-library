@@ -32,7 +32,7 @@
             android:name=".services.ValidationIntentService"
             android:exported="false" />
         <service
-            android:name=".services.TrackingIntentService"
+            android:name=".services.LocationIntentService"
             android:exported="false" />
         <service
             android:name=".services.ActivityTransitionIntentService"

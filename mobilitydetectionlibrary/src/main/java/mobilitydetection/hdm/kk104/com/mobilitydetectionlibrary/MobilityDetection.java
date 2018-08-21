@@ -91,16 +91,16 @@ public class MobilityDetection {
                 Log.e(TAG, Actions.POWER_CONNECTION_ACTION);
                 intent.getBooleanExtra("usbCharge", false);
                 intent.getBooleanExtra("acCharge", false);
-                mobilityDetectionService.isCharging = intent.getBooleanExtra("isCharging", false);
-                mobilityDetectionService.changeConfiguration();
+                /*mobilityDetectionService.isCharging = intent.getBooleanExtra("isCharging", false);
+                mobilityDetectionService.changeConfiguration();*/
                 if (listener != null) {
                     listener.onBatteryManagerChanged();
                 }
             }
             if (action.equals(Actions.WIFI_CONNECTION_ACTION)) {
                 Log.e(TAG, Actions.WIFI_CONNECTION_ACTION);
-                mobilityDetectionService.isWifiConnected = intent.getBooleanExtra("isWifi", false);
-                mobilityDetectionService.changeConfiguration();
+                /*mobilityDetectionService.isWifiConnected = intent.getBooleanExtra("isWifi", false);
+                mobilityDetectionService.changeConfiguration();*/
                 if (listener != null) {
                     listener.onWifiConnectionChanged();
                 }

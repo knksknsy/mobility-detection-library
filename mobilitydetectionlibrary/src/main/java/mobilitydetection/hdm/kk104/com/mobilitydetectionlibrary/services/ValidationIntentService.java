@@ -2,7 +2,6 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
@@ -13,11 +12,11 @@ import java.util.ArrayList;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
-public class ValidationService extends IntentService {
+public class ValidationIntentService extends IntentService {
 
-    private static final String TAG = DetectedActivitiesService.class.getSimpleName();
+    private static final String TAG = DetectedActivitiesIntentService.class.getSimpleName();
 
-    public ValidationService() {
+    public ValidationIntentService() {
         super(TAG);
     }
 
@@ -35,7 +34,7 @@ public class ValidationService extends IntentService {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
 
             ArrayList<DetectedActivity> activities = (ArrayList) result.getProbableActivities();
-            Log.e(TAG, "ValidationService onHandleIntent: " + validationActivity);
+            Log.e(TAG, "ValidationIntentService onHandleIntent: " + validationActivity);
             broadcastValidationActivities(validationActivity, activities);
         }
     }

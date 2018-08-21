@@ -2,7 +2,6 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -20,11 +19,11 @@ import java.util.List;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
-public class FenceService extends IntentService {
+public class FenceIntentService extends IntentService {
 
-    private static final String TAG = FenceService.class.getSimpleName();
+    private static final String TAG = FenceIntentService.class.getSimpleName();
 
-    public FenceService() {
+    public FenceIntentService() {
         super(TAG);
     }
 

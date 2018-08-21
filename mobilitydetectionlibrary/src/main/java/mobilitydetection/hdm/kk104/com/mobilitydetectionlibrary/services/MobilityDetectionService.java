@@ -39,7 +39,6 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONMana
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.TransitionedActivity;
 
 public class MobilityDetectionService extends Service {
 
@@ -109,10 +108,10 @@ public class MobilityDetectionService extends Service {
                 .setFastestInterval(1000)
                 .setMaxWaitTime(5000);
 
-        Intent activityIntent = new Intent(this, DetectedActivitiesService.class);
-        // Intent trackingIntent = new Intent(this, TrackingService.class);
-        // Intent transitionIntent = new Intent(this, ActivityTransitionService.class);
-        // Intent fenceIntent = new Intent(this, FenceService.class);
+        Intent activityIntent = new Intent(this, DetectedActivitiesIntentService.class);
+        // Intent trackingIntent = new Intent(this, TrackingIntentService.class);
+        // Intent transitionIntent = new Intent(this, ActivityTransitionIntentService.class);
+        // Intent fenceIntent = new Intent(this, FenceIntentService.class);
 
         activityPendingIntent = PendingIntent.getService(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // trackingPendingIntent = PendingIntent.getService(this, 1, trackingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -444,7 +443,7 @@ public class MobilityDetectionService extends Service {
     /*public void validateActivity(String activity) {
         Log.e(TAG, Actions.VALIDATE_ACTIVITY_ACTION);
         int requestCode = 4;
-        Intent validationIntent = new Intent(this, ValidationService.class);
+        Intent validationIntent = new Intent(this, ValidationIntentService.class);
         validationIntent.putExtra("validation", activity);
 
         PendingIntent validationPendingIntent = PendingIntent.getService(this, requestCode, validationIntent, PendingIntent.FLAG_ONE_SHOT);

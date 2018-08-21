@@ -2,7 +2,6 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.os.Parcelable;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
@@ -12,11 +11,11 @@ import java.util.ArrayList;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
-public class DetectedActivitiesService extends IntentService {
+public class DetectedActivitiesIntentService extends IntentService {
 
-    private static final String TAG = DetectedActivitiesService.class.getSimpleName();
+    private static final String TAG = DetectedActivitiesIntentService.class.getSimpleName();
 
-    public DetectedActivitiesService() {
+    public DetectedActivitiesIntentService() {
         super(TAG);
     }
 

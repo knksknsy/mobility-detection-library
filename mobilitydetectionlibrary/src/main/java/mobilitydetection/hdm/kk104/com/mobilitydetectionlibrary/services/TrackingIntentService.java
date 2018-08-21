@@ -3,18 +3,17 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 import android.app.IntentService;
 import android.content.Intent;
 import android.location.Location;
-import android.os.Parcelable;
 
 import com.google.android.gms.location.LocationResult;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 
-public class TrackingService extends IntentService {
+public class TrackingIntentService extends IntentService {
 
-    private static final String TAG = TrackingService.class.getSimpleName();
+    private static final String TAG = TrackingIntentService.class.getSimpleName();
 
-    public TrackingService() {
+    public TrackingIntentService() {
         super(TAG);
     }
 

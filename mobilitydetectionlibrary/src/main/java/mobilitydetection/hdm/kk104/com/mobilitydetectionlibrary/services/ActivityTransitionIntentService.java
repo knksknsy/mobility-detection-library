@@ -2,20 +2,19 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.os.Parcelable;
 
 import com.google.android.gms.location.ActivityTransitionResult;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.TransitionedActivity;
 
-public class ActivityTransitionService extends IntentService {
+public class ActivityTransitionIntentService extends IntentService {
 
-    private static final String TAG = ActivityTransitionService.class.getSimpleName();
+    private static final String TAG = ActivityTransitionIntentService.class.getSimpleName();
 
     private ActivityTransitionResult result;
 
-    public ActivityTransitionService() {
+    public ActivityTransitionIntentService() {
         super(TAG);
     }
 

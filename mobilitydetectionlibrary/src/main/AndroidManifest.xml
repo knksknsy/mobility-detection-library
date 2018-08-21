@@ -3,11 +3,14 @@
     package="mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary">
 
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
@@ -23,21 +26,25 @@
             android:value="API_KEY" />
 
         <service
-            android:name=".services.DetectedActivitiesService"
+            android:name=".services.DetectedActivitiesIntentService"
             android:exported="false" />
         <service
-            android:name=".services.ValidationService"
+            android:name=".services.ValidationIntentService"
             android:exported="false" />
         <service
-            android:name=".services.TrackingService"
+            android:name=".services.TrackingIntentService"
             android:exported="false" />
         <service
-            android:name=".services.ActivityTransitionService"
+            android:name=".services.ActivityTransitionIntentService"
+            android:exported="false" />
+
+        <service
+            android:name=".services.GeofenceIntentService"
             android:exported="false" />
 
         <!--
             <service
-            android:name=".services.FenceService"
+            android:name=".services.FenceIntentService"
             android:exported="false" />
         -->
 

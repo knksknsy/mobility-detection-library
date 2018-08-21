@@ -36,4 +36,8 @@ public class Timestamp {
         }
         return null;
     }
+
+    public static long getDifference(String t1, String t2) {
+        return getDate(t2).getTimeInMillis() - getDate(t1).getTimeInMillis();
+    }
 }

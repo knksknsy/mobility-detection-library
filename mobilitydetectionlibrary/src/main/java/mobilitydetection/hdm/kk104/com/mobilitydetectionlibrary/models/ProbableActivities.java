@@ -173,10 +173,7 @@ public class ProbableActivities implements Parcelable {
         boolean exitedActivityVehicle = false;
 
         if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL) || exitedActivity.getProbableActivities().getActivity().equals(Activities.IN_VEHICLE)) {
-            long exitedTime = Timestamp.getDate(exitedActivity.getTimestamp()).getTimeInMillis();
-            long enteredTime = Timestamp.getDate(enteredActivity.getTimestamp()).getTimeInMillis();
-
-            long diff = enteredTime - exitedTime;
+            long diff = Timestamp.getDifference(exitedActivity.getTimestamp(), enteredActivity.getTimestamp());
             long interval = 1000 * 60;
 
             if (diff <= interval) {

@@ -16,5 +16,7 @@ public interface MobilityDetectionListener {
 
     void onStopService();
 
-    void onBatteryManager();
+    void onBatteryManagerChanged();
+
+    void onWifiConnectionChanged();
 }

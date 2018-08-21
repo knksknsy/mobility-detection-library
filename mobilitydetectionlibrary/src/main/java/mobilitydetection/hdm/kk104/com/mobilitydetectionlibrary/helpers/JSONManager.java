@@ -32,6 +32,7 @@ public class JSONManager {
     private final String ACTIVITIES = "activities";
     private final String VALIDATION = "validation";
     private final String TRANSITIONS = "transitions";
+    private final String WIFI = "wifi";
 
     private JSONObject root;
 
@@ -41,77 +42,6 @@ public class JSONManager {
         this.context = context;
         shortDate = getDateShort();
         readJSONFile();
-    }
-
-    public void writeJSONFile() {
-        try {
-            fileOutputStream = context.openFileOutput(DB_NAME, Context.MODE_PRIVATE);
-            fileOutputStream.write(root.toString().getBytes());
-            fileOutputStream.close();
-            Log.e(TAG, "SAVED");
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-
-        }
-    }
-
-    public void readJSONFile() {
-        try {
-            fileInputStream = context.openFileInput(DB_NAME);
-            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-
-            if (stringBuilder.toString().length() > 0) {
-                root = new JSONObject(stringBuilder.toString());
-                if (!root.getJSONObject(DB_NAME).has(shortDate)) {
-                    JSONObject data = new JSONObject();
-                    JSONObject activities = new JSONObject();
-                    JSONObject location = new JSONObject();
-                    JSONObject validation = new JSONObject();
-                    JSONArray transitions = new JSONArray();
-
-                    data.put(ACTIVITIES, activities);
-                    data.put(LOCATION, location);
-                    data.put(VALIDATION, validation);
-                    data.put(TRANSITIONS, transitions);
-                    root.getJSONObject(DB_NAME).put(shortDate, data);
-                }
-            } else {
-                root = null;
-            }
-        } catch (IOException e) {
-            initializeJSON();
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
-    public void initializeJSON() {
-        try {
-            if (root == null) {
-                root = new JSONObject();
-            }
-            JSONObject day = new JSONObject();
-            JSONObject data = new JSONObject();
-            JSONObject activities = new JSONObject();
-            JSONObject location = new JSONObject();
-            JSONObject validation = new JSONObject();
-            JSONArray transitions = new JSONArray();
-
-            data.put(ACTIVITIES, activities);
-            data.put(LOCATION, location);
-            data.put(VALIDATION, validation);
-            data.put(TRANSITIONS, transitions);
-            day.put(shortDate, data);
-            root.put(DB_NAME, day);
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
     }
 
     public void writeDetectedActivity(final DetectedActivities detectedActivities) {
@@ -139,6 +69,112 @@ public class JSONManager {
         }
     }
 
+    public void writeActivityTransition(final DetectedActivities detectedActivities) {
+        try {
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS).put(detectedActivities.toJSON());
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    public void writeWifiLocation(String ssid, DetectedLocation location) {
+        try {
+            JSONObject object = root.getJSONObject(DB_NAME).getJSONObject(WIFI);
+            if (object != JSONObject.NULL) {
+                if (!root.getJSONObject(DB_NAME).getJSONObject(WIFI).has(ssid)) {
+                    root.getJSONObject(DB_NAME).getJSONObject(WIFI).put(ssid, location.toJSON());
+                }
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    public boolean hasWifiLocation(String ssid) {
+        boolean hasSSID = false;
+        try {
+            hasSSID = root.getJSONObject(DB_NAME).getJSONObject(WIFI).has(ssid);
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+        return hasSSID;
+    }
+
+    private void readJSONFile() {
+        try {
+            fileInputStream = context.openFileInput(DB_NAME);
+            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+
+            if (stringBuilder.toString().length() > 0) {
+                root = new JSONObject(stringBuilder.toString());
+                if (!root.getJSONObject(DB_NAME).has(shortDate)) {
+                    JSONObject data = new JSONObject();
+                    JSONObject activities = new JSONObject();
+                    JSONObject location = new JSONObject();
+                    JSONObject validation = new JSONObject();
+                    JSONArray transitions = new JSONArray();
+                    JSONObject wifi = new JSONObject();
+
+                    data.put(ACTIVITIES, activities);
+                    data.put(LOCATION, location);
+                    data.put(VALIDATION, validation);
+                    data.put(TRANSITIONS, transitions);
+                    root.getJSONObject(DB_NAME).put(shortDate, data);
+                    root.getJSONObject(DB_NAME).put(WIFI, wifi);
+                }
+            } else {
+                root = null;
+            }
+        } catch (IOException e) {
+            initializeJSON();
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    private void initializeJSON() {
+        try {
+            if (root == null) {
+                root = new JSONObject();
+            }
+            JSONObject day = new JSONObject();
+            JSONObject data = new JSONObject();
+            JSONObject activities = new JSONObject();
+            JSONObject location = new JSONObject();
+            JSONObject validation = new JSONObject();
+            JSONArray transitions = new JSONArray();
+            JSONObject wifi = new JSONObject();
+
+            data.put(ACTIVITIES, activities);
+            data.put(LOCATION, location);
+            data.put(VALIDATION, validation);
+            data.put(TRANSITIONS, transitions);
+            day.put(shortDate, data);
+            root.put(DB_NAME, day);
+            root.getJSONObject(DB_NAME).put(WIFI, wifi);
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    public void saveJSONFile() {
+        try {
+            fileOutputStream = context.openFileOutput(DB_NAME, Context.MODE_PRIVATE);
+            fileOutputStream.write(root.toString().getBytes());
+            fileOutputStream.close();
+            Log.e(TAG, "SAVED");
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+
+        }
+    }
+
     public ArrayList<DetectedActivities> getActivityTransitions() {
         ArrayList<DetectedActivities> detectedActivities = new ArrayList<>();
         try {
@@ -154,17 +190,6 @@ public class JSONManager {
             e.getMessage();
         }
         return detectedActivities;
-    }
-
-    public int countActivityTransitions() {
-        int count = 0;
-        try {
-            JSONArray transitions = root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS);
-            count = transitions.length();
-        } catch (JSONException e) {
-            e.getMessage();
-        }
-        return count;
     }
 
     public DetectedActivities getLastActivityTransition() {
@@ -206,22 +231,6 @@ public class JSONManager {
         }
         return new DetectedActivities();
     }
-
-    public void writeActivityTransition(final DetectedActivities detectedActivities) {
-        try {
-            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS).put(detectedActivities.toJSON());
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
-    /*public void writeTransitionedActivity(final TransitionedActivity transitionedActivity) {
-        try {
-            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(TRANSITIONS).put(transitionedActivity.getShortTime(), transitionedActivity.toJSON());
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }*/
 
     private String getDateShort() {
         return Timestamp.getDate();

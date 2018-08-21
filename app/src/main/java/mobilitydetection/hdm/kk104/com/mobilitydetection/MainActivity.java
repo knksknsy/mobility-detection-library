@@ -223,8 +223,13 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onBatteryManager() {
-                        vibe.vibrate(1000);
+                    public void onBatteryManagerChanged() {
+                        vibe.vibrate(500);
+                    }
+
+                    @Override
+                    public void onWifiConnectionChanged() {
+                        vibe.vibrate(500);
                     }
                 })
                 .build();

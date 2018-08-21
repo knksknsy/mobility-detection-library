@@ -46,6 +46,7 @@ public class MobilityDetection {
         filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
         filter.addAction(Actions.POWER_CONNECTION_ACTION);
+        filter.addAction(Actions.WIFI_CONNECTION_ACTION);
         return this;
     }
 
@@ -93,7 +94,15 @@ public class MobilityDetection {
                 mobilityDetectionService.isCharging = intent.getBooleanExtra("isCharging", false);
                 mobilityDetectionService.changeConfiguration();
                 if (listener != null) {
-                    listener.onBatteryManager();
+                    listener.onBatteryManagerChanged();
+                }
+            }
+            if (action.equals(Actions.WIFI_CONNECTION_ACTION)) {
+                Log.e(TAG, Actions.WIFI_CONNECTION_ACTION);
+                mobilityDetectionService.isWifiConnected = intent.getBooleanExtra("isWifi", false);
+                mobilityDetectionService.changeConfiguration();
+                if (listener != null) {
+                    listener.onWifiConnectionChanged();
                 }
             }
         }

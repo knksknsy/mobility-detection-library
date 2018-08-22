@@ -4,6 +4,8 @@ import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -116,16 +118,20 @@ public class DetectedLocation implements Parcelable {
     }
 
     private DetectedAddress detectAddress(double latitude, double longitude) {
-        List<Address> address = new ArrayList<>();
-        Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-        try {
-            address = geocoder.getFromLocation(latitude, longitude, 1);
-        } catch (IOException e) {
-            Log.e(TAG, "Cannot get address for location: lat: " + latitude + ", long: " + longitude);
-        }
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+        if (info != null && info.isConnectedOrConnecting()) {
+            List<Address> address = new ArrayList<>();
+            Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+            try {
+                address = geocoder.getFromLocation(latitude, longitude, 1);
+            } catch (IOException e) {
+                Log.e(TAG, "Cannot get address for location: lat: " + latitude + ", long: " + longitude);
+            }
 
-        if (!address.isEmpty()) {
-            return new DetectedAddress(address);
+            if (!address.isEmpty()) {
+                return new DetectedAddress(address);
+            }
         }
         return null;
     }
@@ -144,7 +150,9 @@ public class DetectedLocation implements Parcelable {
             object.put("timestamp", this.timestamp);
             object.put("longitude", this.longitude);
             object.put("latitude", this.latitude);
-            object.put("detectedAddress", detectedAddress.toJSON());
+            if (detectedAddress != null) {
+                object.put("detectedAddress", detectedAddress.toJSON());
+            }
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }

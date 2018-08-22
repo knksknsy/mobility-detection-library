@@ -17,7 +17,6 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -38,7 +37,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
@@ -56,6 +54,8 @@ public class MobilityDetectionService extends Service {
     private static final long INTERVAL_AR = 1000;
     private static final long INTERVAL = 1000;
     private static final long INTERVAL_LOCATION = 1000 * 60;
+
+    public boolean receiverInProgress, isCharging, isWifiConnected, isInGeofence;
 
     IBinder binder = new MobilityDetectionService.LocalBinder();
 
@@ -79,19 +79,12 @@ public class MobilityDetectionService extends Service {
 
     private IntentFilter filter = new IntentFilter();
 
-    private boolean receiverInProgress = false;
-    public boolean isCharging, isWifiConnected, isInGeofence;
-
     public MobilityDetectionService() {
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        isCharging = false;
-        isWifiConnected = false;
-        isInGeofence = false;
 
         jsonManager = new JSONManager(this);
 
@@ -102,22 +95,20 @@ public class MobilityDetectionService extends Service {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         geofencingClient = LocationServices.getGeofencingClient(this);
         geofenceList = new ArrayList<>();
+        // geofenceStates = new HashMap<>();
     }
 
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
-        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
-        sendBroadcast(transitionsLoadedIntent, null);
+        buildNotification();
+        loadTransitions();
+        checkChargingStatus();
 
-        requestActivityRecognitionUpdates();
         // requestActivityRecognitionTransitionUpdates();
         // requestAwarenessUpdates();
         // requestTrackingLocationUpdates();
-
-        buildNotification();
 
         return START_STICKY;
     }
@@ -127,6 +118,7 @@ public class MobilityDetectionService extends Service {
         super.onDestroy();
         removeActivityRecognitionUpdates();
         geofenceList.removeAll(geofenceList);
+        geofencingClient.removeGeofences(getGeofencePendingIntent());
         unregisterReceiver(receiver);
     }
 
@@ -166,7 +158,7 @@ public class MobilityDetectionService extends Service {
                 handleConnectivityChange(intent);
             }
             if (action.equals(Intent.ACTION_POWER_CONNECTED) || action.equals(Intent.ACTION_POWER_DISCONNECTED)) {
-                handlePowerChange(intent);
+                handlePowerConnectionChange(intent);
             }
             if (action.equals(Actions.ACTIVITY_DETECTED_ACTION)) {
                 handleActivityDetection(intent);
@@ -182,23 +174,19 @@ public class MobilityDetectionService extends Service {
         }
     };
 
+    private void checkChargingStatus() {
+        BatteryManager batteryManager = (BatteryManager) getApplicationContext().getSystemService(Context.BATTERY_SERVICE);
+        isCharging = batteryManager.isCharging();
+        changeConfiguration();
+    }
+
+    private void loadTransitions() {
+        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
+        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
+        sendBroadcast(transitionsLoadedIntent, null);
+    }
+
     public void changeConfiguration() {
-        LocationCallback locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-
-                if (locationResult != null) {
-                    Location location = locationResult.getLastLocation();
-                    DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
-
-                    addGeofence(detectedLocation);
-                    requestGeofenceUpdates();
-                }
-
-                fusedLocationProviderClient.removeLocationUpdates(this);
-            }
-        };
         /*if (!isInGeofence && checkLocationPermission()) {
             fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
                 @Override
@@ -223,6 +211,7 @@ public class MobilityDetectionService extends Service {
             // inactive
         }
         if (isCharging && isWifiConnected && !isInGeofence) {
+            removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates();
             // active
         }
@@ -231,6 +220,7 @@ public class MobilityDetectionService extends Service {
             // inactive
         }
         if (isCharging && !isWifiConnected && !isInGeofence) {
+            removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates();
             // active
         }
@@ -239,6 +229,7 @@ public class MobilityDetectionService extends Service {
             // inactive
         }
         if (!isCharging && isWifiConnected && !isInGeofence) {
+            removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates();
             // active
         }
@@ -247,14 +238,12 @@ public class MobilityDetectionService extends Service {
             // inactive
         }
         if (!isCharging && !isWifiConnected && !isInGeofence) {
-            // special
+            removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates();
             // active
         }
 
-        Log.e(TAG, "isCharging: " + isCharging);
-        Log.e(TAG, "isWifiConnected: " + isWifiConnected);
-        Log.e(TAG, "isInGeofence: " + isInGeofence);
+        Log.e(TAG, "isCharging: " + isCharging + ", isWifiConnected: " + isWifiConnected + ", isInGeofence: " + isInGeofence);
     }
 
     private boolean checkLocationPermission() {
@@ -277,6 +266,7 @@ public class MobilityDetectionService extends Service {
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
+                Log.e(TAG, "Successfully requested activity updates");
                 // Toast.makeText(getApplicationContext(), "Successfully requested activity updates", Toast.LENGTH_SHORT).show();
             }
         });
@@ -284,6 +274,7 @@ public class MobilityDetectionService extends Service {
         task.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, "Requesting activity updates failed to start");
                 // Toast.makeText(getApplicationContext(), "Requesting activity updates failed to start", Toast.LENGTH_SHORT).show();
             }
         });
@@ -310,27 +301,59 @@ public class MobilityDetectionService extends Service {
     private GeofencingRequest getGeofencingRequest() {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
         builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_EXIT);
+        // todo: test
         builder.addGeofences(geofenceList);
+        // builder.addGeofence(geofence);
         return builder.build();
     }
 
-    private void addGeofence(DetectedLocation detectedLocation) {
+    private void addGeofence(DetectedLocation detectedLocation, long radius, int loiteringDelay, String caller) {
+        Log.e(TAG, "addGeofence() called from " + caller);
+
+        Log.e(TAG, "ADDED GEOFENCE KEY: " + detectedLocation.getTimestamp());
+
+        Intent in = new Intent(Actions.GEOFENCE_ADDED_ACTION);
+        in.putExtra("geofenceKey", detectedLocation.getTimestamp());
+        sendBroadcast(in, null);
+
         geofenceList.add(new Geofence.Builder()
                 .setRequestId(detectedLocation.getTimestamp())
-                .setCircularRegion(detectedLocation.getLatitude(), detectedLocation.getLongitude(), 50L)
+                .setCircularRegion(detectedLocation.getLatitude(), detectedLocation.getLongitude(), radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setLoiteringDelay(1000 * 5)
+                .setLoiteringDelay(loiteringDelay)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build());
     }
 
-    private void removeGeofence(String key) {
-        for (int i = geofenceList.size() - 1; i >= 0; i--) {
-            if (geofenceList.get(i).getRequestId().equals(key)) {
-                Log.e(TAG, "removed");
-                geofenceList.remove(i);
+    private Geofence getGeofence(DetectedLocation detectedLocation, long radius, int loiteringDelay) {
+        Intent in = new Intent(Actions.GEOFENCE_ADDED_ACTION);
+        in.putExtra("geofenceKey", detectedLocation.getTimestamp());
+        sendBroadcast(in, null);
+
+        return new Geofence.Builder()
+                .setRequestId(detectedLocation.getTimestamp())
+                .setCircularRegion(detectedLocation.getLatitude(), detectedLocation.getLongitude(), radius)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setLoiteringDelay(loiteringDelay)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build();
+    }
+
+    private void removeGeofence(ArrayList<String> keys) {
+        /*ArrayList<String> keys = new ArrayList<>();
+        keys.add(key);*/
+        for (String key : keys) {
+            for (int i = geofenceList.size() - 1; i >= 0; i--) {
+                if (geofenceList.get(i).getRequestId().equals(key)) {
+                    Log.e(TAG, "REMOVED GEOFENCE KEY: " + key);
+                    geofenceList.remove(i);
+                }
             }
         }
+        Intent in = new Intent(Actions.GEOFENCE_REMOVED_ACTION);
+        in.putStringArrayListExtra("geofenceKey", keys);
+        sendBroadcast(in, null);
+        geofencingClient.removeGeofences(keys);
     }
 
     private void buildNotification() {
@@ -351,12 +374,14 @@ public class MobilityDetectionService extends Service {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
+                        Log.e(TAG, "Removed activity updates successfully");
                         // Toast.makeText(getApplicationContext(), "Removed activity updates successfully!", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "Failed to remove activity updates");
                         // Toast.makeText(getApplicationContext(), "Failed to remove activity updates!", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -365,62 +390,84 @@ public class MobilityDetectionService extends Service {
     private void handleGeofenceTransition(final Intent intent) {
         int geofenceTransition = intent.getIntExtra("geofenceTransition", -1);
         ArrayList<String> keys = intent.getStringArrayListExtra("keys");
-        for (String key : keys) {
-            Log.e(TAG, "key: " + key);
-        }
+
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
             Log.e(TAG, "GEOFENCE_TRANSITION_DWELL");
-            isInGeofence = true;
 
-            changeConfiguration();
+            isInGeofence = true;
         }
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
             Log.e(TAG, "GEOFENCE_TRANSITION_EXIT");
 
-            for (int i = keys.size() - 1; i >= 0; i--) {
+            /*for (int i = keys.size() - 1; i >= 0; i--) {
                 removeGeofence(keys.get(i));
-            }
+            }*/
+            removeGeofence(keys);
             isInGeofence = false;
-
-            changeConfiguration();
         }
+
+        changeConfiguration();
     }
 
     private void handleConnectivityChange(final Intent intent) {
-        Log.e(TAG, "CONNECTIVITY_ACTION");
+        final String HANDLER_NAME = "WIFI_CONNECTION_ACTION_LOCATION_LOOPER";
+        final long RADIUS = 50L;
+        // todo: test
+        final int LOITERING_DELAY = 1000 * 60 * 5;
+        // final int LOITERING_DELAY = 1000 * 5;
+
         int connectionType = intent.getIntExtra(ConnectivityManager.EXTRA_NETWORK_TYPE, -1);
 
         if (connectionType == ConnectivityManager.TYPE_WIFI) {
             ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo info = connectivityManager.getActiveNetworkInfo();
-            if (info != null && info.getType() == ConnectivityManager.TYPE_WIFI) {
-                if (info.isConnected()) {
-                    isWifiConnected = true;
-                    WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                    final String ssid = wifiInfo.getSSID();
+            if (info != null && info.isConnected()) {
+                Log.e(TAG, "CONNECTED_CONNECTIVITY_ACTION");
+                isWifiConnected = true;
+                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                final String ssid = wifiInfo.getSSID();
 
-                    if (!jsonManager.hasWifiLocation(ssid)) {
-                        if (checkLocationPermission()) {
-                            fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
-                                @Override
-                                public void onLocationResult(LocationResult locationResult) {
-                                    super.onLocationResult(locationResult);
-
-                                    if (locationResult != null) {
-                                        Location location = locationResult.getLastLocation();
-                                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
-                                        jsonManager.writeWifiLocation(ssid, detectedLocation);
-                                        jsonManager.saveJSONFile();
-                                    }
-                                    fusedLocationProviderClient.removeLocationUpdates(this);
-                                }
-                            }, new HandlerThread("WIFI_CONNECTION_ACTION_LOCATION_LOOPER").getLooper());
-                        }
+                if (jsonManager.hasWifiLocation(ssid)) {
+                    Double[] location = jsonManager.getWifiLocation(ssid);
+                    if (location[0] != null && location[1] != null) {
+                        DetectedLocation detectedLocation = new DetectedLocation();
+                        Log.e(TAG, "latitude: " + location[0] + ", longitude: " + location[1]);
+                        detectedLocation.setLatitude(location[0]);
+                        detectedLocation.setLatitude(location[1]);
+                        // todo: check if stationary
+                        // todo: check home or work wifi
+                        // todo: test
+                        addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION hasWifiLocation");
+                        requestGeofenceUpdates();
+                        // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, LOITERING_DELAY));
                     }
+                } else if (checkLocationPermission()) {
+                    fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
+                        @Override
+                        public void onLocationResult(LocationResult locationResult) {
+                            super.onLocationResult(locationResult);
+
+                            if (locationResult != null) {
+                                Location location = locationResult.getLastLocation();
+                                DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+
+                                // todo: check stationary wifi => on exit in max 5min => not stationary; on dwell 5min => stationary
+                                // todo: test
+                                addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION !hasWifiLocation");
+                                requestGeofenceUpdates();
+                                // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, LOITERING_DELAY));
+
+                                jsonManager.writeWifiLocation(ssid, detectedLocation);
+                                jsonManager.saveJSONFile();
+                            }
+                            fusedLocationProviderClient.removeLocationUpdates(this);
+                        }
+                    }, new HandlerThread(HANDLER_NAME).getLooper());
                 }
             }
         } else {
+            Log.e(TAG, "DISCONNECTED_CONNECTIVITY_ACTION");
             isWifiConnected = false;
         }
 
@@ -431,107 +478,109 @@ public class MobilityDetectionService extends Service {
         sendBroadcast(i, null);
     }
 
-    private void handlePowerChange(final Intent intent) {
-        Log.e(TAG, "ACTION_POWER_CONNECTED || ACTION_POWER_DISCONNECTED");
-        int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+    private void handlePowerConnectionChange(final Intent intent) {
+        final String HANDLER_NAME = "ACTION_POWER_CONNECTED_LOCATION_LOOPER";
+        final long RADIUS = 50L;
+        // todo: test
+        final int LOITERING_DELAY = 1000 * 60 * 5;
+        // final int LOITERING_DELAY = 1000 * 5;
 
-        int chargePlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
-        boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
+        String action = intent.getAction();
 
-        this.isCharging = isCharging;
-        changeConfiguration();
+        if (action.equals(Intent.ACTION_POWER_CONNECTED) && checkLocationPermission()) {
+            Log.e(TAG, "ACTION_POWER_CONNECTED");
+
+            fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    super.onLocationResult(locationResult);
+
+                    if (locationResult != null) {
+                        Location location = locationResult.getLastLocation();
+                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+
+                        // todo: test
+                        addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "ACTION_POWER_CONNECTED");
+                        requestGeofenceUpdates();
+                        // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, LOITERING_DELAY));
+
+                        isCharging = true;
+                        changeConfiguration();
+                    }
+                    fusedLocationProviderClient.removeLocationUpdates(this);
+                }
+            }, new HandlerThread(HANDLER_NAME).getLooper());
+        }
+
+        if (action.equals(Intent.ACTION_POWER_DISCONNECTED)) {
+            Log.e(TAG, "ACTION_POWER_DISCONNECTED");
+            isCharging = false;
+            changeConfiguration();
+        }
 
         Intent i = new Intent(Actions.POWER_CONNECTION_ACTION);
         i.putExtra("isCharging", isCharging);
-        i.putExtra("usbCharge", usbCharge);
-        i.putExtra("acCharge", acCharge);
         sendBroadcast(i, null);
     }
 
     private void handleActivityDetection(final Intent intent) {
         if (!receiverInProgress) {
             Log.e(TAG, Actions.ACTIVITY_DETECTED_ACTION);
-            /*if (checkLocationPermission()) {
+
+            final String HANDLER_NAME = "ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER";
+            final long RADIUS = 100L;
+            // todo: test
+            final long LOITERING_DELAY = 1000 * 60 * 5;
+            // final long LOITERING_DELAY = 1000 * 5;
+            long timeDifference;
+
+            DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+            final DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
+            String enteredActivityString = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
+
+            if (exitedActivity.getTimestamp() != null) {
+                timeDifference = Timestamp.getDifference(exitedActivity.getTimestamp(), detectedActivities.getTimestamp());
+            } else {
+                timeDifference = LOITERING_DELAY;
+            }
+
+            boolean activityChanged = !enteredActivityString.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivityString);
+            final boolean equalActivity = timeDifference > LOITERING_DELAY && exitedActivity.getProbableActivities().getActivity().equals(enteredActivityString);
+            final boolean stillActivity = exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL);
+
+            if ((activityChanged || equalActivity) && checkLocationPermission()) {
+                receiverInProgress = true;
+
                 fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
                     @Override
                     public void onLocationResult(LocationResult locationResult) {
                         super.onLocationResult(locationResult);
 
-                        DetectedActivities detectedActivities;
+                        DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
                         if (locationResult != null) {
                             Location location = locationResult.getLastLocation();
                             DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
-
-                            detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                             detectedActivities.setDetectedLocation(detectedLocation);
-                        } else {
-                            detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+
+                            if (equalActivity && stillActivity) {
+                                // todo: test
+                                addGeofence(detectedLocation, RADIUS, (int) LOITERING_DELAY, Actions.ACTIVITY_DETECTED_ACTION + " equalActivity && stillActivity");
+                                requestGeofenceUpdates();
+                                // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, (int) LOITERING_DELAY));
+                            }
                         }
                         jsonManager.writeActivityTransition(detectedActivities);
+                        jsonManager.saveJSONFile();
+
                         Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
                         i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
                         sendBroadcast(i, null);
 
                         fusedLocationProviderClient.removeLocationUpdates(this);
+                        receiverInProgress = false;
                     }
-                }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
-            }*/
-
-            DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-
-            final DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
-
-            String enteredActivity = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
-
-            long diff;
-            long dwellingTime = 1000 * 60 * 5;
-            if (exitedActivity.getTimestamp() != null) {
-                diff = Timestamp.getDifference(exitedActivity.getTimestamp(), detectedActivities.getTimestamp());
-            } else {
-                diff = dwellingTime;
-            }
-
-            boolean activityChanged = !enteredActivity.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivity);
-            final boolean equalActivity = diff > dwellingTime && exitedActivity.getProbableActivities().getActivity().equals(enteredActivity);
-
-            if (activityChanged || equalActivity) {
-                receiverInProgress = true;
-                if (checkLocationPermission()) {
-                    fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
-                        @Override
-                        public void onLocationResult(LocationResult locationResult) {
-                            super.onLocationResult(locationResult);
-
-                            DetectedActivities detectedActivities;
-
-                            if (locationResult != null) {
-                                Location location = locationResult.getLastLocation();
-                                DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
-
-                                if (equalActivity && exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
-                                    addGeofence(detectedLocation);
-                                    requestGeofenceUpdates();
-                                }
-
-                                detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                                detectedActivities.setDetectedLocation(detectedLocation);
-                            } else {
-                                detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-                            }
-                            jsonManager.writeActivityTransition(detectedActivities);
-                            jsonManager.saveJSONFile();
-                            Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
-                            i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
-                            sendBroadcast(i, null);
-
-                            fusedLocationProviderClient.removeLocationUpdates(this);
-                            receiverInProgress = false;
-                        }
-                    }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
-                }
+                }, new HandlerThread(HANDLER_NAME).getLooper());
             }
         }
     }
@@ -539,33 +588,29 @@ public class MobilityDetectionService extends Service {
     private void handleActivityValidation(final Intent intent) {
         Log.e(TAG, Actions.ACTIVITY_VALIDATED_ACTION);
 
+        final String HANDLER_NAME = "ACTIVITY_VALIDATED_ACTION_LOCATION_LOOPER";
+
+        final String validation = intent.getStringExtra("validation");
+        final DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+
         if (checkLocationPermission()) {
             fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
 
-                    String validation = intent.getStringExtra("validation");
-                    DetectedActivities detectedActivities;
-
                     if (locationResult != null) {
                         Location location = locationResult.getLastLocation();
                         DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
-
-                        detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                         detectedActivities.setDetectedLocation(detectedLocation);
-                    } else {
-                        detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                     }
 
                     jsonManager.writeValidation(validation, detectedActivities);
 
                     fusedLocationProviderClient.removeLocationUpdates(this);
                 }
-            }, new HandlerThread("ACTIVITY_VALIDATED_ACTION_LOCATION_LOOPER").getLooper());
+            }, new HandlerThread(HANDLER_NAME).getLooper());
         } else {
-            String validation = intent.getStringExtra("validation");
-            DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
             jsonManager.writeValidation(validation, detectedActivities);
         }
     }

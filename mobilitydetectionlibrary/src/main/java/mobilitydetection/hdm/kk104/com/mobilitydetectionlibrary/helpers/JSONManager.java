@@ -90,6 +90,17 @@ public class JSONManager {
         }
     }
 
+    public Double[] getWifiLocation(String ssid) {
+        Double[] location = new Double[2];
+        try {
+            location[0] = root.getJSONObject(DB_NAME).getJSONObject(WIFI).getJSONObject(ssid).getDouble("latitude");
+            location[1] = root.getJSONObject(DB_NAME).getJSONObject(WIFI).getJSONObject(ssid).getDouble("longitude");
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+        return location;
+    }
+
     public boolean hasWifiLocation(String ssid) {
         boolean hasSSID = false;
         try {

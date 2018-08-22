@@ -19,4 +19,8 @@ public interface MobilityDetectionListener {
     void onBatteryManagerChanged();
 
     void onWifiConnectionChanged();
+
+    void onGeofenceAdded(String key);
+
+    void onGeofenceRemoved(ArrayList<String> keys);
 }

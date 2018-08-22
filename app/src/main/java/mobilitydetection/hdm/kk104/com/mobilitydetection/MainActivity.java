@@ -35,6 +35,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
@@ -50,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_LOCATION = 100;
     private static final int REQUEST_CHECK_LOCATION_SETTINGS = 200;
 
+    private List<String> geofences;
+    private TextView geofenceList;
     private TextView activityList;
     private ListView activityListView;
     // private Button btnSend;
@@ -80,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mobilityDetection.stopMobilityDetection();
     }
 
     @Override
@@ -109,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initView() {
+        geofences = new ArrayList<>();
+        geofenceList = findViewById(R.id.geofence_list);
         activityList = findViewById(R.id.activity_list);
 
         /*spinner = findViewById(R.id.spinner);
@@ -231,10 +237,37 @@ public class MainActivity extends AppCompatActivity {
                     public void onWifiConnectionChanged() {
                         vibe.vibrate(500);
                     }
+
+                    @Override
+                    public void onGeofenceAdded(String key) {
+                        geofences.add(key);
+                        setText();
+                    }
+
+                    @Override
+                    public void onGeofenceRemoved(ArrayList<String> keys) {
+                        for (String key : keys) {
+                            for (int i = geofences.size() - 1; i >= 0; i--) {
+                                if (geofences.get(i).equals(key)) {
+                                    geofences.remove(i);
+                                }
+                            }
+                        }
+                        setText();
+                    }
                 })
                 .build();
 
         initiateLocationSettings();
+    }
+
+    private void setText() {
+        geofenceList.setText("");
+        String text = "";
+        for (String geofence : geofences) {
+            text += geofence + "\n";
+        }
+        geofenceList.setText(text);
     }
 
     private void initiateLocationSettings() {

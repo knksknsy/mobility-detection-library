@@ -33,7 +33,7 @@ public class DetectedLocation implements Parcelable {
     private DetectedAddress detectedAddress;
 
     public DetectedLocation() {
-
+        this.timestamp = generateTimestamp();
     }
 
     public DetectedLocation(Context context, Location location) {

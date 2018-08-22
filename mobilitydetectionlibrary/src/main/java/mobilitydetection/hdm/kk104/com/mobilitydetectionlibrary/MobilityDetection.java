@@ -47,6 +47,8 @@ public class MobilityDetection {
         filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
         filter.addAction(Actions.POWER_CONNECTION_ACTION);
         filter.addAction(Actions.WIFI_CONNECTION_ACTION);
+        filter.addAction(Actions.GEOFENCE_ADDED_ACTION);
+        filter.addAction(Actions.GEOFENCE_REMOVED_ACTION);
         return this;
     }
 
@@ -88,7 +90,6 @@ public class MobilityDetection {
                 }
             }
             if (action.equals(Actions.POWER_CONNECTION_ACTION)) {
-                Log.e(TAG, Actions.POWER_CONNECTION_ACTION);
                 intent.getBooleanExtra("usbCharge", false);
                 intent.getBooleanExtra("acCharge", false);
                 /*mobilityDetectionService.isCharging = intent.getBooleanExtra("isCharging", false);
@@ -98,11 +99,24 @@ public class MobilityDetection {
                 }
             }
             if (action.equals(Actions.WIFI_CONNECTION_ACTION)) {
-                Log.e(TAG, Actions.WIFI_CONNECTION_ACTION);
                 /*mobilityDetectionService.isWifiConnected = intent.getBooleanExtra("isWifi", false);
                 mobilityDetectionService.changeConfiguration();*/
                 if (listener != null) {
                     listener.onWifiConnectionChanged();
+                }
+            }
+            if (action.equals(Actions.GEOFENCE_ADDED_ACTION)) {
+                Log.e(TAG, Actions.GEOFENCE_ADDED_ACTION);
+                String key = intent.getStringExtra("geofenceKey");
+                if (listener != null) {
+                    listener.onGeofenceAdded(key);
+                }
+            }
+            if (action.equals(Actions.GEOFENCE_REMOVED_ACTION)) {
+                Log.e(TAG, Actions.GEOFENCE_REMOVED_ACTION);
+                ArrayList<String> keys = intent.getStringArrayListExtra("geofenceKey");
+                if (listener != null) {
+                    listener.onGeofenceRemoved(keys);
                 }
             }
         }

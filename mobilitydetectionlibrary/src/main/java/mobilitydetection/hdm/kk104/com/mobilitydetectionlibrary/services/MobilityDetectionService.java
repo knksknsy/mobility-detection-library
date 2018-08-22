@@ -45,6 +45,7 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONManager;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 
@@ -124,7 +125,8 @@ public class MobilityDetectionService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // removeActivityRecognitionUpdates();
+        removeActivityRecognitionUpdates();
+        geofenceList.removeAll(geofenceList);
         unregisterReceiver(receiver);
     }
 
@@ -480,7 +482,7 @@ public class MobilityDetectionService extends Service {
 
             DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
-            DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
+            final DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
 
             String enteredActivity = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
 
@@ -509,7 +511,7 @@ public class MobilityDetectionService extends Service {
                                 Location location = locationResult.getLastLocation();
                                 DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
 
-                                if (equalActivity) {
+                                if (equalActivity && exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
                                     addGeofence(detectedLocation);
                                     requestGeofenceUpdates();
                                 }

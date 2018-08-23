@@ -30,7 +30,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.4"
+        android:layout_weight="0.6"
         android:orientation="vertical">
 
         <ListView
@@ -42,14 +42,15 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.3"
+        android:layout_weight="0.1"
         android:orientation="vertical">
         <TextView
             android:id="@+id/geofence_list"
             android:layout_width="match_parent"
             android:layout_height="180dp"
             android:gravity="center_horizontal"
-            android:textSize="14sp"/>
+            android:scrollbars="vertical"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <LinearLayout

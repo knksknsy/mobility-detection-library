@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
@@ -51,11 +50,9 @@ public class MobilityDetectionService extends Service {
 
     private static final String TAG = MobilityDetectionService.class.getSimpleName();
 
-    private static final long INTERVAL_AR = 1000;
-    private static final long INTERVAL = 1000;
-    private static final long INTERVAL_LOCATION = 1000 * 60;
-
     public boolean receiverInProgress, isCharging, isWifiConnected, isInGeofence;
+
+    private IntentFilter filter = new IntentFilter();
 
     IBinder binder = new MobilityDetectionService.LocalBinder();
 
@@ -77,8 +74,6 @@ public class MobilityDetectionService extends Service {
     // private FusedLocationProviderClient fusedLocationProviderClientTracking;
     // private FenceClient fenceClient;
 
-    private IntentFilter filter = new IntentFilter();
-
     public MobilityDetectionService() {
     }
 
@@ -95,7 +90,6 @@ public class MobilityDetectionService extends Service {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         geofencingClient = LocationServices.getGeofencingClient(this);
         geofenceList = new ArrayList<>();
-        // geofenceStates = new HashMap<>();
     }
 
     @Override
@@ -117,8 +111,7 @@ public class MobilityDetectionService extends Service {
     public void onDestroy() {
         super.onDestroy();
         removeActivityRecognitionUpdates();
-        geofenceList.removeAll(geofenceList);
-        geofencingClient.removeGeofences(getGeofencePendingIntent());
+        removeAllGeofenceUpdates(getGeofencePendingIntent());
         unregisterReceiver(receiver);
     }
 
@@ -134,11 +127,6 @@ public class MobilityDetectionService extends Service {
             addFilterActions();
         }
         registerReceiver(receiver, filter);
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        return super.onUnbind(intent);
     }
 
     public class LocalBinder extends Binder {
@@ -174,219 +162,6 @@ public class MobilityDetectionService extends Service {
         }
     };
 
-    private void checkChargingStatus() {
-        BatteryManager batteryManager = (BatteryManager) getApplicationContext().getSystemService(Context.BATTERY_SERVICE);
-        isCharging = batteryManager.isCharging();
-        changeConfiguration();
-    }
-
-    private void loadTransitions() {
-        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
-        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
-        sendBroadcast(transitionsLoadedIntent, null);
-    }
-
-    public void changeConfiguration() {
-        /*if (!isInGeofence && checkLocationPermission()) {
-            fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
-                @Override
-                public void onLocationResult(LocationResult locationResult) {
-                    super.onLocationResult(locationResult);
-
-                    if (locationResult != null) {
-                        Location location = locationResult.getLastLocation();
-                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
-
-                        addGeofence(detectedLocation);
-                        requestGeofenceUpdates();
-                    }
-
-                    fusedLocationProviderClient.removeLocationUpdates(this);
-                }
-            }, new HandlerThread("ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER").getLooper());
-        }*/
-
-        if (isCharging && isWifiConnected && isInGeofence) {
-            removeActivityRecognitionUpdates();
-            // inactive
-        }
-        if (isCharging && isWifiConnected && !isInGeofence) {
-            removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates();
-            // active
-        }
-        if (isCharging && !isWifiConnected && isInGeofence) {
-            removeActivityRecognitionUpdates();
-            // inactive
-        }
-        if (isCharging && !isWifiConnected && !isInGeofence) {
-            removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates();
-            // active
-        }
-        if (!isCharging && isWifiConnected && isInGeofence) {
-            removeActivityRecognitionUpdates();
-            // inactive
-        }
-        if (!isCharging && isWifiConnected && !isInGeofence) {
-            removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates();
-            // active
-        }
-        if (!isCharging && !isWifiConnected && isInGeofence) {
-            removeActivityRecognitionUpdates();
-            // inactive
-        }
-        if (!isCharging && !isWifiConnected && !isInGeofence) {
-            removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates();
-            // active
-        }
-
-        Log.e(TAG, "isCharging: " + isCharging + ", isWifiConnected: " + isWifiConnected + ", isInGeofence: " + isInGeofence);
-    }
-
-    private boolean checkLocationPermission() {
-        if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-        return true;
-    }
-
-    public void saveData() {
-        Log.e(TAG, Actions.SAVE_DATA_ACTION);
-        jsonManager.saveJSONFile();
-    }
-
-    public void requestActivityRecognitionUpdates() {
-        Task<Void> task = activityRecognitionClient.requestActivityUpdates(INTERVAL_AR, getDetectedActivityPendingIntent());
-
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                Log.e(TAG, "Successfully requested activity updates");
-                // Toast.makeText(getApplicationContext(), "Successfully requested activity updates", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.e(TAG, "Requesting activity updates failed to start");
-                // Toast.makeText(getApplicationContext(), "Requesting activity updates failed to start", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void requestGeofenceUpdates() {
-        if (checkLocationPermission()) {
-            geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-
-                        }
-                    });
-        }
-    }
-
-    private GeofencingRequest getGeofencingRequest() {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_EXIT);
-        // todo: test
-        builder.addGeofences(geofenceList);
-        // builder.addGeofence(geofence);
-        return builder.build();
-    }
-
-    private void addGeofence(DetectedLocation detectedLocation, long radius, int loiteringDelay, String caller) {
-        Log.e(TAG, "addGeofence() called from " + caller);
-
-        Log.e(TAG, "ADDED GEOFENCE KEY: " + detectedLocation.getTimestamp());
-
-        Intent in = new Intent(Actions.GEOFENCE_ADDED_ACTION);
-        in.putExtra("geofenceKey", detectedLocation.getTimestamp());
-        sendBroadcast(in, null);
-
-        geofenceList.add(new Geofence.Builder()
-                .setRequestId(detectedLocation.getTimestamp())
-                .setCircularRegion(detectedLocation.getLatitude(), detectedLocation.getLongitude(), radius)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setLoiteringDelay(loiteringDelay)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
-                .build());
-    }
-
-    private Geofence getGeofence(DetectedLocation detectedLocation, long radius, int loiteringDelay) {
-        Intent in = new Intent(Actions.GEOFENCE_ADDED_ACTION);
-        in.putExtra("geofenceKey", detectedLocation.getTimestamp());
-        sendBroadcast(in, null);
-
-        return new Geofence.Builder()
-                .setRequestId(detectedLocation.getTimestamp())
-                .setCircularRegion(detectedLocation.getLatitude(), detectedLocation.getLongitude(), radius)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setLoiteringDelay(loiteringDelay)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
-                .build();
-    }
-
-    private void removeGeofence(ArrayList<String> keys) {
-        /*ArrayList<String> keys = new ArrayList<>();
-        keys.add(key);*/
-        for (String key : keys) {
-            for (int i = geofenceList.size() - 1; i >= 0; i--) {
-                if (geofenceList.get(i).getRequestId().equals(key)) {
-                    Log.e(TAG, "REMOVED GEOFENCE KEY: " + key);
-                    geofenceList.remove(i);
-                }
-            }
-        }
-        Intent in = new Intent(Actions.GEOFENCE_REMOVED_ACTION);
-        in.putStringArrayListExtra("geofenceKey", keys);
-        sendBroadcast(in, null);
-        geofencingClient.removeGeofences(keys);
-    }
-
-    private void buildNotification() {
-        Intent intent = new Intent(Actions.STOP_MOBILITY_DETECTION_ACTION);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 4, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        NotificationCompat.Builder notification = new NotificationCompat.Builder(getApplicationContext(), getString(R.string.notification_id))
-                .setContentTitle(getText(R.string.app_name))
-                .setContentText(getText(R.string.tracking_enabled_notify))
-                .setOngoing(true)
-                .setContentIntent(pendingIntent)
-                .setSmallIcon(R.drawable.ic_stat_name);
-        startForeground(1, notification.build());
-    }
-
-    public void removeActivityRecognitionUpdates() {
-        activityRecognitionClient.removeActivityUpdates(getDetectedActivityPendingIntent())
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.e(TAG, "Removed activity updates successfully");
-                        // Toast.makeText(getApplicationContext(), "Removed activity updates successfully!", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Failed to remove activity updates");
-                        // Toast.makeText(getApplicationContext(), "Failed to remove activity updates!", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
     private void handleGeofenceTransition(final Intent intent) {
         int geofenceTransition = intent.getIntExtra("geofenceTransition", -1);
         ArrayList<String> keys = intent.getStringArrayListExtra("keys");
@@ -399,10 +174,7 @@ public class MobilityDetectionService extends Service {
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
             Log.e(TAG, "GEOFENCE_TRANSITION_EXIT");
 
-            /*for (int i = keys.size() - 1; i >= 0; i--) {
-                removeGeofence(keys.get(i));
-            }*/
-            removeGeofence(keys);
+            removeGeofenceUpdates(keys);
             isInGeofence = false;
         }
 
@@ -413,8 +185,8 @@ public class MobilityDetectionService extends Service {
         final String HANDLER_NAME = "WIFI_CONNECTION_ACTION_LOCATION_LOOPER";
         final long RADIUS = 50L;
         // todo: test
-        final int LOITERING_DELAY = 1000 * 60 * 5;
-        // final int LOITERING_DELAY = 1000 * 5;
+        // final int LOITERING_DELAY = 1000 * 60 * 5;
+        final int LOITERING_DELAY = 1000 * 5;
 
         int connectionType = intent.getIntExtra(ConnectivityManager.EXTRA_NETWORK_TYPE, -1);
 
@@ -437,10 +209,8 @@ public class MobilityDetectionService extends Service {
                         detectedLocation.setLatitude(location[1]);
                         // todo: check if stationary
                         // todo: check home or work wifi
-                        // todo: test
                         addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION hasWifiLocation");
                         requestGeofenceUpdates();
-                        // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, LOITERING_DELAY));
                     }
                 } else if (checkLocationPermission()) {
                     fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
@@ -449,14 +219,11 @@ public class MobilityDetectionService extends Service {
                             super.onLocationResult(locationResult);
 
                             if (locationResult != null) {
-                                Location location = locationResult.getLastLocation();
-                                DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+                                DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
 
                                 // todo: check stationary wifi => on exit in max 5min => not stationary; on dwell 5min => stationary
-                                // todo: test
                                 addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION !hasWifiLocation");
                                 requestGeofenceUpdates();
-                                // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, LOITERING_DELAY));
 
                                 jsonManager.writeWifiLocation(ssid, detectedLocation);
                                 jsonManager.saveJSONFile();
@@ -482,8 +249,8 @@ public class MobilityDetectionService extends Service {
         final String HANDLER_NAME = "ACTION_POWER_CONNECTED_LOCATION_LOOPER";
         final long RADIUS = 50L;
         // todo: test
-        final int LOITERING_DELAY = 1000 * 60 * 5;
-        // final int LOITERING_DELAY = 1000 * 5;
+        // final int LOITERING_DELAY = 1000 * 60 * 5;
+        final int LOITERING_DELAY = 1000 * 5;
 
         String action = intent.getAction();
 
@@ -496,13 +263,10 @@ public class MobilityDetectionService extends Service {
                     super.onLocationResult(locationResult);
 
                     if (locationResult != null) {
-                        Location location = locationResult.getLastLocation();
-                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
 
-                        // todo: test
                         addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "ACTION_POWER_CONNECTED");
                         requestGeofenceUpdates();
-                        // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, LOITERING_DELAY));
 
                         isCharging = true;
                         changeConfiguration();
@@ -530,8 +294,8 @@ public class MobilityDetectionService extends Service {
             final String HANDLER_NAME = "ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER";
             final long RADIUS = 100L;
             // todo: test
-            final long LOITERING_DELAY = 1000 * 60 * 5;
-            // final long LOITERING_DELAY = 1000 * 5;
+            // final long LOITERING_DELAY = 1000 * 60 * 5;
+            final long LOITERING_DELAY = 1000 * 5;
             long timeDifference;
 
             DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
@@ -559,15 +323,12 @@ public class MobilityDetectionService extends Service {
                         DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
 
                         if (locationResult != null) {
-                            Location location = locationResult.getLastLocation();
-                            DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+                            DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
                             detectedActivities.setDetectedLocation(detectedLocation);
 
                             if (equalActivity && stillActivity) {
-                                // todo: test
                                 addGeofence(detectedLocation, RADIUS, (int) LOITERING_DELAY, Actions.ACTIVITY_DETECTED_ACTION + " equalActivity && stillActivity");
                                 requestGeofenceUpdates();
-                                // requestGeofenceUpdates(getGeofence(detectedLocation, RADIUS, (int) LOITERING_DELAY));
                             }
                         }
                         jsonManager.writeActivityTransition(detectedActivities);
@@ -600,8 +361,7 @@ public class MobilityDetectionService extends Service {
                     super.onLocationResult(locationResult);
 
                     if (locationResult != null) {
-                        Location location = locationResult.getLastLocation();
-                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), location);
+                        DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
                         detectedActivities.setDetectedLocation(detectedLocation);
                     }
 
@@ -615,6 +375,88 @@ public class MobilityDetectionService extends Service {
         }
     }
 
+    public void changeConfiguration() {
+        Log.e(TAG, "isCharging: " + isCharging + ", isWifiConnected: " + isWifiConnected + ", isInGeofence: " + isInGeofence);
+
+        if (isCharging && isWifiConnected && !isInGeofence) {
+            removeActivityRecognitionUpdates();
+            requestActivityRecognitionUpdates(1000);
+        }
+        if (isCharging && !isWifiConnected && !isInGeofence) {
+            removeActivityRecognitionUpdates();
+            requestActivityRecognitionUpdates(1000);
+        }
+        if (!isCharging && isWifiConnected && !isInGeofence) {
+            removeActivityRecognitionUpdates();
+            requestActivityRecognitionUpdates(1000 * 20);
+        }
+        if (!isCharging && !isWifiConnected && !isInGeofence) {
+            removeActivityRecognitionUpdates();
+            requestActivityRecognitionUpdates(1000 * 10);
+        }
+
+        if (isCharging && isWifiConnected && isInGeofence) {
+            removeAllGeofenceUpdates(geofencingPendingIntent);
+            isInGeofence = false;
+            removeActivityRecognitionUpdates();
+        }
+        if (isCharging && !isWifiConnected && isInGeofence) {
+            removeActivityRecognitionUpdates();
+        }
+        if (!isCharging && isWifiConnected && isInGeofence) {
+            removeAllGeofenceUpdates(geofencingPendingIntent);
+            isInGeofence = false;
+            removeActivityRecognitionUpdates();
+            requestActivityRecognitionUpdates(1000 * 60 * 6);
+        }
+        if (!isCharging && !isWifiConnected && isInGeofence) {
+            removeAllGeofenceUpdates(geofencingPendingIntent);
+            isInGeofence = false;
+            removeActivityRecognitionUpdates();
+            requestActivityRecognitionUpdates(1000 * 60 * 3);
+        }
+    }
+
+    private boolean checkLocationPermission() {
+        if (Build.VERSION.SDK_INT >= 23 &&
+                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+        return true;
+    }
+
+    public void saveData() {
+        Log.e(TAG, Actions.SAVE_DATA_ACTION);
+        jsonManager.saveJSONFile();
+    }
+
+
+    private void loadTransitions() {
+        Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
+        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
+        sendBroadcast(transitionsLoadedIntent, null);
+    }
+
+    private void checkChargingStatus() {
+        BatteryManager batteryManager = (BatteryManager) getApplicationContext().getSystemService(Context.BATTERY_SERVICE);
+        isCharging = batteryManager.isCharging();
+        changeConfiguration();
+    }
+
+    private void buildNotification() {
+        Intent intent = new Intent(Actions.STOP_MOBILITY_DETECTION_ACTION);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 4, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(getApplicationContext(), getString(R.string.notification_id))
+                .setContentTitle(getText(R.string.app_name))
+                .setContentText(getText(R.string.tracking_enabled_notify))
+                .setOngoing(true)
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ic_stat_name);
+        startForeground(1, notification.build());
+    }
+
     private void addFilterActions() {
         if (filter != null) {
             filter.addAction(Actions.LOCATION_ACTION);
@@ -626,6 +468,132 @@ public class MobilityDetectionService extends Service {
             filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             filter.addAction(Actions.GEOFENCE_TRANSITION_ACTION);
         }
+    }
+
+    public void requestActivityRecognitionUpdates(final long INTERVAL) {
+        Task<Void> task = activityRecognitionClient.requestActivityUpdates(INTERVAL, getDetectedActivityPendingIntent());
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.e(TAG, "Successfully requested activity updates");
+                // Toast.makeText(getApplicationContext(), "Successfully requested activity updates", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, "Requesting activity updates failed to start");
+                // Toast.makeText(getApplicationContext(), "Requesting activity updates failed to start", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public void removeActivityRecognitionUpdates() {
+        activityRecognitionClient.removeActivityUpdates(getDetectedActivityPendingIntent())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.e(TAG, "Removed activity updates successfully");
+                        // Toast.makeText(getApplicationContext(), "Removed activity updates successfully!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "Failed to remove activity updates");
+                        // Toast.makeText(getApplicationContext(), "Failed to remove activity updates!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void requestGeofenceUpdates() {
+        if (checkLocationPermission()) {
+            geofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+
+                        }
+                    });
+        }
+    }
+
+    private void removeGeofenceUpdates(ArrayList<String> keys) {
+        for (String key : keys) {
+            for (int i = geofenceList.size() - 1; i >= 0; i--) {
+                if (geofenceList.get(i).getRequestId().equals(key)) {
+                    Log.e(TAG, "REMOVED GEOFENCE KEY: " + key);
+                    geofenceList.remove(i);
+                }
+            }
+        }
+        Intent in = new Intent(Actions.GEOFENCE_REMOVED_ACTION);
+        in.putStringArrayListExtra("geofenceKey", keys);
+        sendBroadcast(in, null);
+        geofencingClient.removeGeofences(keys);
+    }
+
+    private void removeAllGeofenceUpdates(PendingIntent pendingIntent) {
+        for (Geofence geofence : geofenceList) {
+            Log.e(TAG, "REMOVED GEOFENCE KEY: " + geofence.getRequestId());
+        }
+
+        geofenceList.clear();
+
+        Intent in = new Intent(Actions.GEOFENCES_REMOVED_ACTION);
+        sendBroadcast(in, null);
+        geofencingClient.removeGeofences(pendingIntent);
+    }
+
+    private void addGeofence(DetectedLocation detectedLocation, long radius, int loiteringDelay, String caller) {
+        Log.e(TAG, "addGeofence() called from " + caller);
+
+        Log.e(TAG, "ADDED GEOFENCE KEY: " + detectedLocation.getTimestamp());
+
+        if (geofenceList.size() > 0) {
+            List<String> keys = new ArrayList<>();
+            for (Geofence geofence : geofenceList) {
+                keys.add(geofence.getRequestId());
+            }
+            geofencingClient.removeGeofences(keys);
+        }
+
+        Intent in = new Intent(Actions.GEOFENCE_ADDED_ACTION);
+        in.putExtra("geofenceKey", detectedLocation.getTimestamp());
+        sendBroadcast(in, null);
+
+        geofenceList.add(new Geofence.Builder()
+                .setRequestId(detectedLocation.getTimestamp())
+                .setCircularRegion(detectedLocation.getLatitude(), detectedLocation.getLongitude(), radius)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setLoiteringDelay(loiteringDelay)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build());
+    }
+
+    private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_EXIT);
+        builder.addGeofences(geofenceList);
+        return builder.build();
+    }
+
+    private LocationRequest getLocationRequest() {
+        LocationRequest locationRequest = new LocationRequest()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(1000)
+                .setFastestInterval(1000)
+                .setMaxWaitTime(5000);
+
+        return locationRequest;
     }
 
     private PendingIntent getDetectedActivityPendingIntent() {
@@ -671,16 +639,6 @@ public class MobilityDetectionService extends Service {
         Intent intent = new Intent(this, ActivityTransitionIntentService.class);
         transitionPendingIntent = PendingIntent.getService(this, 3, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         return transitionPendingIntent;
-    }
-
-    private LocationRequest getLocationRequest() {
-        LocationRequest locationRequest = new LocationRequest()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(1000)
-                .setFastestInterval(1000)
-                .setMaxWaitTime(5000);
-
-        return locationRequest;
     }
 
     /*public void validateActivity(String activity) {

@@ -16,11 +16,13 @@ public interface MobilityDetectionListener {
 
     void onStopService();
 
-    void onBatteryManagerChanged();
+    void onPowerConnectionChanged(boolean hasPower);
 
-    void onWifiConnectionChanged();
+    void onWifiConnectionChanged(boolean hasWifiConnection);
 
     void onGeofenceAdded(String key);
 
     void onGeofenceRemoved(ArrayList<String> keys);
+
+    void onGeofencesRemoved();
 }

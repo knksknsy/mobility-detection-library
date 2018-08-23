@@ -16,6 +16,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -55,10 +56,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView geofenceList;
     private TextView activityList;
     private ListView activityListView;
-    // private Button btnSend;
     private Button btnSave, btnDelete;
-    // private Spinner spinner;
     private Vibrator vibe;
+
+    // private Button btnSend;
+    // private Spinner spinner;
 
     private ArrayList<DetectedActivities> activities;
     private ActivityListAdapter adapter;
@@ -97,16 +99,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = getString(R.string.notification_channel);
             String description = getString(R.string.notification_description);
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(getString(R.string.notification_id), name, importance);
             channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
@@ -115,12 +113,8 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         geofences = new ArrayList<>();
         geofenceList = findViewById(R.id.geofence_list);
+        geofenceList.setMovementMethod(new ScrollingMovementMethod());
         activityList = findViewById(R.id.activity_list);
-
-        /*spinner = findViewById(R.id.spinner);
-        String[] activityItems = Activities.activities;
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, activityItems);
-        spinner.setAdapter(spinnerAdapter);*/
 
         activities = new ArrayList<>();
         activityListView = findViewById(R.id.activity_list_view);
@@ -143,8 +137,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // btnSend = findViewById(R.id.btn_send);
-        /*btnSend.setOnClickListener(new View.OnClickListener() {
+        /*spinner = findViewById(R.id.spinner);
+        String[] activityItems = Activities.activities;
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, activityItems);
+        spinner.setAdapter(spinnerAdapter);*/
+
+        /*btnSend = findViewById(R.id.btn_send);
+        btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 vibe.vibrate(100);
@@ -229,13 +228,21 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onBatteryManagerChanged() {
-                        vibe.vibrate(500);
+                    public void onPowerConnectionChanged(boolean hasPowerConnection) {
+                        if (hasPowerConnection) {
+                            vibe.vibrate(1000);
+                        } else {
+                            vibe.vibrate(500);
+                        }
                     }
 
                     @Override
-                    public void onWifiConnectionChanged() {
-                        vibe.vibrate(500);
+                    public void onWifiConnectionChanged(boolean hasWifiConnection) {
+                        if (hasWifiConnection) {
+                            vibe.vibrate(1000);
+                        } else {
+                            vibe.vibrate(500);
+                        }
                     }
 
                     @Override
@@ -253,6 +260,12 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         }
+                        setText();
+                    }
+
+                    @Override
+                    public void onGeofencesRemoved() {
+                        geofences.clear();
                         setText();
                     }
                 })

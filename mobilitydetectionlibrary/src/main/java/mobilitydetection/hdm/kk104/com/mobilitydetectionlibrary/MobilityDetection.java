@@ -49,6 +49,7 @@ public class MobilityDetection {
         filter.addAction(Actions.WIFI_CONNECTION_ACTION);
         filter.addAction(Actions.GEOFENCE_ADDED_ACTION);
         filter.addAction(Actions.GEOFENCE_REMOVED_ACTION);
+        filter.addAction(Actions.GEOFENCES_REMOVED_ACTION);
         return this;
     }
 
@@ -90,19 +91,15 @@ public class MobilityDetection {
                 }
             }
             if (action.equals(Actions.POWER_CONNECTION_ACTION)) {
-                intent.getBooleanExtra("usbCharge", false);
-                intent.getBooleanExtra("acCharge", false);
-                /*mobilityDetectionService.isCharging = intent.getBooleanExtra("isCharging", false);
-                mobilityDetectionService.changeConfiguration();*/
+                boolean hasPowerConnection = intent.getBooleanExtra("isCharging", false);
                 if (listener != null) {
-                    listener.onBatteryManagerChanged();
+                    listener.onPowerConnectionChanged(hasPowerConnection);
                 }
             }
             if (action.equals(Actions.WIFI_CONNECTION_ACTION)) {
-                /*mobilityDetectionService.isWifiConnected = intent.getBooleanExtra("isWifi", false);
-                mobilityDetectionService.changeConfiguration();*/
+                boolean hasWifiConnection = intent.getBooleanExtra("isWifi", false);
                 if (listener != null) {
-                    listener.onWifiConnectionChanged();
+                    listener.onWifiConnectionChanged(hasWifiConnection);
                 }
             }
             if (action.equals(Actions.GEOFENCE_ADDED_ACTION)) {
@@ -117,6 +114,12 @@ public class MobilityDetection {
                 ArrayList<String> keys = intent.getStringArrayListExtra("geofenceKey");
                 if (listener != null) {
                     listener.onGeofenceRemoved(keys);
+                }
+            }
+            if (action.equals(Actions.GEOFENCES_REMOVED_ACTION)) {
+                Log.e(TAG, Actions.GEOFENCES_REMOVED_ACTION);
+                if (listener != null) {
+                    listener.onGeofencesRemoved();
                 }
             }
         }

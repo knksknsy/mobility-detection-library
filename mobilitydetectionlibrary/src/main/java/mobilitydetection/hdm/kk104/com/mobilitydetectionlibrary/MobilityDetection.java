@@ -151,9 +151,11 @@ public class MobilityDetection {
         if (context != null) {
             mobilityDetectionService.saveData();
             Intent intent = new Intent(context, MobilityDetectionService.class);
+            if (serviceBound) {
+                context.unbindService(serviceConnection);
+                context.unregisterReceiver(listenerReceiver);
+            }
             context.stopService(intent);
-            context.unbindService(serviceConnection);
-            context.unregisterReceiver(listenerReceiver);
             serviceBound = false;
         } else {
             throw new NullPointerException("Context is not defined.");

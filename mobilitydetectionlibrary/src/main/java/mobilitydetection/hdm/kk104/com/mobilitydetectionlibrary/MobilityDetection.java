@@ -28,6 +28,15 @@ public class MobilityDetection {
     private Context context;
     private MobilityDetectionListener listener;
 
+    private long interval;
+    private long fastInterval;
+    private long mediumInterval;
+    private long slowInterval;
+    private int loiteringDelayWifiConnectionChanged;
+    private int loiteringDelayWifiConnectionTime;
+    private int loiteringDelayPowerConnectionChanged;
+    private int loiteringDelayActivity;
+
     public MobilityDetectionService mobilityDetectionService;
     private boolean serviceBound = false;
 
@@ -36,8 +45,48 @@ public class MobilityDetection {
     private MobilityDetection() {
     }
 
-    public static MobilityDetection getInstance() {
+    private static MobilityDetection getInstance() {
         return mobilityDetection;
+    }
+
+    public MobilityDetection setInterval(long interval) {
+        this.interval = interval;
+        return this;
+    }
+
+    public MobilityDetection setFastInterval(long fastInterval) {
+        this.fastInterval = fastInterval;
+        return this;
+    }
+
+    public MobilityDetection setMediumInterval(long mediumInterval) {
+        this.mediumInterval = mediumInterval;
+        return this;
+    }
+
+    public MobilityDetection setSlowInterval(long slowInterval) {
+        this.slowInterval = slowInterval;
+        return this;
+    }
+
+    public MobilityDetection setLoiteringDelayWifiConnectionChanged(int loiteringDelayWifiConnectionChanged) {
+        this.loiteringDelayWifiConnectionChanged = loiteringDelayWifiConnectionChanged;
+        return this;
+    }
+
+    public MobilityDetection setLoiteringDelayWifiConnectionTime(int loiteringDelayWifiConnectionTime) {
+        this.loiteringDelayWifiConnectionTime = loiteringDelayWifiConnectionTime;
+        return this;
+    }
+
+    public MobilityDetection setLoiteringDelayPowerConnectionChanged(int loiteringDelayPowerConnectionChanged) {
+        this.loiteringDelayPowerConnectionChanged = loiteringDelayPowerConnectionChanged;
+        return this;
+    }
+
+    public MobilityDetection setLoiteringDelayActivity(int loiteringDelayActivity) {
+        this.loiteringDelayActivity = loiteringDelayActivity;
+        return this;
     }
 
     private MobilityDetection setContext(Context context) {
@@ -147,6 +196,14 @@ public class MobilityDetection {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MobilityDetectionService.LocalBinder binder = (MobilityDetectionService.LocalBinder) service;
             mobilityDetectionService = binder.getServiceInstance();
+            mobilityDetectionService.interval = interval;
+            mobilityDetectionService.fastInterval = fastInterval;
+            mobilityDetectionService.mediumInterval = mediumInterval;
+            mobilityDetectionService.slowInterval = slowInterval;
+            mobilityDetectionService.loiteringDelayWifiConnectionChanged = loiteringDelayWifiConnectionChanged;
+            mobilityDetectionService.loiteringDelayWifiConnectionTime = loiteringDelayWifiConnectionTime;
+            mobilityDetectionService.loiteringDelayPowerConnectionChanged = loiteringDelayPowerConnectionChanged;
+            mobilityDetectionService.loiteringDelayActivity = loiteringDelayActivity;
             serviceBound = true;
         }
 
@@ -184,6 +241,14 @@ public class MobilityDetection {
 
     public static class Builder {
         private Context context;
+        private long interval = 1000 * 10;
+        private long fastInterval = 1000;
+        private long mediumInterval = 1000 * 60 * 3;
+        private long slowInterval = 1000 * 60 * 6;
+        private int loiteringDelayWifiConnectionChanged = 1000 * 60 * 5;
+        private int loiteringDelayWifiConnectionTime = 1000 * 60 * 60 * 2;
+        private int loiteringDelayPowerConnectionChanged = 1000 * 60 * 5;
+        private int loiteringDelayActivity = 1000 * 60 * 15;
         private MobilityDetectionListener listener;
 
         public Builder() {
@@ -195,13 +260,63 @@ public class MobilityDetection {
             return this;
         }
 
+        public Builder setInterval(long interval) {
+            this.interval = interval;
+            return this;
+        }
+
+        public Builder setFastInterval(long fastInterval) {
+            this.fastInterval = fastInterval;
+            return this;
+        }
+
+        public Builder setMediumInterval(long mediumInterval) {
+            this.mediumInterval = mediumInterval;
+            return this;
+        }
+
+        public Builder setSlowInterval(long slowInterval) {
+            this.slowInterval = slowInterval;
+            return this;
+        }
+
+        public Builder setLoiteringDelayWifiConnectionChanged(int loiteringDelayWifiConnectionChanged) {
+            this.loiteringDelayWifiConnectionChanged = loiteringDelayWifiConnectionChanged;
+            return this;
+        }
+
+        public Builder setLoiteringDelayWifiConnectionTime(int loiteringDelayWifiConnectionTime) {
+            this.loiteringDelayWifiConnectionTime = loiteringDelayWifiConnectionTime;
+            return this;
+        }
+
+        public Builder setLoiteringDelayPowerConnectionChanged(int loiteringDelayPowerConnectionChanged) {
+            this.loiteringDelayPowerConnectionChanged = loiteringDelayPowerConnectionChanged;
+            return this;
+        }
+
+        public Builder setLoiteringDelayActivity(int loiteringDelayActivity) {
+            this.loiteringDelayActivity = loiteringDelayActivity;
+            return this;
+        }
+
         public Builder setListener(MobilityDetectionListener listener) {
             this.listener = listener;
             return this;
         }
 
         public MobilityDetection build() {
-            return MobilityDetection.getInstance().setContext(context).setListener(listener);
+            return MobilityDetection.getInstance()
+                    .setContext(context)
+                    .setInterval(interval)
+                    .setFastInterval(fastInterval)
+                    .setMediumInterval(mediumInterval)
+                    .setSlowInterval(slowInterval)
+                    .setLoiteringDelayWifiConnectionChanged(loiteringDelayWifiConnectionChanged)
+                    .setLoiteringDelayWifiConnectionTime(loiteringDelayWifiConnectionTime)
+                    .setLoiteringDelayPowerConnectionChanged(loiteringDelayPowerConnectionChanged)
+                    .setLoiteringDelayActivity(loiteringDelayActivity)
+                    .setListener(listener);
         }
     }
 

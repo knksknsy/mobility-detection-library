@@ -72,6 +72,15 @@ public class MobilityDetectionService extends Service {
     private PendingIntent transitionPendingIntent;
     private PendingIntent fencePendingIntent;
 
+    public long interval;
+    public long fastInterval;
+    public long mediumInterval;
+    public long slowInterval;
+    public int loiteringDelayWifiConnectionChanged;
+    public int loiteringDelayWifiConnectionTime;
+    public int loiteringDelayPowerConnectionChanged;
+    public int loiteringDelayActivity;
+
     // private LocationRequest locationRequestTracking;
     // private FusedLocationProviderClient fusedLocationProviderClientTracking;
     // private FenceClient fenceClient;
@@ -188,7 +197,7 @@ public class MobilityDetectionService extends Service {
         final String HANDLER_NAME = "WIFI_CONNECTION_ACTION_LOCATION_LOOPER";
         final long RADIUS = 50L;
         // todo: test
-        // final int LOITERING_DELAY = 1000 * 60 * 5;
+        // final int LOITERING_DELAY = loiteringDelayWifiConnectionChanged;
         final int LOITERING_DELAY = 1000 * 5;
 
         int connectionType = intent.getIntExtra(ConnectivityManager.EXTRA_NETWORK_TYPE, -1);
@@ -247,7 +256,7 @@ public class MobilityDetectionService extends Service {
                 String connectionTimestamp = dataManager.getWifiConnectionTime(ssid);
                 if (connectionTimestamp != null) {
                     long totalConnectionTime = Timestamp.getDifference(connectionTimestamp, disconnectionTimestamp);
-                    if (totalConnectionTime >= 1000 * 60 * 60 * 2) {
+                    if (totalConnectionTime >= loiteringDelayWifiConnectionTime) {
                         dataManager.updateWifiConnectionCount(ssid);
                     }
                 }
@@ -266,7 +275,7 @@ public class MobilityDetectionService extends Service {
         final String HANDLER_NAME = "ACTION_POWER_CONNECTED_LOCATION_LOOPER";
         final long RADIUS = 50L;
         // todo: test
-        // final int LOITERING_DELAY = 1000 * 60 * 5;
+        // final int LOITERING_DELAY = loiteringDelayPowerConnectionChanged;
         final int LOITERING_DELAY = 1000 * 5;
 
         String action = intent.getAction();
@@ -311,8 +320,8 @@ public class MobilityDetectionService extends Service {
             final String HANDLER_NAME = "ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER";
             final long RADIUS = 100L;
             // todo: test
-            // final long LOITERING_DELAY = 1000 * 60 * 15;
-            final long LOITERING_DELAY = 1000 * 5;
+            // final int LOITERING_DELAY = loiteringDelayActivity;
+            final int LOITERING_DELAY = 1000 * 5;
             long timeDifference;
 
             DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
@@ -344,7 +353,7 @@ public class MobilityDetectionService extends Service {
                             detectedActivities.setDetectedLocation(detectedLocation);
 
                             if (continuousActivity && stillActivity) {
-                                addGeofence(detectedLocation, RADIUS, (int) LOITERING_DELAY, Actions.ACTIVITY_DETECTED_ACTION + " equalActivity && stillActivity");
+                                addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, Actions.ACTIVITY_DETECTED_ACTION + " equalActivity && stillActivity");
                                 requestGeofenceUpdates();
 
                                 endRoute();
@@ -402,29 +411,41 @@ public class MobilityDetectionService extends Service {
         }
     }
 
+    public boolean isStationaryWifi() {
+        String ssid = dataManager.getLastWifiConnectionSSID();
+        if (ssid != null) {
+            return dataManager.isWifiLocationStationary(ssid);
+        } else return false;
+    }
+
     public void changeConfiguration() {
         Log.e(TAG, "isCharging: " + isCharging + ", isWifiConnected: " + isWifiConnected + ", isInGeofence: " + isInGeofence);
 
         if (isCharging && isWifiConnected && !isInGeofence) {
             removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates(1000);
+            if (!isStationaryWifi()) {
+                requestActivityRecognitionUpdates(fastInterval);
+            }
         }
         if (isCharging && !isWifiConnected && !isInGeofence) {
             removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates(1000);
+            requestActivityRecognitionUpdates(fastInterval);
         }
         if (!isCharging && isWifiConnected && !isInGeofence) {
             removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates(1000 * 20);
+            if (!isStationaryWifi()) {
+                requestActivityRecognitionUpdates(interval);
+            }
         }
         if (!isCharging && !isWifiConnected && !isInGeofence) {
             removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates(1000 * 10);
+            requestActivityRecognitionUpdates(interval);
         }
 
         if (isCharging && isWifiConnected && isInGeofence) {
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
+            removeActivityRecognitionUpdates();
             // todo: test
             // removeActivityRecognitionUpdates();
         }
@@ -435,13 +456,15 @@ public class MobilityDetectionService extends Service {
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates(1000 * 60 * 6);
+            if (!isStationaryWifi()) {
+                requestActivityRecognitionUpdates(slowInterval);
+            }
         }
         if (!isCharging && !isWifiConnected && isInGeofence) {
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
-            requestActivityRecognitionUpdates(1000 * 60 * 3);
+            requestActivityRecognitionUpdates(mediumInterval);
         }
     }
 
@@ -468,7 +491,7 @@ public class MobilityDetectionService extends Service {
         DetectedActivities detectedActivities = dataManager.getLastActivityTransition();
         String lastActivityTimestamp = detectedActivities.getTimestamp();
         if (lastActivityTimestamp != null) {
-            if (Timestamp.getDifference(lastActivityTimestamp, Timestamp.generateTimestamp()) > 1000 * 5) {
+            if (Timestamp.getDifference(lastActivityTimestamp, Timestamp.generateTimestamp()) > loiteringDelayActivity) {
                 dataManager.writeRoute();
             }
         }

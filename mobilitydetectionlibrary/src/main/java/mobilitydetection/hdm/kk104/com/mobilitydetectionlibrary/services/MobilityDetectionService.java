@@ -16,6 +16,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -40,11 +41,12 @@ import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.JSONManager;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DataManager;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 
 public class MobilityDetectionService extends Service {
 
@@ -56,7 +58,7 @@ public class MobilityDetectionService extends Service {
 
     IBinder binder = new MobilityDetectionService.LocalBinder();
 
-    private JSONManager jsonManager;
+    private DataManager dataManager;
 
     private ActivityRecognitionClient activityRecognitionClient;
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -81,7 +83,7 @@ public class MobilityDetectionService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        jsonManager = new JSONManager(this);
+        dataManager = new DataManager(this);
 
         addFilterActions();
         registerReceiver(receiver, filter);
@@ -98,6 +100,7 @@ public class MobilityDetectionService extends Service {
 
         buildNotification();
         loadTransitions();
+        loadRoutes();
         checkChargingStatus();
 
         // requestActivityRecognitionTransitionUpdates();
@@ -157,7 +160,7 @@ public class MobilityDetectionService extends Service {
             if (action.equals(Actions.LOCATION_ACTION)) {
                 Log.e(TAG, Actions.LOCATION_ACTION);
                 DetectedLocation detectedLocation = intent.getParcelableExtra(DetectedLocation.class.getSimpleName());
-                jsonManager.writeDetectedLocation(detectedLocation);
+                dataManager.writeDetectedLocation(detectedLocation);
             }
         }
     };
@@ -198,43 +201,57 @@ public class MobilityDetectionService extends Service {
                 isWifiConnected = true;
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                final String ssid = wifiInfo.getSSID();
-
-                if (jsonManager.hasWifiLocation(ssid)) {
-                    Double[] location = jsonManager.getWifiLocation(ssid);
-                    if (location[0] != null && location[1] != null) {
-                        DetectedLocation detectedLocation = new DetectedLocation();
-                        Log.e(TAG, "latitude: " + location[0] + ", longitude: " + location[1]);
-                        detectedLocation.setLatitude(location[0]);
-                        detectedLocation.setLatitude(location[1]);
-                        // todo: check if stationary
-                        // todo: check home or work wifi
-                        addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION hasWifiLocation");
-                        requestGeofenceUpdates();
-                    }
-                } else if (checkLocationPermission()) {
-                    fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
-                        @Override
-                        public void onLocationResult(LocationResult locationResult) {
-                            super.onLocationResult(locationResult);
-
-                            if (locationResult != null) {
-                                DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
-
-                                // todo: check stationary wifi => on exit in max 5min => not stationary; on dwell 5min => stationary
-                                addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION !hasWifiLocation");
+                if (wifiInfo != null) {
+                    final String ssid = wifiInfo.getSSID();
+                    dataManager.writeWifiConnectionTime(ssid);
+                    if (dataManager.hasWifiLocation(ssid)) {
+                        if (dataManager.isWifiLocationStationary(ssid)) {
+                            isInGeofence = true;
+                        } else {
+                            Double[] location = dataManager.getWifiLocation(ssid);
+                            if (location[0] != null && location[1] != null) {
+                                DetectedLocation detectedLocation = new DetectedLocation();
+                                detectedLocation.setLatitude(location[0]);
+                                detectedLocation.setLatitude(location[1]);
+                                addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION hasWifiLocation");
                                 requestGeofenceUpdates();
-
-                                jsonManager.writeWifiLocation(ssid, detectedLocation);
-                                jsonManager.saveJSONFile();
                             }
-                            fusedLocationProviderClient.removeLocationUpdates(this);
                         }
-                    }, new HandlerThread(HANDLER_NAME).getLooper());
+                    } else if (checkLocationPermission()) {
+                        fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
+                            @Override
+                            public void onLocationResult(LocationResult locationResult) {
+                                super.onLocationResult(locationResult);
+
+                                if (locationResult != null) {
+                                    DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
+
+                                    addGeofence(detectedLocation, RADIUS, LOITERING_DELAY, "CONNECTED_CONNECTIVITY_ACTION !hasWifiLocation");
+                                    requestGeofenceUpdates();
+
+                                    dataManager.writeWifiLocation(ssid, detectedLocation);
+                                    dataManager.saveJSONFile();
+                                }
+                                fusedLocationProviderClient.removeLocationUpdates(this);
+                            }
+                        }, new HandlerThread(HANDLER_NAME).getLooper());
+                    }
                 }
             }
         } else {
             Log.e(TAG, "DISCONNECTED_CONNECTIVITY_ACTION");
+            String disconnectionTimestamp = Timestamp.generateTimestamp();
+            String ssid = dataManager.getLastWifiConnectionSSID();
+            if (ssid != null) {
+                dataManager.removeLastWifiConnectionSSID();
+                String connectionTimestamp = dataManager.getWifiConnectionTime(ssid);
+                if (connectionTimestamp != null) {
+                    long totalConnectionTime = Timestamp.getDifference(connectionTimestamp, disconnectionTimestamp);
+                    if (totalConnectionTime >= 1000 * 60 * 60 * 2) {
+                        dataManager.updateWifiConnectionCount(ssid);
+                    }
+                }
+            }
             isWifiConnected = false;
         }
 
@@ -294,12 +311,12 @@ public class MobilityDetectionService extends Service {
             final String HANDLER_NAME = "ACTIVITY_DETECTED_ACTION_LOCATION_LOOPER";
             final long RADIUS = 100L;
             // todo: test
-            // final long LOITERING_DELAY = 1000 * 60 * 5;
+            // final long LOITERING_DELAY = 1000 * 60 * 15;
             final long LOITERING_DELAY = 1000 * 5;
             long timeDifference;
 
             DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-            final DetectedActivities exitedActivity = jsonManager.getLastActivityTransition();
+            final DetectedActivities exitedActivity = dataManager.getLastActivityTransition();
             String enteredActivityString = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
 
             if (exitedActivity.getTimestamp() != null) {
@@ -309,10 +326,10 @@ public class MobilityDetectionService extends Service {
             }
 
             boolean activityChanged = !enteredActivityString.isEmpty() && !exitedActivity.getProbableActivities().getActivity().equals(enteredActivityString);
-            final boolean equalActivity = timeDifference > LOITERING_DELAY && exitedActivity.getProbableActivities().getActivity().equals(enteredActivityString);
+            final boolean continuousActivity = timeDifference > LOITERING_DELAY && exitedActivity.getProbableActivities().getActivity().equals(enteredActivityString);
             final boolean stillActivity = exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL);
 
-            if ((activityChanged || equalActivity) && checkLocationPermission()) {
+            if ((activityChanged || continuousActivity) && checkLocationPermission()) {
                 receiverInProgress = true;
 
                 fusedLocationProviderClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
@@ -326,13 +343,15 @@ public class MobilityDetectionService extends Service {
                             DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
                             detectedActivities.setDetectedLocation(detectedLocation);
 
-                            if (equalActivity && stillActivity) {
+                            if (continuousActivity && stillActivity) {
                                 addGeofence(detectedLocation, RADIUS, (int) LOITERING_DELAY, Actions.ACTIVITY_DETECTED_ACTION + " equalActivity && stillActivity");
                                 requestGeofenceUpdates();
+
+                                endRoute();
                             }
                         }
-                        jsonManager.writeActivityTransition(detectedActivities);
-                        jsonManager.saveJSONFile();
+                        dataManager.writeActivityTransition(detectedActivities);
+                        dataManager.saveJSONFile();
 
                         Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
                         i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
@@ -344,6 +363,14 @@ public class MobilityDetectionService extends Service {
                 }, new HandlerThread(HANDLER_NAME).getLooper());
             }
         }
+    }
+
+    public void endRoute() {
+        dataManager.writeRoute();
+
+        Intent intent = new Intent(Actions.ROUTE_ENDED_ACTION);
+        intent.putParcelableArrayListExtra(Route.class.getSimpleName(), dataManager.getRoutes());
+        sendBroadcast(intent, null);
     }
 
     private void handleActivityValidation(final Intent intent) {
@@ -365,13 +392,13 @@ public class MobilityDetectionService extends Service {
                         detectedActivities.setDetectedLocation(detectedLocation);
                     }
 
-                    jsonManager.writeValidation(validation, detectedActivities);
+                    dataManager.writeValidation(validation, detectedActivities);
 
                     fusedLocationProviderClient.removeLocationUpdates(this);
                 }
             }, new HandlerThread(HANDLER_NAME).getLooper());
         } else {
-            jsonManager.writeValidation(validation, detectedActivities);
+            dataManager.writeValidation(validation, detectedActivities);
         }
     }
 
@@ -396,21 +423,22 @@ public class MobilityDetectionService extends Service {
         }
 
         if (isCharging && isWifiConnected && isInGeofence) {
-            removeAllGeofenceUpdates(geofencingPendingIntent);
+            removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
-            removeActivityRecognitionUpdates();
+            // todo: test
+            // removeActivityRecognitionUpdates();
         }
         if (isCharging && !isWifiConnected && isInGeofence) {
             removeActivityRecognitionUpdates();
         }
         if (!isCharging && isWifiConnected && isInGeofence) {
-            removeAllGeofenceUpdates(geofencingPendingIntent);
+            removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates(1000 * 60 * 6);
         }
         if (!isCharging && !isWifiConnected && isInGeofence) {
-            removeAllGeofenceUpdates(geofencingPendingIntent);
+            removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates(1000 * 60 * 3);
@@ -428,14 +456,28 @@ public class MobilityDetectionService extends Service {
 
     public void saveData() {
         Log.e(TAG, Actions.SAVE_DATA_ACTION);
-        jsonManager.saveJSONFile();
+        dataManager.saveJSONFile();
     }
 
 
     private void loadTransitions() {
         Intent transitionsLoadedIntent = new Intent(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
-        transitionsLoadedIntent.putParcelableArrayListExtra("activities", jsonManager.getActivityTransitions());
+        transitionsLoadedIntent.putParcelableArrayListExtra("activities", dataManager.getActivityTransitions());
         sendBroadcast(transitionsLoadedIntent, null);
+
+        DetectedActivities detectedActivities = dataManager.getLastActivityTransition();
+        String lastActivityTimestamp = detectedActivities.getTimestamp();
+        if (lastActivityTimestamp != null) {
+            if (Timestamp.getDifference(lastActivityTimestamp, Timestamp.generateTimestamp()) > 1000 * 5) {
+                dataManager.writeRoute();
+            }
+        }
+    }
+
+    private void loadRoutes() {
+        Intent intent = new Intent(Actions.ROUTES_LOADED_ACTION);
+        intent.putParcelableArrayListExtra(Route.class.getSimpleName(), dataManager.getRoutes());
+        sendBroadcast(intent, null);
     }
 
     private void checkChargingStatus() {

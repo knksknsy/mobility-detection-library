@@ -30,11 +30,23 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.6"
+        android:layout_weight="0.3"
         android:orientation="vertical">
 
         <ListView
             android:id="@+id/activity_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.3"
+        android:orientation="vertical">
+
+        <ListView
+            android:id="@+id/routes_list_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </LinearLayout>

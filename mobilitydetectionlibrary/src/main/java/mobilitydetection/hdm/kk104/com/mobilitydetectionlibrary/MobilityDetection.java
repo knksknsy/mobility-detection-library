@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.MobilityDetectionService;
 
 public class MobilityDetection {
@@ -50,6 +51,8 @@ public class MobilityDetection {
         filter.addAction(Actions.GEOFENCE_ADDED_ACTION);
         filter.addAction(Actions.GEOFENCE_REMOVED_ACTION);
         filter.addAction(Actions.GEOFENCES_REMOVED_ACTION);
+        filter.addAction(Actions.ROUTE_ENDED_ACTION);
+        filter.addAction(Actions.ROUTES_LOADED_ACTION);
         return this;
     }
 
@@ -120,6 +123,20 @@ public class MobilityDetection {
                 Log.e(TAG, Actions.GEOFENCES_REMOVED_ACTION);
                 if (listener != null) {
                     listener.onGeofencesRemoved();
+                }
+            }
+            if (action.equals(Actions.ROUTE_ENDED_ACTION)) {
+                Log.e(TAG, Actions.ROUTE_ENDED_ACTION);
+                ArrayList<Route> routes = intent.getParcelableArrayListExtra(Route.class.getSimpleName());
+                if (listener != null) {
+                    listener.onRouteEnded(routes);
+                }
+            }
+            if (action.equals(Actions.ROUTES_LOADED_ACTION)) {
+                Log.e(TAG, Actions.ROUTES_LOADED_ACTION);
+                ArrayList<Route> routes = intent.getParcelableArrayListExtra(Route.class.getSimpleName());
+                if (listener != null) {
+                    listener.onRoutesLoaded(routes);
                 }
             }
         }

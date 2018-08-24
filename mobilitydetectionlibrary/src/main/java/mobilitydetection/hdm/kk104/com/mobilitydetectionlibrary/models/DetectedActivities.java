@@ -24,6 +24,7 @@ public class DetectedActivities implements Parcelable {
     private ProbableActivities probableActivities;
     private DetectedLocation detectedLocation;
 
+
     public DetectedActivities() {
         this.probableActivities = new ProbableActivities();
     }

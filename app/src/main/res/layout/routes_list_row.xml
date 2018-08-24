@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33"
+            android:text="Start time"/>
+
+        <TextView
+            android:id="@+id/startTime"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".67"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33"
+            android:text="Start activity"/>
+
+        <TextView
+            android:id="@+id/startActivity"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".67"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33"
+            android:text="Start location"/>
+
+        <TextView
+            android:id="@+id/startLocation"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".67"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33"
+            android:text="End Time"/>
+
+        <TextView
+            android:id="@+id/endTime"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".67"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33"
+            android:text="End activity"/>
+
+        <TextView
+            android:id="@+id/endActivity"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".67"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".33"
+            android:text="End location"/>
+
+        <TextView
+            android:id="@+id/endLocation"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".67"/>
+    </LinearLayout>
+
+</LinearLayout>

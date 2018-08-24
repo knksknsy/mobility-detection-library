@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -42,6 +43,7 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetectio
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,11 +53,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSIONS_REQUEST_LOCATION = 100;
     private static final int REQUEST_CHECK_LOCATION_SETTINGS = 200;
+    private static final int REQUEST_CODE_ROUTE_ACTIVITY = 300;
 
     private List<String> geofences;
     private TextView geofenceList;
     private TextView activityList;
     private ListView activityListView;
+    private ListView routesListView;
     private Button btnSave, btnDelete;
     private Vibrator vibe;
 
@@ -63,7 +67,9 @@ public class MainActivity extends AppCompatActivity {
     // private Spinner spinner;
 
     private ArrayList<DetectedActivities> activities;
-    private ActivityListAdapter adapter;
+    private ArrayList<Route> routes;
+    private ActivityListAdapter activitiesAdapter;
+    private RoutesListAdapter routesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,8 +124,19 @@ public class MainActivity extends AppCompatActivity {
 
         activities = new ArrayList<>();
         activityListView = findViewById(R.id.activity_list_view);
-        adapter = new ActivityListAdapter(this, activities);
-        activityListView.setAdapter(adapter);
+        activitiesAdapter = new ActivityListAdapter(this, activities);
+        activityListView.setAdapter(activitiesAdapter);
+
+        routes = new ArrayList<>();
+        routesListView = findViewById(R.id.routes_list_view);
+        routesAdapter = new RoutesListAdapter(this, routes);
+        routesListView.setAdapter(routesAdapter);
+        routesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int i, long id) {
+                openRouteActivity(routes.get(i));
+            }
+        });
 
         btnSave = findViewById(R.id.btn_save);
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -133,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                adapter.clear();
+                activitiesAdapter.clear();
             }
         });
 
@@ -153,6 +170,12 @@ public class MainActivity extends AppCompatActivity {
         });*/
     }
 
+    private void openRouteActivity(Route route) {
+        Intent intent = new Intent(this, RouteActivity.class);
+        intent.putExtra(Route.class.getSimpleName(), route);
+        startActivityForResult(intent, REQUEST_CODE_ROUTE_ACTIVITY);
+    }
+
     private void initMobilityDetection() {
         mobilityDetection = new MobilityDetection.Builder()
                 .setContext(MainActivity.this)
@@ -164,13 +187,13 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onTransitioned(DetectedActivities activity) {
-                        adapter.add(activity);
+                        activitiesAdapter.add(activity);
                     }
 
                     @Override
                     public void onTransitionsLoaded(ArrayList<DetectedActivities> activities) {
-                        adapter.clear();
-                        adapter.addAll(activities);
+                        activitiesAdapter.clear();
+                        activitiesAdapter.addAll(activities);
                     }
 
                     @Override
@@ -268,6 +291,23 @@ public class MainActivity extends AppCompatActivity {
                         geofences.clear();
                         setText();
                     }
+
+                    @Override
+                    public void onRouteEnded(ArrayList<Route> routes) {
+                        activitiesAdapter.clear();
+                        routesAdapter.clear();
+                        for (Route route : routes) {
+                            routesAdapter.add(route);
+                        }
+                    }
+
+                    @Override
+                    public void onRoutesLoaded(ArrayList<Route> routes) {
+                        routesAdapter.clear();
+                        for (Route route : routes) {
+                            routesAdapter.add(route);
+                        }
+                    }
                 })
                 .build();
 
@@ -364,6 +404,11 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == Activity.RESULT_CANCELED) {
                 Log.e(TAG, "LOCATION_SETTINGS RESULT_CANCELED");
                 checkLocationSettings();
+            }
+        }
+        if (requestCode == REQUEST_CODE_ROUTE_ACTIVITY) {
+            if (resultCode == Activity.RESULT_OK) {
+
             }
         }
     }

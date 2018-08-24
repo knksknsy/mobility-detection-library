@@ -5,6 +5,7 @@ import com.google.android.gms.location.DetectedActivity;
 import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 
 public interface MobilityDetectionListener {
 
@@ -25,4 +26,8 @@ public interface MobilityDetectionListener {
     void onGeofenceRemoved(ArrayList<String> keys);
 
     void onGeofencesRemoved();
+
+    void onRouteEnded(ArrayList<Route> routes);
+
+    void onRoutesLoaded(ArrayList<Route> routes);
 }

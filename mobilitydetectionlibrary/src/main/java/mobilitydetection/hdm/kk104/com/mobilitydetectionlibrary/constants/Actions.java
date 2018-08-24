@@ -18,5 +18,7 @@ public class Actions {
     public static String GEOFENCE_ADDED_ACTION = "GEOFENCE_ADDED_ACTION";
     public static String GEOFENCE_REMOVED_ACTION = "GEOFENCE_REMOVED_ACTION";
     public static String GEOFENCES_REMOVED_ACTION = "GEOFENCES_REMOVED_ACTION";
+    public static String ROUTES_LOADED_ACTION = "ROUTES_LOADED_ACTION";
+    public static String ROUTE_ENDED_ACTION = "ROUTE_ENDED_ACTION";
 
 }

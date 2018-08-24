@@ -36,6 +36,10 @@ public class DetectedLocation implements Parcelable {
         this.timestamp = generateTimestamp();
     }
 
+    public DetectedLocation(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
     public DetectedLocation(Context context, Location location) {
         this.context = context;
         this.timestamp = generateTimestamp();

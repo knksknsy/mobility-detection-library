@@ -20,7 +20,11 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedA
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 
+/**
+ * Class for persisting to and reading data from JSON and SharedPreferences.
+ */
 public class DataManager {
 
     private static final String TAG = DataManager.class.getSimpleName();
@@ -39,41 +43,30 @@ public class DataManager {
     private final String LAST_WIFI_CONNECTION_SSID = "LAST_WIFI_CONNECTION_SSID";
     private final String WIFI_SSID = "WIFI_SSID";
 
+    /**
+     * JSONObject containing data
+     */
     private JSONObject root;
 
     private String shortDate;
 
+    /**
+     * Creates a DataManager object. Reads values from JSON file and initializes root JSONObject.
+     *
+     * @param context
+     */
     public DataManager(Context context) {
         this.context = context;
         shortDate = getDateShort();
         readJSONFile();
     }
 
-    public void writeDetectedActivity(final DetectedActivities detectedActivities) {
-        try {
-            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(ACTIVITIES).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
-    public void writeValidation(final String activity, final DetectedActivities detectedActivities) {
-        try {
-            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
-            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).getJSONObject(detectedActivities.getShortTime()).put("activity", activity);
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
-    public void writeDetectedLocation(final DetectedLocation detectedLocation) {
-        try {
-            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(LOCATION).put(detectedLocation.getShortTime(), detectedLocation.toJSON());
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    }
-
+    /**
+     * Adds a DetectedActivities object as transition to the root JSONObject.
+     *
+     * @param detectedActivities
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
+     */
     public void writeActivityTransition(final DetectedActivities detectedActivities) {
         try {
             root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS).put(detectedActivities.toJSON());
@@ -82,6 +75,11 @@ public class DataManager {
         }
     }
 
+    /**
+     * Adds a Route object to the root JSONObject. The Route object is initialized passing all transitioned activities to it's constructor method.
+     *
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route
+     */
     public void writeRoute() {
         try {
             ArrayList<DetectedActivities> activities = getActivityTransitions();
@@ -95,15 +93,21 @@ public class DataManager {
         }
     }
 
+    /**
+     * Reads and returns all completed routes.
+     *
+     * @return all routes as an ArrayList of Route objects
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route
+     */
     public ArrayList<Route> getRoutes() {
         ArrayList<Route> routes = new ArrayList<>();
         try {
             JSONArray routesArray = root.getJSONObject(DB_NAME).getJSONArray(ROUTES);
             for (int i = 0; i < routesArray.length(); i++) {
                 JSONObject routeObject = routesArray.getJSONObject(i);
-
                 JSONArray objectRoutes = routeObject.getJSONArray("route");
                 ArrayList<DetectedActivities> routeActivities = new ArrayList<>();
+                // Populate transitioned activities of a route
                 for (int j = 0; j < objectRoutes.length(); j++) {
                     JSONObject objectRoute = objectRoutes.getJSONObject(j);
                     DetectedActivities detectedActivities = new DetectedActivities();
@@ -146,6 +150,12 @@ public class DataManager {
         return routes;
     }
 
+    /**
+     * Adds wifi information and it's location to the root JSONObject
+     *
+     * @param ssid
+     * @param location
+     */
     public void writeWifiLocation(String ssid, DetectedLocation location) {
         try {
             JSONObject object = root.getJSONObject(DB_NAME).getJSONObject(WIFI);
@@ -159,6 +169,11 @@ public class DataManager {
         }
     }
 
+    /**
+     * Increments the total wifi connection count.
+     *
+     * @param ssid SSID of the wifi network
+     */
     public void updateWifiConnectionCount(String ssid) {
         try {
             JSONObject object = root.getJSONObject(DB_NAME).getJSONObject(WIFI);
@@ -177,6 +192,12 @@ public class DataManager {
         }
     }
 
+    /**
+     * Returns whether a wifi network is stationary or a mobile hotspot
+     *
+     * @param ssid SSID of the wifi network
+     * @return
+     */
     public boolean isWifiLocationStationary(String ssid) {
         boolean isStationary = false;
         try {
@@ -194,6 +215,12 @@ public class DataManager {
         return isStationary;
     }
 
+    /**
+     * Returns the location of a wifi network
+     *
+     * @param ssid SSID of the wifi network
+     * @return Double[] tuple. First value is the latitude. Second value is the longitude.
+     */
     public Double[] getWifiLocation(String ssid) {
         Double[] location = new Double[2];
         try {
@@ -205,6 +232,12 @@ public class DataManager {
         return location;
     }
 
+    /**
+     * Checks if it's the first connection to this wifi network.
+     *
+     * @param ssid SSID of the wifi network
+     * @return
+     */
     public boolean hasWifiLocation(String ssid) {
         boolean hasSSID = false;
         try {
@@ -215,6 +248,11 @@ public class DataManager {
         return hasSSID;
     }
 
+    /**
+     * Writes the total connection time the device was connected to a wifi network
+     *
+     * @param ssid SSID of the wifi network
+     */
     public void writeWifiConnectionTime(String ssid) {
         SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences(WIFI_CONNECTION_TIMES, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -223,11 +261,22 @@ public class DataManager {
         writeLastWifiConnectionSSID(ssid);
     }
 
+    /**
+     * Returns the total connection time as a String timestamp.
+     *
+     * @param ssid SSID of the wifi network
+     * @return a String timestamp with the following pattern yyyy-MM-ddTHH:mm:ss
+     */
     public String getWifiConnectionTime(String ssid) {
         SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences(WIFI_CONNECTION_TIMES, Context.MODE_PRIVATE);
         return sharedPreferences.getString(ssid, null);
     }
 
+    /**
+     * Writes the wifi SSID as the last wifi connection
+     *
+     * @param ssid SSID of the wifi network
+     */
     private void writeLastWifiConnectionSSID(String ssid) {
         SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences(LAST_WIFI_CONNECTION_SSID, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -235,11 +284,19 @@ public class DataManager {
         editor.apply();
     }
 
+    /**
+     * Return the wifi SSID of the last wifi connection
+     *
+     * @return SSID of the wifi network
+     */
     public String getLastWifiConnectionSSID() {
         SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences(LAST_WIFI_CONNECTION_SSID, Context.MODE_PRIVATE);
         return sharedPreferences.getString(WIFI_SSID, null);
     }
 
+    /**
+     * Deletes the last wifi connection's SSID
+     */
     public void removeLastWifiConnectionSSID() {
         SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences(LAST_WIFI_CONNECTION_SSID, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -247,6 +304,12 @@ public class DataManager {
         editor.apply();
     }
 
+    /**
+     * Returns currently tracked activity transitions.
+     *
+     * @return ArrayList of DetectedActivities object
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
+     */
     public ArrayList<DetectedActivities> getActivityTransitions() {
         ArrayList<DetectedActivities> detectedActivities = new ArrayList<>();
         try {
@@ -264,6 +327,9 @@ public class DataManager {
         return detectedActivities;
     }
 
+    /**
+     * Deletes currently tracked activity transitions.
+     */
     private void removeActivityTransitions() {
         try {
             root.getJSONObject(DB_NAME).getJSONObject(shortDate).put(TRANSITIONS, new JSONArray());
@@ -272,6 +338,12 @@ public class DataManager {
         }
     }
 
+    /**
+     * Returns the last saved transitioned activity
+     *
+     * @return DetectedActivities
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
+     */
     public DetectedActivities getLastActivityTransition() {
         try {
             JSONArray transitions = root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONArray(TRANSITIONS);
@@ -287,6 +359,13 @@ public class DataManager {
         return new DetectedActivities();
     }
 
+    /**
+     * Initialized a DetectedActivities object from a JSONObject.
+     *
+     * @param transition JSONObject
+     * @return DetectedActivities
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
+     */
     private DetectedActivities initActivityTransition(JSONObject transition) {
         try {
             DetectedActivities activity = new DetectedActivities();
@@ -310,6 +389,9 @@ public class DataManager {
         return new DetectedActivities();
     }
 
+    /**
+     * Reads and saves the JSON file as the root JSONObject.
+     */
     private void readJSONFile() {
         try {
             FileInputStream fileInputStream = context.openFileInput(DB_NAME);
@@ -350,6 +432,9 @@ public class DataManager {
         }
     }
 
+    /**
+     * Initializes a blank root JSONObject.
+     */
     private void initializeJSON() {
         try {
             if (root == null) {
@@ -377,6 +462,9 @@ public class DataManager {
         }
     }
 
+    /**
+     * Writes the root JSONObject to a JSON file.
+     */
     public void saveJSONFile() {
         try {
             FileOutputStream fileOutputStream = context.openFileOutput(DB_NAME, Context.MODE_PRIVATE);
@@ -385,11 +473,63 @@ public class DataManager {
             Log.e(TAG, "SAVED");
         } catch (IOException e) {
             Log.e(TAG, e.getMessage());
-
         }
     }
 
+    /**
+     * Return the date of today in the following pattern: yyyy-MM-dd
+     *
+     * @return String short date
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp
+     */
     private String getDateShort() {
         return Timestamp.getDate();
+    }
+
+    /**
+     * Adds a DetectedActivities object to the root JSONObject.
+     *
+     * @param detectedActivities
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
+     * @deprecated
+     */
+    public void writeDetectedActivity(final DetectedActivities detectedActivities) {
+        try {
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(ACTIVITIES).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    /**
+     * Adds a DetectedActivities object to the root JSONObject as a validation.
+     *
+     * @param activity           validated activity as String
+     * @param detectedActivities
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
+     * @deprecated
+     */
+    public void writeValidation(final String activity, final DetectedActivities detectedActivities) {
+        try {
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).put(detectedActivities.getShortTime(), detectedActivities.toJSON());
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(VALIDATION).getJSONObject(detectedActivities.getShortTime()).put("activity", activity);
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    /**
+     * Adds a DetectedLocation object to the root JSONObject.
+     *
+     * @param detectedLocation
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation
+     * @deprecated
+     */
+    public void writeDetectedLocation(final DetectedLocation detectedLocation) {
+        try {
+            root.getJSONObject(DB_NAME).getJSONObject(shortDate).getJSONObject(LOCATION).put(detectedLocation.getShortTime(), detectedLocation.toJSON());
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage());
+        }
     }
 }

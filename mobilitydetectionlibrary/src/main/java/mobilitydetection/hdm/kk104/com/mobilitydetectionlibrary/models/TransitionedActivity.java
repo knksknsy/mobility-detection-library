@@ -10,8 +10,13 @@ import com.google.android.gms.location.ActivityTransitionResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 
+/**
+ * Containing activity transition information.
+ *
+ * @deprecated
+ */
 public class TransitionedActivity implements Parcelable {
 
     private static final String TAG = TransitionedActivity.class.getSimpleName();
@@ -96,6 +101,11 @@ public class TransitionedActivity implements Parcelable {
         return Timestamp.generateTimestamp();
     }
 
+    /**
+     * Converts a TransitionedActivity object to a JSONObject.
+     *
+     * @return
+     */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();
         try {

@@ -10,18 +10,44 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+/**
+ * Class containing route information and every activity transitions which happened on route.
+ */
 public class Route implements Parcelable {
 
     private static final String TAG = Route.class.getSimpleName();
 
+    /**
+     * Containing all activity transitions of route.
+     */
     private ArrayList<DetectedActivities> activities;
-
+    /**
+     * State of the first detected activity.
+     */
     private String startActivity;
+    /**
+     * State of the last detected activity.
+     */
     private String endActivity;
-
+    /**
+     * Timestamp of the starting activity in the following pattern: yyyy-MM-ddTHH:mm:ss
+     */
     private String startTime;
+    /**
+     * Timestamp of the last activity in the following pattern: yyyy-MM-ddTHH:mm:ss
+     */
     private String endTime;
+    /**
+     * Location information of the starting activity,
+     *
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation
+     */
     private DetectedLocation startLocation;
+    /**
+     * Location information of the last activity.
+     *
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation
+     */
     private DetectedLocation endLocation;
 
     public Route(ArrayList<DetectedActivities> activities) {
@@ -38,6 +64,11 @@ public class Route implements Parcelable {
         endLocation = this.activities.get(this.activities.size() - 1).getDetectedLocation();
     }
 
+    /**
+     * Constructor for creating a Route object by reading a Parcel
+     *
+     * @param in
+     */
     public Route(Parcel in) {
         activities = in.readArrayList(DetectedActivities.class.getClassLoader());
         startActivity = in.readString();
@@ -53,6 +84,12 @@ public class Route implements Parcelable {
         return hashCode();
     }
 
+    /**
+     * Converts the Route object to a Parcel
+     *
+     * @param dest
+     * @param flags
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeList(activities);
@@ -130,6 +167,11 @@ public class Route implements Parcelable {
         this.endLocation = endLocation;
     }
 
+    /**
+     * Converts a Route object to a JSONObject.
+     *
+     * @return
+     */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();
         try {

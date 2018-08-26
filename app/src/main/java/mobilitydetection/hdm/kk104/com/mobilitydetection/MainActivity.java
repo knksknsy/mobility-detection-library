@@ -179,14 +179,16 @@ public class MainActivity extends AppCompatActivity {
     private void initMobilityDetection() {
         mobilityDetection = new MobilityDetection.Builder()
                 .setContext(MainActivity.this)
-                /*.setInterval(1000 * 5)
+                .setInterval(1000 * 5)
                 .setFastInterval(1000 * 5)
                 .setMediumInterval(1000 * 5)
                 .setSlowInterval(1000 * 5)
-                .setLoiteringDelayWifiConnectionChanged(1000 * 60 * 5)
-                .setLoiteringDelayWifiConnectionTime(1000 * 60 * 5)
-                .setLoiteringDelayPowerConnectionChanged(1000 * 60 * 5)
-                .setLoiteringDelayActivity(1000 * 60 * 5)*/
+                .setLoiteringDelayWifi(1000 * 60 * 5)
+                .setLoiteringDelayPower(1000 * 60 * 5)
+                .setLoiteringDelayActivity(1000 * 60 * 5)
+                .setRadiusPower(50L)
+                .setRadiusWifi(50L)
+                .setRadiusActivity(100L)
                 .setListener(new MobilityDetectionListener() {
                     @Override
                     public void onStopService() {

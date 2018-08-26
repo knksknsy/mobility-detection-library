@@ -19,6 +19,11 @@ import java.util.List;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
+/**
+ * IntentService for handling Awareness API's fences.
+ *
+ * @deprecated
+ */
 public class FenceIntentService extends IntentService {
 
     private static final String TAG = FenceIntentService.class.getSimpleName();

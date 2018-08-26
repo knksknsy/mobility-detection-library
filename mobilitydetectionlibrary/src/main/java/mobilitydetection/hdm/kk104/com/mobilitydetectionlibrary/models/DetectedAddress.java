@@ -10,6 +10,9 @@ import org.json.JSONObject;
 
 import java.util.List;
 
+/**
+ * Class containing address information
+ */
 public class DetectedAddress implements Parcelable {
 
     private static final String TAG = DetectedAddress.class.getSimpleName();
@@ -34,6 +37,11 @@ public class DetectedAddress implements Parcelable {
         this.featureName = address.get(0).getFeatureName();
     }
 
+    /**
+     * Constructor for creating a DetectedAddress object by reading a Parcel
+     *
+     * @param in
+     */
     public DetectedAddress(Parcel in) {
         address = in.readString();
         city = in.readString();
@@ -48,6 +56,12 @@ public class DetectedAddress implements Parcelable {
         return hashCode();
     }
 
+    /**
+     * Converts the DetectedAddress object to a Parcel
+     *
+     * @param dest
+     * @param flags
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(address);
@@ -116,6 +130,11 @@ public class DetectedAddress implements Parcelable {
         this.featureName = featureName;
     }
 
+    /**
+     * Converts a DetectedAddress object to a JSONObject.
+     *
+     * @return
+     */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();
         try {

@@ -14,8 +14,11 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DetectedActivitiesEvaluation;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 
+/**
+ * Containing each activity's probability
+ */
 public class ProbableActivities implements Parcelable {
 
     private static final String TAG = ProbableActivities.class.getSimpleName();
@@ -29,11 +32,25 @@ public class ProbableActivities implements Parcelable {
     public int WALKING;
     public int RUNNING;
 
+    /**
+     * Most probable activity type according to DetectedActivity
+     */
     public String mostProbableType;
+    /**
+     * Most probable activity confidence according to DetectedActivity
+     */
     public int mostProbableConfidence;
 
+    /**
+     * Containing all activities and their probabilities
+     */
     private ArrayList<DetectedActivity> activities;
 
+    /**
+     * The estimated activity by DetectedActivitiesEvaluation
+     *
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DetectedActivitiesEvaluation
+     */
     private String activity = new String();
 
     public ProbableActivities() {
@@ -48,6 +65,11 @@ public class ProbableActivities implements Parcelable {
         mostProbableConfidence = getMostProbableActivity().getConfidence();
     }
 
+    /**
+     * Constructor for creating a ProbableActivities object by reading a Parcel
+     *
+     * @param in
+     */
     public ProbableActivities(Parcel in) {
         IN_VEHICLE = in.readInt();
         ON_BICYCLE = in.readInt();
@@ -68,6 +90,12 @@ public class ProbableActivities implements Parcelable {
         return hashCode();
     }
 
+    /**
+     * Converts the ProbableActivities object to a Parcel
+     *
+     * @param dest
+     * @param flags
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(IN_VEHICLE);
@@ -114,6 +142,12 @@ public class ProbableActivities implements Parcelable {
         this.activity = activity;
     }
 
+    /**
+     * Initializes activity attributes from an ArrayList of DetectedActivity objects.
+     * The following activities are available: IN_VEHICLE, ON_BICYCLE, ON_FOOT, STILL, UNKNOWN, TILTING, WALKING, RUNNING
+     *
+     * @param activities
+     */
     private void initProbableActivities(final ArrayList<DetectedActivity> activities) {
         for (DetectedActivity activity : activities) {
             int type = activity.getType();
@@ -167,6 +201,13 @@ public class ProbableActivities implements Parcelable {
         return activities;
     }
 
+    /**
+     * Evaluates the activity which is detected
+     *
+     * @param exitedActivity
+     * @param enteredActivity
+     * @return
+     */
     public String evaluateActivity(final DetectedActivities exitedActivity, final DetectedActivities enteredActivity) {
         String activity = new String();
         boolean exitedActivityStill = false;
@@ -233,6 +274,11 @@ public class ProbableActivities implements Parcelable {
         return activity;
     }
 
+    /**
+     * Converts a ProbableActivities object to a JSONObject.
+     *
+     * @return
+     */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();
         try {

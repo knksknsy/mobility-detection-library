@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 
+/**
+ * IntentService for getting ActivityRecognitionResult.
+ */
 public class DetectedActivitiesIntentService extends IntentService {
 
     private static final String TAG = DetectedActivitiesIntentService.class.getSimpleName();

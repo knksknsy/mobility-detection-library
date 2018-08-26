@@ -14,14 +14,31 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 
+/**
+ * Class containing all information for a detected activity
+ */
 public class DetectedActivities implements Parcelable {
 
     private static final String TAG = DetectedActivities.class.getSimpleName();
 
+    /**
+     * Timestamp in the following pattern: yyyy-MM-ddTHH:mm:ss
+     */
     private String timestamp;
+    /**
+     * Containing each activity's probability
+     *
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities
+     */
     private ProbableActivities probableActivities;
+    /**
+     * Containing the detected activities location and geocoding information
+     *
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation
+     */
     private DetectedLocation detectedLocation;
 
 
@@ -30,27 +47,32 @@ public class DetectedActivities implements Parcelable {
     }
 
     public DetectedActivities(ArrayList<DetectedActivity> detectedActivities) {
-        this.timestamp = generateTimestamp();
+        this.timestamp = Timestamp.generateTimestamp();
         this.probableActivities = new ProbableActivities(detectedActivities);
     }
 
     public DetectedActivities(List<DetectedActivity> detectedActivities) {
-        this.timestamp = generateTimestamp();
+        this.timestamp = Timestamp.generateTimestamp();
         this.probableActivities = new ProbableActivities((ArrayList<DetectedActivity>) detectedActivities);
     }
 
     public DetectedActivities(ArrayList<DetectedActivity> detectedActivities, Context context, Location location) {
-        this.timestamp = generateTimestamp();
+        this.timestamp = Timestamp.generateTimestamp();
         this.probableActivities = new ProbableActivities(detectedActivities);
         this.detectedLocation = new DetectedLocation(context, location);
     }
 
     public DetectedActivities(List<DetectedActivity> detectedActivities, Context context, Location location) {
-        this.timestamp = generateTimestamp();
+        this.timestamp = Timestamp.generateTimestamp();
         this.probableActivities = new ProbableActivities((ArrayList<DetectedActivity>) detectedActivities);
         this.detectedLocation = new DetectedLocation(context, location);
     }
 
+    /**
+     * Constructor for creating a DetectedActivities object by reading a Parcel
+     *
+     * @param in
+     */
     public DetectedActivities(Parcel in) {
         timestamp = in.readString();
         probableActivities = in.readParcelable(getClass().getClassLoader());
@@ -62,6 +84,12 @@ public class DetectedActivities implements Parcelable {
         return hashCode();
     }
 
+    /**
+     * Converts the DetectedActivities object to a Parcel
+     *
+     * @param dest
+     * @param flags
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(timestamp);
@@ -107,10 +135,11 @@ public class DetectedActivities implements Parcelable {
         this.detectedLocation = detectedLocation;
     }
 
-    private String generateTimestamp() {
-        return Timestamp.generateTimestamp();
-    }
-
+    /**
+     * Converts a DetectedActivities object to a JSONObject.
+     *
+     * @return
+     */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();
         try {

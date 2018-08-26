@@ -15,11 +15,15 @@ import com.google.android.gms.location.DetectedActivity;
 import java.util.ArrayList;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.MobilityDetectionConstants;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.MobilityDetectionService;
 
+/**
+ * Singleton class for building mobility detection library
+ */
 public class MobilityDetection {
 
     private static final String TAG = MobilityDetection.class.getSimpleName();
@@ -32,10 +36,12 @@ public class MobilityDetection {
     private long fastInterval;
     private long mediumInterval;
     private long slowInterval;
-    private int loiteringDelayWifiConnectionChanged;
-    private int loiteringDelayWifiConnectionTime;
-    private int loiteringDelayPowerConnectionChanged;
+    private int loiteringDelayWifi;
+    private int loiteringDelayPower;
     private int loiteringDelayActivity;
+    private long radiusPower;
+    private long radiusWifi;
+    private long radiusActivity;
 
     public MobilityDetectionService mobilityDetectionService;
     private boolean serviceBound = false;
@@ -49,49 +55,9 @@ public class MobilityDetection {
         return mobilityDetection;
     }
 
-    public MobilityDetection setInterval(long interval) {
-        this.interval = interval;
-        return this;
-    }
-
-    public MobilityDetection setFastInterval(long fastInterval) {
-        this.fastInterval = fastInterval;
-        return this;
-    }
-
-    public MobilityDetection setMediumInterval(long mediumInterval) {
-        this.mediumInterval = mediumInterval;
-        return this;
-    }
-
-    public MobilityDetection setSlowInterval(long slowInterval) {
-        this.slowInterval = slowInterval;
-        return this;
-    }
-
-    public MobilityDetection setLoiteringDelayWifiConnectionChanged(int loiteringDelayWifiConnectionChanged) {
-        this.loiteringDelayWifiConnectionChanged = loiteringDelayWifiConnectionChanged;
-        return this;
-    }
-
-    public MobilityDetection setLoiteringDelayWifiConnectionTime(int loiteringDelayWifiConnectionTime) {
-        this.loiteringDelayWifiConnectionTime = loiteringDelayWifiConnectionTime;
-        return this;
-    }
-
-    public MobilityDetection setLoiteringDelayPowerConnectionChanged(int loiteringDelayPowerConnectionChanged) {
-        this.loiteringDelayPowerConnectionChanged = loiteringDelayPowerConnectionChanged;
-        return this;
-    }
-
-    public MobilityDetection setLoiteringDelayActivity(int loiteringDelayActivity) {
-        this.loiteringDelayActivity = loiteringDelayActivity;
-        return this;
-    }
-
     private MobilityDetection setContext(Context context) {
         this.context = context;
-        filter.addAction(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+        filter.addAction(Actions.ACTIVITY_TRANSITIONED_ACTION);
         filter.addAction(Actions.ACTIVITY_TRANSITIONS_LOADED_ACTION);
         filter.addAction(Actions.ACTIVITY_LIST_ACTION);
         filter.addAction(Actions.STOP_MOBILITY_DETECTION_ACTION);
@@ -105,6 +71,56 @@ public class MobilityDetection {
         return this;
     }
 
+    private MobilityDetection setInterval(long interval) {
+        this.interval = interval;
+        return this;
+    }
+
+    private MobilityDetection setFastInterval(long fastInterval) {
+        this.fastInterval = fastInterval;
+        return this;
+    }
+
+    private MobilityDetection setMediumInterval(long mediumInterval) {
+        this.mediumInterval = mediumInterval;
+        return this;
+    }
+
+    private MobilityDetection setSlowInterval(long slowInterval) {
+        this.slowInterval = slowInterval;
+        return this;
+    }
+
+    private MobilityDetection setLoiteringDelayWifi(int loiteringDelayWifi) {
+        this.loiteringDelayWifi = loiteringDelayWifi;
+        return this;
+    }
+
+    private MobilityDetection setLoiteringDelayPower(int loiteringDelayPower) {
+        this.loiteringDelayPower = loiteringDelayPower;
+        return this;
+    }
+
+    private MobilityDetection setLoiteringDelayActivity(int loiteringDelayActivity) {
+        this.loiteringDelayActivity = loiteringDelayActivity;
+        return this;
+    }
+
+    private MobilityDetection setRadiusPower(long radiusPower) {
+        this.radiusPower = radiusPower;
+        return this;
+    }
+
+    private MobilityDetection setRadiusWifi(long radiusWifi) {
+        this.radiusWifi = radiusWifi;
+        return this;
+    }
+
+    private MobilityDetection setRadiusActivity(long radiusActivity) {
+        this.radiusActivity = radiusActivity;
+        return this;
+    }
+
     private MobilityDetection setListener(MobilityDetectionListener listener) {
         this.listener = listener;
         return this;
@@ -114,8 +130,8 @@ public class MobilityDetection {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION)) {
-                Log.e(TAG, Actions.ACTIVITY_TRANSITIONED_RECEIVER_ACTION);
+            if (action.equals(Actions.ACTIVITY_TRANSITIONED_ACTION)) {
+                Log.e(TAG, Actions.ACTIVITY_TRANSITIONED_ACTION);
                 DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
                 if (listener != null) {
                     listener.onTransitioned(detectedActivities);
@@ -200,10 +216,12 @@ public class MobilityDetection {
             mobilityDetectionService.fastInterval = fastInterval;
             mobilityDetectionService.mediumInterval = mediumInterval;
             mobilityDetectionService.slowInterval = slowInterval;
-            mobilityDetectionService.loiteringDelayWifiConnectionChanged = loiteringDelayWifiConnectionChanged;
-            mobilityDetectionService.loiteringDelayWifiConnectionTime = loiteringDelayWifiConnectionTime;
-            mobilityDetectionService.loiteringDelayPowerConnectionChanged = loiteringDelayPowerConnectionChanged;
+            mobilityDetectionService.loiteringDelayWifi = loiteringDelayWifi;
+            mobilityDetectionService.loiteringDelayPower = loiteringDelayPower;
             mobilityDetectionService.loiteringDelayActivity = loiteringDelayActivity;
+            mobilityDetectionService.radiusPower = radiusPower;
+            mobilityDetectionService.radiusWifi = radiusWifi;
+            mobilityDetectionService.radiusActivity = radiusActivity;
             serviceBound = true;
         }
 
@@ -213,6 +231,11 @@ public class MobilityDetection {
         }
     };
 
+    /**
+     * Starts the mobility detection library
+     *
+     * @throws NullPointerException
+     */
     public void startMobilityDetection() throws NullPointerException {
         if (context != null) {
             Intent intent = new Intent(context, MobilityDetectionService.class);
@@ -224,6 +247,11 @@ public class MobilityDetection {
         }
     }
 
+    /**
+     * Stops the mobility detection library
+     *
+     * @throws NullPointerException
+     */
     public void stopMobilityDetection() throws NullPointerException {
         if (context != null) {
             mobilityDetectionService.saveData();
@@ -239,72 +267,169 @@ public class MobilityDetection {
         }
     }
 
+    /**
+     * Class for building the MobilityDetection class
+     */
     public static class Builder {
+
         private Context context;
-        private long interval = 1000 * 10;
-        private long fastInterval = 1000;
-        private long mediumInterval = 1000 * 60 * 3;
-        private long slowInterval = 1000 * 60 * 6;
-        private int loiteringDelayWifiConnectionChanged = 1000 * 60 * 5;
-        private int loiteringDelayWifiConnectionTime = 1000 * 60 * 60 * 2;
-        private int loiteringDelayPowerConnectionChanged = 1000 * 60 * 5;
-        private int loiteringDelayActivity = 1000 * 60 * 15;
+
+        private long interval = MobilityDetectionConstants.INTERVAL;
+        private long fastInterval = MobilityDetectionConstants.FAST_INTERVAL;
+        private long mediumInterval = MobilityDetectionConstants.MEDIUM_INTERVAL;
+        private long slowInterval = MobilityDetectionConstants.SLOW_INTERVAL;
+
+        private int loiteringDelayWifi = MobilityDetectionConstants.LOITERING_DELAY_WIFI;
+        private int loiteringDelayPower = MobilityDetectionConstants.LOITERING_DELAY_POWER;
+        private int loiteringDelayActivity = MobilityDetectionConstants.LOITERING_DELAY_ACTIVITY;
+
+        private long radiusPower = MobilityDetectionConstants.RADIUS_POWER;
+        private long radiusWifi = MobilityDetectionConstants.RADIUS_WIFI;
+        private long radiusActivity = MobilityDetectionConstants.RADIUS_ACTIVITY;
+
         private MobilityDetectionListener listener;
 
         public Builder() {
 
         }
 
+        /**
+         * Setting the context of the application where the library is included
+         *
+         * @param context Context
+         * @return Builder
+         */
         public Builder setContext(Context context) {
             this.context = context;
             return this;
         }
 
+        /**
+         * Setting the update interval for ActivityRecognitionClient
+         *
+         * @param interval Update interval in milliseconds
+         * @return Builder
+         */
         public Builder setInterval(long interval) {
             this.interval = interval;
             return this;
         }
 
+        /**
+         * Setting the fastest update interval for ActivityRecognitionClient
+         *
+         * @param fastInterval Update interval in milliseconds
+         * @return Builder
+         */
         public Builder setFastInterval(long fastInterval) {
             this.fastInterval = fastInterval;
             return this;
         }
 
+        /**
+         * Setting the medium update interval for ActivityRecognitionClient
+         *
+         * @param mediumInterval Update interval in milliseconds
+         * @return Builder
+         */
         public Builder setMediumInterval(long mediumInterval) {
             this.mediumInterval = mediumInterval;
             return this;
         }
 
+        /**
+         * Setting the slowest update interval for ActivityRecognitionClient
+         *
+         * @param slowInterval Update interval in milliseconds
+         * @return Builder
+         */
         public Builder setSlowInterval(long slowInterval) {
             this.slowInterval = slowInterval;
             return this;
         }
 
-        public Builder setLoiteringDelayWifiConnectionChanged(int loiteringDelayWifiConnectionChanged) {
-            this.loiteringDelayWifiConnectionChanged = loiteringDelayWifiConnectionChanged;
+        /**
+         * Setting the loitering delay for a geofence when a wifi connection has been established. The value is used for deciding whether a wifi connection is a mobile hotspot or a stationary network.
+         *
+         * @param loiteringDelayWifi loitering delay in milliseconds
+         * @return Builder
+         */
+        public Builder setLoiteringDelayWifi(int loiteringDelayWifi) {
+            this.loiteringDelayWifi = loiteringDelayWifi;
             return this;
         }
 
-        public Builder setLoiteringDelayWifiConnectionTime(int loiteringDelayWifiConnectionTime) {
-            this.loiteringDelayWifiConnectionTime = loiteringDelayWifiConnectionTime;
+        /**
+         * Setting the loitering delay for a geofence when the power connection has been established. The value is used for deciding whether an user is charging its mobile device with a power bank or from an socket.
+         *
+         * @param loiteringDelayPower loitering delay in milliseconds
+         * @return Builder
+         */
+        public Builder setLoiteringDelayPower(int loiteringDelayPower) {
+            this.loiteringDelayPower = loiteringDelayPower;
             return this;
         }
 
-        public Builder setLoiteringDelayPowerConnectionChanged(int loiteringDelayPowerConnectionChanged) {
-            this.loiteringDelayPowerConnectionChanged = loiteringDelayPowerConnectionChanged;
-            return this;
-        }
-
+        /**
+         * Setting the loitering delay for a geofence and when no new activities are recognized by the ActivityRecognitionClient. The value is used for changing the configuration of the ActivityRecognitionClient in order to prevent battery drainage.
+         *
+         * @param loiteringDelayActivity loitering delay in milliseconds
+         * @return Builder
+         */
         public Builder setLoiteringDelayActivity(int loiteringDelayActivity) {
             this.loiteringDelayActivity = loiteringDelayActivity;
             return this;
         }
 
+        /**
+         * Setting the radius for a geofence when a power connection is established. The value is used for deciding whether an user is charging its mobile device with a power bank or from an socket.
+         *
+         * @param radiusPower radius in meters
+         * @return Builder
+         */
+        public Builder setRadiusPower(long radiusPower) {
+            this.radiusPower = radiusPower;
+            return this;
+        }
+
+        /**
+         * Setting the radius for a geofence when a wifi connection is established. The value is used for deciding whether a wifi connection is a mobile hotspot or a stationary network.
+         *
+         * @param radiusWifi radius in meters
+         * @return Builder
+         */
+        public Builder setRadiusWifi(long radiusWifi) {
+            this.radiusWifi = radiusWifi;
+            return this;
+        }
+
+        /**
+         * Setting the radius for a geofence when no new activities are recognized by the ActivityRecognitionClient. The value is used for changing the configuration of the ActivityRecognitionClient in order to prevent battery drainage.
+         *
+         * @param radiusActivity radius in meters
+         * @return Builder
+         */
+        public Builder setRadiusActivity(long radiusActivity) {
+            this.radiusActivity = radiusActivity;
+            return this;
+        }
+
+        /**
+         * Setting the listener for retrieving events in the application
+         *
+         * @param listener MobilityDetectionListener
+         * @return Builder
+         */
         public Builder setListener(MobilityDetectionListener listener) {
             this.listener = listener;
             return this;
         }
 
+        /**
+         * Builds a singleton object of MobilityDetection class
+         *
+         * @return MobilityDetection
+         */
         public MobilityDetection build() {
             return MobilityDetection.getInstance()
                     .setContext(context)
@@ -312,10 +437,12 @@ public class MobilityDetection {
                     .setFastInterval(fastInterval)
                     .setMediumInterval(mediumInterval)
                     .setSlowInterval(slowInterval)
-                    .setLoiteringDelayWifiConnectionChanged(loiteringDelayWifiConnectionChanged)
-                    .setLoiteringDelayWifiConnectionTime(loiteringDelayWifiConnectionTime)
-                    .setLoiteringDelayPowerConnectionChanged(loiteringDelayPowerConnectionChanged)
+                    .setLoiteringDelayWifi(loiteringDelayWifi)
+                    .setLoiteringDelayPower(loiteringDelayPower)
                     .setLoiteringDelayActivity(loiteringDelayActivity)
+                    .setRadiusPower(radiusPower)
+                    .setRadiusWifi(radiusWifi)
+                    .setRadiusActivity(radiusActivity)
                     .setListener(listener);
         }
     }

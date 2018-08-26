@@ -2,8 +2,6 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.Context;
-import android.os.Parcelable;
 import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
@@ -13,9 +11,11 @@ import com.google.android.gms.location.GeofencingEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.R;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 
+/**
+ * IntentService for getting geofence transitions.
+ */
 public class GeofenceIntentService extends IntentService {
 
     private static final String TAG = GeofenceIntentService.class.getSimpleName();

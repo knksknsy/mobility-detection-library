@@ -18,6 +18,12 @@ public class Activities {
 
     final public static String[] activities = new String[]{IN_VEHICLE, ON_BICYCLE, ON_FOOT, STILL, UNKNOWN, TILTING, WALKING, RUNNING};
 
+    /**
+     * Converting the activity type returned from DetectedActivity into a human readable output.
+     *
+     * @param type
+     * @return
+     */
     public static String getActivityType(int type) {
         String activity = "";
         switch (type) {
@@ -49,6 +55,12 @@ public class Activities {
         return activity;
     }
 
+    /**
+     * Converting the transition type returned from ActivityTransitionEvent into a human readable output.
+     *
+     * @param type
+     * @return
+     */
     public static String getTransitionType(int type) {
         String sType = "";
         switch (type) {

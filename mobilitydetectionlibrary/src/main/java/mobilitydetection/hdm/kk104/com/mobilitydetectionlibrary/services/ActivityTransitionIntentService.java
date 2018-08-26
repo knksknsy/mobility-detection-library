@@ -8,6 +8,11 @@ import com.google.android.gms.location.ActivityTransitionResult;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.TransitionedActivity;
 
+/**
+ * IntentService for getting ActivityTransitionResult
+ *
+ * @deprecated
+ */
 public class ActivityTransitionIntentService extends IntentService {
 
     private static final String TAG = ActivityTransitionIntentService.class.getSimpleName();
@@ -78,7 +83,7 @@ public class ActivityTransitionIntentService extends IntentService {
     }
 
     private void broadcastTransition(TransitionedActivity activity) {
-        Intent intent = new Intent(Actions.ACTIVITY_TRANSITIONED_ACTION);
+        Intent intent = new Intent(Actions.ACTIVITY_TRANSITION_API_ACTION);
         intent.putExtra(TransitionedActivity.class.getSimpleName(), activity);
         sendBroadcast(intent, null);
     }

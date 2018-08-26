@@ -9,6 +9,11 @@ import com.google.android.gms.location.LocationResult;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Actions;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 
+/**
+ * IntentService for getting location updates.
+ *
+ * @deprecated
+ */
 public class LocationIntentService extends IntentService {
 
     private static final String TAG = LocationIntentService.class.getSimpleName();

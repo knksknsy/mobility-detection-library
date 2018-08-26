@@ -18,22 +18,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.Timestamp;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 
+/**
+ * Class containing coordinates and address information from Geocoder
+ *
+ * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedAddress
+ */
 public class DetectedLocation implements Parcelable {
 
     private static final String TAG = DetectedLocation.class.getSimpleName();
 
     private Context context;
 
+    /**
+     * Timestamp in the following pattern: yyyy-MM-ddTHH:mm:ss
+     */
     private String timestamp;
     private double latitude;
     private double longitude;
     private Location location;
+    /**
+     * Containing address information from Geocoder
+     */
     private DetectedAddress detectedAddress;
 
     public DetectedLocation() {
-        this.timestamp = generateTimestamp();
+        this.timestamp = Timestamp.generateTimestamp();
     }
 
     public DetectedLocation(String timestamp) {
@@ -42,13 +53,18 @@ public class DetectedLocation implements Parcelable {
 
     public DetectedLocation(Context context, Location location) {
         this.context = context;
-        this.timestamp = generateTimestamp();
+        this.timestamp = Timestamp.generateTimestamp();
         this.location = location;
         this.latitude = location.getLatitude();
         this.longitude = location.getLongitude();
         this.detectedAddress = detectAddress(this.latitude, this.longitude);
     }
 
+    /**
+     * Constructor for creating a DetectedLocation object by reading a Parcel
+     *
+     * @param in
+     */
     public DetectedLocation(Parcel in) {
         timestamp = in.readString();
         location = in.readParcelable(Location.class.getClassLoader());
@@ -62,6 +78,12 @@ public class DetectedLocation implements Parcelable {
         return hashCode();
     }
 
+    /**
+     * Converts the DetectedLocation object to a Parcel
+     *
+     * @param dest
+     * @param flags
+     */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(timestamp);
@@ -121,6 +143,14 @@ public class DetectedLocation implements Parcelable {
         this.detectedAddress = address;
     }
 
+    /**
+     * Getting the address information from Geocoder
+     *
+     * @param latitude
+     * @param longitude
+     * @return DetectedAddress object
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedAddress
+     */
     private DetectedAddress detectAddress(double latitude, double longitude) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = connectivityManager.getActiveNetworkInfo();
@@ -140,14 +170,15 @@ public class DetectedLocation implements Parcelable {
         return null;
     }
 
-    private String generateTimestamp() {
-        return Timestamp.generateTimestamp();
-    }
-
     public String getShortTime() {
         return Timestamp.getTime(timestamp);
     }
 
+    /**
+     * Converts a DetectedLocation object to a JSONObject.
+     *
+     * @return
+     */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();
         try {

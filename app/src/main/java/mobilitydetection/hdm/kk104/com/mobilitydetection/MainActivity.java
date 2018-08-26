@@ -183,10 +183,10 @@ public class MainActivity extends AppCompatActivity {
                 .setFastInterval(1000 * 5)
                 .setMediumInterval(1000 * 5)
                 .setSlowInterval(1000 * 5)
-                .setLoiteringDelayWifiConnectionChanged(1000 * 5)
-                .setLoiteringDelayWifiConnectionTime(1000 * 5)
-                .setLoiteringDelayPowerConnectionChanged(1000 * 5)
-                .setLoiteringDelayActivity(1000 * 5)*/
+                .setLoiteringDelayWifiConnectionChanged(1000 * 60 * 5)
+                .setLoiteringDelayWifiConnectionTime(1000 * 60 * 5)
+                .setLoiteringDelayPowerConnectionChanged(1000 * 60 * 5)
+                .setLoiteringDelayActivity(1000 * 60 * 5)*/
                 .setListener(new MobilityDetectionListener() {
                     @Override
                     public void onStopService() {

@@ -74,9 +74,6 @@ public class MobilityDetectionService extends Service {
 
     private PendingIntent detectedActivityPendingIntent;
     private PendingIntent geofencingPendingIntent;
-    private PendingIntent locationPendingIntent;
-    private PendingIntent transitionPendingIntent;
-    private PendingIntent fencePendingIntent;
 
     public long interval = MobilityDetectionConstants.INTERVAL;
     public long fastInterval = MobilityDetectionConstants.FAST_INTERVAL;
@@ -89,11 +86,10 @@ public class MobilityDetectionService extends Service {
 
     public long radiusPower = MobilityDetectionConstants.RADIUS_POWER;
     public long radiusWifi = MobilityDetectionConstants.RADIUS_WIFI;
-    public long radiusActivity = MobilityDetectionConstants.RADIUS_ACTIVITY;
-
-    // private LocationRequest locationRequestTracking;
-    // private FusedLocationProviderClient fusedLocationProviderClientTracking;
-    // private FenceClient fenceClient;
+    // private FenceClient fenceClient
+    // private PendingIntent locationPendingIntent;
+    // private PendingIntent transitionPendingIntent;
+    // private PendingIntent fencePendingIntent;
 
     public MobilityDetectionService() {
     }
@@ -799,52 +795,6 @@ public class MobilityDetectionService extends Service {
     }
 
     /**
-     * Getting the PendingIntent for starting LocationIntentService. The class is responsible for getting location updates.
-     *
-     * @return PendingIntent
-     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.LocationIntentService
-     * @deprecated
-     */
-    private PendingIntent getLocationPendingIntent() {
-        if (locationPendingIntent != null) {
-            return locationPendingIntent;
-        }
-        Intent intent = new Intent(this, LocationIntentService.class);
-        locationPendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        return locationPendingIntent;
-    }
-
-    /**
-     * Getting the PendingIntent for starting FenceIntentService. The class is responsible for whether or not a user is performing an activity.
-     *
-     * @return PendingIntent
-     * @deprecated
-     */
-    private PendingIntent getFencePendingIntent() {
-        if (fencePendingIntent != null) {
-            return fencePendingIntent;
-        }
-        Intent intent = new Intent(this, FenceIntentService.class);
-        fencePendingIntent = PendingIntent.getService(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        return fencePendingIntent;
-    }
-
-    /**
-     * Getting the PendingIntent for starting ActivityTransitionIntentService. The class is responsible for detecting activity transitions.
-     *
-     * @return PendingIntent
-     * @deprecated
-     */
-    private PendingIntent getTransitionPendingIntent() {
-        if (transitionPendingIntent != null) {
-            return transitionPendingIntent;
-        }
-        Intent intent = new Intent(this, ActivityTransitionIntentService.class);
-        transitionPendingIntent = PendingIntent.getService(this, 3, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        return transitionPendingIntent;
-    }
-
-    /**
      * Write JSON file to storage.
      */
     public void saveData() {
@@ -921,6 +871,33 @@ public class MobilityDetectionService extends Service {
                         Log.e(TAG, e.getMessage());
                     }
                 });*//*
+    }*/
+
+    /*private PendingIntent getLocationPendingIntent() {
+        if (locationPendingIntent != null) {
+            return locationPendingIntent;
+        }
+        Intent intent = new Intent(this, LocationIntentService.class);
+        locationPendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return locationPendingIntent;
+    }
+
+    private PendingIntent getFencePendingIntent() {
+        if (fencePendingIntent != null) {
+            return fencePendingIntent;
+        }
+        Intent intent = new Intent(this, FenceIntentService.class);
+        fencePendingIntent = PendingIntent.getService(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return fencePendingIntent;
+    }
+
+    private PendingIntent getTransitionPendingIntent() {
+        if (transitionPendingIntent != null) {
+            return transitionPendingIntent;
+        }
+        Intent intent = new Intent(this, ActivityTransitionIntentService.class);
+        transitionPendingIntent = PendingIntent.getService(this, 3, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return transitionPendingIntent;
     }*/
 
     /*public void requestAwarenessUpdates() {

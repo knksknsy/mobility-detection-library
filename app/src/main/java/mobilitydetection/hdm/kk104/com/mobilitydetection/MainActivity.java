@@ -41,7 +41,7 @@ import java.util.List;
 
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.initializer.MobilityDetection;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 

@@ -1,4 +1,4 @@
-package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models;
+package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants;
 
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.DetectedActivity;

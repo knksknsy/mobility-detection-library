@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 
 /**
@@ -31,7 +32,7 @@ public class DetectedActivities implements Parcelable {
      * Containing each activity's probability
      *
      * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities
-     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities
+     * @see Activities
      */
     private ProbableActivities probableActivities;
     /**

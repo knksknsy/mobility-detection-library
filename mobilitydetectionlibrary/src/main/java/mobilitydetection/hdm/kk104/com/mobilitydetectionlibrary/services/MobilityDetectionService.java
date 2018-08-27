@@ -43,7 +43,7 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Action
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.MobilityDetectionConstants;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DataManager;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedLocation;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;

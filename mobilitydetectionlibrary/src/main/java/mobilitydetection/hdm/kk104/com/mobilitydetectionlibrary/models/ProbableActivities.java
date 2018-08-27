@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.helpers.DetectedActivitiesEvaluation;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 

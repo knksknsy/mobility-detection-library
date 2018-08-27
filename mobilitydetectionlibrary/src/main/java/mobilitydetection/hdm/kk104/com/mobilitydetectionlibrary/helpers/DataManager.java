@@ -86,7 +86,7 @@ public class DataManager {
             removeActivityTransitions();
             if (activities.size() > 0) {
                 Route route = new Route(activities);
-                root.getJSONObject(DB_NAME).getJSONArray(ROUTES).put(route.toJSON());
+                root.getJSONArray(ROUTES).put(route.toJSON());
             }
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
@@ -102,7 +102,7 @@ public class DataManager {
     public ArrayList<Route> getRoutes() {
         ArrayList<Route> routes = new ArrayList<>();
         try {
-            JSONArray routesArray = root.getJSONObject(DB_NAME).getJSONArray(ROUTES);
+            JSONArray routesArray = root.getJSONArray(ROUTES);
             for (int i = 0; i < routesArray.length(); i++) {
                 JSONObject routeObject = routesArray.getJSONObject(i);
                 JSONArray objectRoutes = routeObject.getJSONArray("route");
@@ -115,26 +115,28 @@ public class DataManager {
                     DetectedLocation detectedLocation = new DetectedLocation(objectRoute.getJSONObject("detectedLocation").getString("timestamp"));
                     detectedLocation.setLatitude(objectRoute.getJSONObject("detectedLocation").getDouble("latitude"));
                     detectedLocation.setLongitude(objectRoute.getJSONObject("detectedLocation").getDouble("longitude"));
-                    DetectedAddress detectedAddress = new DetectedAddress();
-                    if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("address")) {
-                        detectedAddress.setAddress(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("address"));
+                    if (objectRoute.getJSONObject("detectedLocation").has("detectedAddress")) {
+                        DetectedAddress detectedAddress = new DetectedAddress();
+                        if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("address")) {
+                            detectedAddress.setAddress(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("address"));
+                        }
+                        if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("city")) {
+                            detectedAddress.setCity(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("city"));
+                        }
+                        if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("state")) {
+                            detectedAddress.setState(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("state"));
+                        }
+                        if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("country")) {
+                            detectedAddress.setCountry(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("country"));
+                        }
+                        if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("postalCode")) {
+                            detectedAddress.setPostalCode(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("postalCode"));
+                        }
+                        if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("featureName")) {
+                            detectedAddress.setFeatureName(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("featureName"));
+                        }
+                        detectedLocation.setDetectedAddress(detectedAddress);
                     }
-                    if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("city")) {
-                        detectedAddress.setCity(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("city"));
-                    }
-                    if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("state")) {
-                        detectedAddress.setState(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("state"));
-                    }
-                    if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("country")) {
-                        detectedAddress.setCountry(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("country"));
-                    }
-                    if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("postalCode")) {
-                        detectedAddress.setPostalCode(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("postalCode"));
-                    }
-                    if (objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").has("featureName")) {
-                        detectedAddress.setFeatureName(objectRoute.getJSONObject("detectedLocation").getJSONObject("detectedAddress").getString("featureName"));
-                    }
-                    detectedLocation.setDetectedAddress(detectedAddress);
                     detectedActivities.setDetectedLocation(detectedLocation);
                     detectedActivities.getProbableActivities().setActivity(objectRoute.getJSONObject("detectedActivities").getString("activity"));
 
@@ -158,10 +160,10 @@ public class DataManager {
      */
     public void writeWifiLocation(String ssid, DetectedLocation location) {
         try {
-            JSONObject object = root.getJSONObject(DB_NAME).getJSONObject(WIFI);
+            JSONObject object = root.getJSONObject(WIFI);
             if (object != JSONObject.NULL) {
-                if (!root.getJSONObject(DB_NAME).getJSONObject(WIFI).has(ssid)) {
-                    root.getJSONObject(DB_NAME).getJSONObject(WIFI).put(ssid, location.toJSON());
+                if (!root.getJSONObject(WIFI).has(ssid)) {
+                    root.getJSONObject(WIFI).put(ssid, location.toJSON());
                 }
             }
         } catch (JSONException e) {
@@ -176,7 +178,7 @@ public class DataManager {
      */
     public void updateWifiConnectionCount(String ssid) {
         try {
-            JSONObject object = root.getJSONObject(DB_NAME).getJSONObject(WIFI);
+            JSONObject object = root.getJSONObject(WIFI);
             if (object != JSONObject.NULL) {
                 if (object.has(ssid)) {
                     if (object.getJSONObject(ssid).has("dwellingCount")) {
@@ -201,7 +203,7 @@ public class DataManager {
     public boolean isWifiLocationStationary(String ssid) {
         boolean isStationary = false;
         try {
-            JSONObject object = root.getJSONObject(DB_NAME).getJSONObject(WIFI);
+            JSONObject object = root.getJSONObject(WIFI);
             if (object != JSONObject.NULL) {
                 if (object.has(ssid)) {
                     if (object.getJSONObject(ssid).has("dwellingCount")) {
@@ -224,8 +226,8 @@ public class DataManager {
     public Double[] getWifiLocation(String ssid) {
         Double[] location = new Double[2];
         try {
-            location[0] = root.getJSONObject(DB_NAME).getJSONObject(WIFI).getJSONObject(ssid).getDouble("latitude");
-            location[1] = root.getJSONObject(DB_NAME).getJSONObject(WIFI).getJSONObject(ssid).getDouble("longitude");
+            location[0] = root.getJSONObject(WIFI).getJSONObject(ssid).getDouble("latitude");
+            location[1] = root.getJSONObject(WIFI).getJSONObject(ssid).getDouble("longitude");
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
@@ -241,7 +243,7 @@ public class DataManager {
     public boolean hasWifiLocation(String ssid) {
         boolean hasSSID = false;
         try {
-            hasSSID = root.getJSONObject(DB_NAME).getJSONObject(WIFI).has(ssid);
+            hasSSID = root.getJSONObject(WIFI).has(ssid);
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }
@@ -418,9 +420,9 @@ public class DataManager {
                     data.put(LOCATION, location);
                     data.put(VALIDATION, validation);
                     data.put(TRANSITIONS, transitions);
+                    root.put(WIFI, wifi);
+                    root.put(ROUTES, routes);
                     root.getJSONObject(DB_NAME).put(shortDate, data);
-                    root.getJSONObject(DB_NAME).put(WIFI, wifi);
-                    root.getJSONObject(DB_NAME).put(ROUTES, routes);
                 }
             } else {
                 root = null;
@@ -455,8 +457,8 @@ public class DataManager {
             data.put(TRANSITIONS, transitions);
             day.put(shortDate, data);
             root.put(DB_NAME, day);
-            root.getJSONObject(DB_NAME).put(WIFI, wifi);
-            root.getJSONObject(DB_NAME).put(ROUTES, routes);
+            root.put(WIFI, wifi);
+            root.put(ROUTES, routes);
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage());
         }

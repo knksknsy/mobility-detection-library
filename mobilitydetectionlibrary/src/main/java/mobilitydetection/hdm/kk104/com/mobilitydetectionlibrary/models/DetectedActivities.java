@@ -138,7 +138,7 @@ public class DetectedActivities implements Parcelable {
     /**
      * Converts a DetectedActivities object to a JSONObject.
      *
-     * @return
+     * @return JSONObject
      */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();

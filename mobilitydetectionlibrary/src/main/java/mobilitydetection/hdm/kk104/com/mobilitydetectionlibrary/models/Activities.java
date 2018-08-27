@@ -22,7 +22,7 @@ public class Activities {
      * Converting the activity type returned from DetectedActivity into a human readable output.
      *
      * @param type
-     * @return
+     * @return Human readable string of activity
      */
     public static String getActivityType(int type) {
         String activity = "";
@@ -59,7 +59,8 @@ public class Activities {
      * Converting the transition type returned from ActivityTransitionEvent into a human readable output.
      *
      * @param type
-     * @return
+     * @return Human readable string of transition
+     * @deprecated
      */
     public static String getTransitionType(int type) {
         String sType = "";

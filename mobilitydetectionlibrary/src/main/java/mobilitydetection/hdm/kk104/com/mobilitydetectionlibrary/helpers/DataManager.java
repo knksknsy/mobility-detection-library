@@ -198,7 +198,7 @@ public class DataManager {
      * Returns whether a wifi network is stationary or a mobile hotspot
      *
      * @param ssid SSID of the wifi network
-     * @return
+     * @return boolean
      */
     public boolean isWifiLocationStationary(String ssid) {
         boolean isStationary = false;
@@ -238,7 +238,7 @@ public class DataManager {
      * Checks if it's the first connection to this wifi network.
      *
      * @param ssid SSID of the wifi network
-     * @return
+     * @return boolean
      */
     public boolean hasWifiLocation(String ssid) {
         boolean hasSSID = false;

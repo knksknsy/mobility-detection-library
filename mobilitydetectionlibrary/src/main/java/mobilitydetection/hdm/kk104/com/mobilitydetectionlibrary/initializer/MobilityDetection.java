@@ -1,4 +1,4 @@
-package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary;
+package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.initializer;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;

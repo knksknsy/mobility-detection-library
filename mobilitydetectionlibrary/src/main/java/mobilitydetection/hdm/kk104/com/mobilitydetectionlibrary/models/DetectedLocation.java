@@ -177,7 +177,7 @@ public class DetectedLocation implements Parcelable {
     /**
      * Converts a DetectedLocation object to a JSONObject.
      *
-     * @return
+     * @return JSONObject
      */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();

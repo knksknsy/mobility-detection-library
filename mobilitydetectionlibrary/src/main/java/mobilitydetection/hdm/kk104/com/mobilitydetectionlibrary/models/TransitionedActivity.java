@@ -104,7 +104,7 @@ public class TransitionedActivity implements Parcelable {
     /**
      * Converts a TransitionedActivity object to a JSONObject.
      *
-     * @return
+     * @return JSONObject
      */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();

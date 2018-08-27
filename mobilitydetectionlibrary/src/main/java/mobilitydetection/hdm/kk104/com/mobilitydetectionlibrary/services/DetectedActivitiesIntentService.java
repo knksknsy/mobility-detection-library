@@ -46,6 +46,11 @@ public class DetectedActivitiesIntentService extends IntentService {
         }
     }
 
+    /**
+     * Send broadcast to application holding detected activity probabilities.
+     *
+     * @param activities Extracted intent result of ActivityRecognitionResult.
+     */
     private void broadcastActivities(ArrayList<DetectedActivity> activities) {
         Intent intent = new Intent(Actions.ACTIVITY_LIST_ACTION);
         intent.putParcelableArrayListExtra("activities", activities);
@@ -56,6 +61,13 @@ public class DetectedActivitiesIntentService extends IntentService {
         broadcastDetectedActivities(detectedActivities);
     }
 
+    /**
+     * Send broadcast to MobilityDetectionService. Contains DetectedActivities object holding detected activity information.
+     *
+     * @param detectedActivities DetectedActivities object created with the extracted intent result of ActivityRecognitionResult.
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.services.MobilityDetectionService
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
+     */
     private void broadcastDetectedActivities(DetectedActivities detectedActivities) {
         Intent intent = new Intent(Actions.ACTIVITY_DETECTED_ACTION);
         intent.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);

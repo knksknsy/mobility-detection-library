@@ -202,15 +202,16 @@ public class ProbableActivities implements Parcelable {
     }
 
     /**
-     * Evaluates the activity which is detected
+     * Evaluates the activity which is detected.
      *
-     * @param exitedActivity
-     * @param enteredActivity
-     * @return
+     * @param exitedActivity  DetectedActivities object of the last detected activity.
+     * @param enteredActivity DetectedActivities object of the currently detected activity.
+     * @return Human readable String containing the evaluated activity.
+     * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities
      */
     public String evaluateActivity(final DetectedActivities exitedActivity, final DetectedActivities enteredActivity) {
         String activity = new String();
-        boolean exitedActivityStill = false;
+        /*boolean exitedActivityStill = false;*/
         boolean exitedActivityVehicle = false;
 
         if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL) || exitedActivity.getProbableActivities().getActivity().equals(Activities.IN_VEHICLE)) {
@@ -218,19 +219,16 @@ public class ProbableActivities implements Parcelable {
             long interval = 1000 * 60;
 
             if (diff <= interval) {
-                if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL) && enteredActivity.getProbableActivities().STILL >= 70) {
+                /*if (exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL) && enteredActivity.getProbableActivities().STILL >= 70) {
                     exitedActivityStill = true;
-                }
+                }*/
                 if (exitedActivity.getProbableActivities().getActivity().equals(Activities.IN_VEHICLE)) {
                     exitedActivityVehicle = true;
                 }
             }
         }
 
-        if (ON_FOOT >= 80) {
-            activity = Activities.ON_FOOT;
-        }
-        if (WALKING >= 80) {
+        if (WALKING >= 80 || ON_FOOT >= 80) {
             activity = Activities.WALKING;
         }
 
@@ -240,14 +238,14 @@ public class ProbableActivities implements Parcelable {
             activity = Activities.STILL;
         }
 
-        if (exitedActivityStill) {
+        /*if (exitedActivityStill) {
             final ProbableActivities probableActivities = enteredActivity.getProbableActivities();
             probableActivities.STILL = probableActivities.STILL - 15;
             if (DetectedActivitiesEvaluation.Deceleration.checkState(probableActivities)) {
                 activity = Activities.STILL;
             }
-        }
-        if (exitedActivityVehicle && enteredActivity.getProbableActivities().STILL >= 50) {
+        }*/
+        if (exitedActivityVehicle && enteredActivity.getProbableActivities().STILL >= 60) {
             activity = Activities.STILL;
         }
 
@@ -277,7 +275,7 @@ public class ProbableActivities implements Parcelable {
     /**
      * Converts a ProbableActivities object to a JSONObject.
      *
-     * @return
+     * @return JSONObject
      */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();

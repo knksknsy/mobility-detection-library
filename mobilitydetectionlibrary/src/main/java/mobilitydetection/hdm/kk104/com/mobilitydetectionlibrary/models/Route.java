@@ -170,7 +170,7 @@ public class Route implements Parcelable {
     /**
      * Converts a Route object to a JSONObject.
      *
-     * @return
+     * @return JSONObject
      */
     public JSONObject toJSON() {
         JSONObject object = new JSONObject();

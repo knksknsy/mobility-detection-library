@@ -13,7 +13,7 @@ public class Timestamp {
     /**
      * Generates a timestamp in the following pattern: yyyy-MM-ddTHH:mm:ss
      *
-     * @return
+     * @return timestamp
      */
     public static String generateTimestamp() {
         Date date = new Date();
@@ -25,8 +25,8 @@ public class Timestamp {
     /**
      * Return a timestamp in the following pattern: HH:mm:ss
      *
-     * @param timestamp
-     * @return
+     * @param timestamp timestamp string to be formatted
+     * @return formatted timestamp
      */
     public static String getTime(String timestamp) {
         return timestamp.split("T")[1];
@@ -35,7 +35,7 @@ public class Timestamp {
     /**
      * Return a timestamp in the following pattern: yyyy-MM-dd
      *
-     * @return
+     * @return timestamp string
      */
     public static String getDate() {
         Date date = new Date();
@@ -48,7 +48,7 @@ public class Timestamp {
      * Converts a timestamp string into a Calendar object
      *
      * @param timestamp has the following pattern: yyyy-MM-ddTHH:mm:ss
-     * @return null when the pattern is incorrect
+     * @return Calendar object. Null when the pattern is incorrect
      */
     public static Calendar getDate(String timestamp) {
         Calendar calendar = Calendar.getInstance();
@@ -67,7 +67,7 @@ public class Timestamp {
      *
      * @param t1 has the following pattern: yyyy-MM-ddTHH:mm:ss
      * @param t2 has the following pattern: yyyy-MM-ddTHH:mm:ss
-     * @return
+     * @return time difference in milliseconds
      */
     public static long getDifference(String t1, String t2) {
         return getDate(t2).getTimeInMillis() - getDate(t1).getTimeInMillis();

@@ -39,7 +39,7 @@ import com.google.android.gms.tasks.Task;
 import java.util.ArrayList;
 import java.util.List;
 
-import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.MobilityDetection;
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.initializer.MobilityDetection;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.listeners.MobilityDetectionListener;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;

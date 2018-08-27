@@ -66,7 +66,7 @@ public class DetectedActivitiesEvaluation {
          * Return if the activity is accelerating
          *
          * @param probableActivities ProbableActivities object containing the probabilities of each activity.
-         * @return
+         * @return state of if activity is accelerating
          * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities
          */
         public static boolean checkState(final ProbableActivities probableActivities) {
@@ -173,7 +173,7 @@ public class DetectedActivitiesEvaluation {
          * Return if the activity is a vehicle in a constant motion
          *
          * @param probableActivities ProbableActivities object containing the probabilities of each activity.
-         * @return
+         * @return state of if activity is in constant motion
          * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities
          */
         public static boolean checkState(final ProbableActivities probableActivities) {
@@ -280,7 +280,7 @@ public class DetectedActivitiesEvaluation {
          * Return if the activity is decelerating
          *
          * @param probableActivities ProbableActivities object containing the probabilities of each activity.
-         * @return
+         * @return state of if activity is decelerating
          * @see mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.ProbableActivities
          */
         public static boolean checkState(final ProbableActivities probableActivities) {

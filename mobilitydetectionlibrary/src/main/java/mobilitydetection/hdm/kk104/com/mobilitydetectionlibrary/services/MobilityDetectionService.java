@@ -86,7 +86,10 @@ public class MobilityDetectionService extends Service {
 
     public long radiusPower = MobilityDetectionConstants.RADIUS_POWER;
     public long radiusWifi = MobilityDetectionConstants.RADIUS_WIFI;
-    // private FenceClient fenceClient
+    public long radiusActivity = MobilityDetectionConstants.RADIUS_ACTIVITY;
+
+    // private LocationRequest locationRequestTracking;
+    // private FenceClient fenceClient;
     // private PendingIntent locationPendingIntent;
     // private PendingIntent transitionPendingIntent;
     // private PendingIntent fencePendingIntent;

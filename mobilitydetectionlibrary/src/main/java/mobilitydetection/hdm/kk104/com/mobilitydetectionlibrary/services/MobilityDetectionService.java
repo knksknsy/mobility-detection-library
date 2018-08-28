@@ -433,38 +433,38 @@ public class MobilityDetectionService extends Service {
         boolean wifi = isWifiConnected;
         boolean geofence = isInGeofence;
 
-        if (charging && wifi && !geofence) {
+        if (charging && wifi && !geofence) { // power bank + mobile hotspot
             removeActivityRecognitionUpdates();
             if (!isStationaryWifi()) {
                 requestActivityRecognitionUpdates(fastInterval);
             }
         }
-        if (charging && !wifi && !geofence) {
+        if (charging && !wifi && !geofence) { // power bank
             removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates(fastInterval);
         }
-        if (!charging && wifi && !geofence) {
+        if (!charging && wifi && !geofence) { // mobile hotspot
             removeActivityRecognitionUpdates();
             if (!isStationaryWifi()) {
                 requestActivityRecognitionUpdates(interval);
             }
         }
-        if (!charging && !wifi && !geofence) {
+        if (!charging && !wifi && !geofence) { // default
             removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates(interval);
         }
 
-        if (charging && wifi && geofence) {
+        if (charging && wifi && geofence) { // fully stationary
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
             // todo: test
             // removeActivityRecognitionUpdates();
         }
-        if (charging && !wifi && geofence) {
+        if (charging && !wifi && geofence) { // charging stationary
             removeActivityRecognitionUpdates();
         }
-        if (!charging && wifi && geofence) {
+        if (!charging && wifi && geofence) { // wifi stationary
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
@@ -472,7 +472,7 @@ public class MobilityDetectionService extends Service {
                 requestActivityRecognitionUpdates(slowInterval);
             }
         }
-        if (!charging && !wifi && geofence) {
+        if (!charging && !wifi && geofence) { // default stationary
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();

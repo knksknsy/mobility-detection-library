@@ -371,13 +371,13 @@ public class MobilityDetectionService extends Service {
             long timeDifference;
 
             // Attributes for comparing exited and newly detected activity
-            DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
+            final DetectedActivities enteredActivity = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
             final DetectedActivities exitedActivity = dataManager.getLastActivityTransition();
-            String enteredActivityString = detectedActivities.getProbableActivities().evaluateActivity(exitedActivity, detectedActivities);
+            String enteredActivityString = enteredActivity.getProbableActivities().evaluateActivity(exitedActivity, enteredActivity);
 
             // Calculating the time difference between the exited and newly detected activity
             if (exitedActivity.getTimestamp() != null) {
-                timeDifference = Timestamp.getDifference(exitedActivity.getTimestamp(), detectedActivities.getTimestamp());
+                timeDifference = Timestamp.getDifference(exitedActivity.getTimestamp(), enteredActivity.getTimestamp());
             } else {
                 timeDifference = loiteringDelayActivity;
             }
@@ -395,11 +395,9 @@ public class MobilityDetectionService extends Service {
                     public void onLocationResult(LocationResult locationResult) {
                         super.onLocationResult(locationResult);
 
-                        DetectedActivities detectedActivities = intent.getParcelableExtra(DetectedActivities.class.getSimpleName());
-
                         if (locationResult != null) {
                             DetectedLocation detectedLocation = new DetectedLocation(getApplicationContext(), locationResult.getLastLocation());
-                            detectedActivities.setDetectedLocation(detectedLocation);
+                            enteredActivity.setDetectedLocation(detectedLocation);
 
                             // The user hasn't moved since the time <loiteringDelayActivity>
                             if (continuousActivity && stillActivity) {
@@ -409,12 +407,12 @@ public class MobilityDetectionService extends Service {
                                 endRoute();
                             }
                         }
-                        dataManager.writeActivityTransition(detectedActivities);
+                        dataManager.writeActivityTransition(enteredActivity);
                         dataManager.saveJSONFile();
 
                         // Notify MobilityDetection class for activity transition
                         Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_ACTION);
-                        i.putExtra(DetectedActivities.class.getSimpleName(), detectedActivities);
+                        i.putExtra(DetectedActivities.class.getSimpleName(), enteredActivity);
                         sendBroadcast(i, null);
 
                         fusedLocationProviderClient.removeLocationUpdates(this);

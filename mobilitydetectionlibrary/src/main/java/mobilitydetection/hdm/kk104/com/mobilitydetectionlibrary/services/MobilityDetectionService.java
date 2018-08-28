@@ -516,7 +516,6 @@ public class MobilityDetectionService extends Service {
         return true;
     }
 
-
     /**
      * Loads activity transitions and notifies the application running the library.
      */
@@ -761,7 +760,8 @@ public class MobilityDetectionService extends Service {
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(fastInterval)
                 .setFastestInterval(fastInterval)
-                .setMaxWaitTime(5000);
+                .setExpirationDuration(5000);
+                //.setMaxWaitTime(5000);
 
         return locationRequest;
     }

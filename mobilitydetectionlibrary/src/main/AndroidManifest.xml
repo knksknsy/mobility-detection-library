@@ -5,7 +5,6 @@
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -15,6 +14,26 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application>
+
+        <service android:name=".services.MobilityDetectionService" />
+
+        <service
+            android:name=".services.DetectedActivitiesIntentService"
+            android:exported="false" />
+
+        <service
+            android:name=".services.GeofenceIntentService"
+            android:exported="false" />
+
+        <!--<service
+            android:name=".services.ValidationIntentService"
+            android:exported="false" />
+        <service
+            android:name=".services.LocationIntentService"
+            android:exported="false" />
+        <service
+            android:name=".services.ActivityTransitionIntentService"
+            android:exported="false" />
         <meta-data
             android:name="com.google.android.awareness.API_KEY"
             android:value="API_KEY" />
@@ -24,31 +43,9 @@
         <meta-data
             android:name="com.google.android.nearby.messages.API_KEY"
             android:value="API_KEY" />
-
         <service
-            android:name=".services.DetectedActivitiesIntentService"
-            android:exported="false" />
-        <service
-            android:name=".services.ValidationIntentService"
-            android:exported="false" />
-        <service
-            android:name=".services.LocationIntentService"
-            android:exported="false" />
-        <service
-            android:name=".services.ActivityTransitionIntentService"
-            android:exported="false" />
-
-        <service
-            android:name=".services.GeofenceIntentService"
-            android:exported="false" />
-
-        <!--
-            <service
             android:name=".services.FenceIntentService"
-            android:exported="false" />
-        -->
-
-        <service android:name=".services.MobilityDetectionService" />
+            android:exported="false" />-->
 
     </application>
 

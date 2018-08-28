@@ -429,38 +429,42 @@ public class MobilityDetectionService extends Service {
     public void changeConfiguration() {
         Log.e(TAG, "isCharging: " + isCharging + ", isWifiConnected: " + isWifiConnected + ", isInGeofence: " + isInGeofence);
 
-        if (isCharging && isWifiConnected && !isInGeofence) {
+        boolean charging = isCharging;
+        boolean wifi = isWifiConnected;
+        boolean geofence = isInGeofence;
+
+        if (charging && wifi && !geofence) {
             removeActivityRecognitionUpdates();
             if (!isStationaryWifi()) {
                 requestActivityRecognitionUpdates(fastInterval);
             }
         }
-        if (isCharging && !isWifiConnected && !isInGeofence) {
+        if (charging && !wifi && !geofence) {
             removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates(fastInterval);
         }
-        if (!isCharging && isWifiConnected && !isInGeofence) {
+        if (!charging && wifi && !geofence) {
             removeActivityRecognitionUpdates();
             if (!isStationaryWifi()) {
                 requestActivityRecognitionUpdates(interval);
             }
         }
-        if (!isCharging && !isWifiConnected && !isInGeofence) {
+        if (!charging && !wifi && !geofence) {
             removeActivityRecognitionUpdates();
             requestActivityRecognitionUpdates(interval);
         }
 
-        if (isCharging && isWifiConnected && isInGeofence) {
+        if (charging && wifi && geofence) {
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
             // todo: test
             // removeActivityRecognitionUpdates();
         }
-        if (isCharging && !isWifiConnected && isInGeofence) {
+        if (charging && !wifi && geofence) {
             removeActivityRecognitionUpdates();
         }
-        if (!isCharging && isWifiConnected && isInGeofence) {
+        if (!charging && wifi && geofence) {
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();
@@ -468,7 +472,7 @@ public class MobilityDetectionService extends Service {
                 requestActivityRecognitionUpdates(slowInterval);
             }
         }
-        if (!isCharging && !isWifiConnected && isInGeofence) {
+        if (!charging && !wifi && geofence) {
             removeAllGeofenceUpdates(getGeofencePendingIntent());
             isInGeofence = false;
             removeActivityRecognitionUpdates();

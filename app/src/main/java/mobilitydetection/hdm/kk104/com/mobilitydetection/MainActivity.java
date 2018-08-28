@@ -334,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initiateLocationSettings() {
-        if (checkPermission()) {
+        if (checkLocationPermission()) {
             LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
             Log.e(TAG, "PERMISSION_GRANTED for ACCESS_FINE_LOCATION");
@@ -423,10 +423,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private boolean checkPermission() {
+    private boolean checkLocationPermission() {
         if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return false;
         }
         return true;

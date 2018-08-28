@@ -10,6 +10,7 @@ import com.google.android.gms.location.ActivityTransitionResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants.Activities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.utils.Timestamp;
 
 /**

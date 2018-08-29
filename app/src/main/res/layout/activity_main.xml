@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingVertical="10dp"
-    tools:context="mobilitydetection.hdm.kk104.com.mobilitydetection.MainActivity">
+    tools:context="mobilitydetection.hdm.kk104.com.mobilitydetection.application.MainActivity">
 
     <!--<LinearLayout
         android:layout_width="match_parent"

@@ -1,4 +1,4 @@
-package mobilitydetection.hdm.kk104.com.mobilitydetection;
+package mobilitydetection.hdm.kk104.com.mobilitydetection.adapters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import mobilitydetection.hdm.kk104.com.mobilitydetection.R;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 
 public class RoutesListAdapter extends ArrayAdapter<Route> {

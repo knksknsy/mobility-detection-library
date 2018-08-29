@@ -1,4 +1,4 @@
-package mobilitydetection.hdm.kk104.com.mobilitydetection;
+package mobilitydetection.hdm.kk104.com.mobilitydetection.activities;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import mobilitydetection.hdm.kk104.com.mobilitydetection.R;
+import mobilitydetection.hdm.kk104.com.mobilitydetection.adapters.ActivityListAdapter;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.DetectedActivities;
 import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 

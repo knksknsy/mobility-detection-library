@@ -75,6 +75,137 @@ public class MainActivity extends AppCompatActivity {
     private ActivityListAdapter activitiesAdapter;
     private RoutesListAdapter routesAdapter;
 
+    private MobilityDetectionListener mobilityDetectionListener = new MobilityDetectionListener() {
+        @Override
+        public void onStopService() {
+            finish();
+        }
+
+        @Override
+        public void onTransitioned(DetectedActivities activity) {
+            activitiesAdapter.add(activity);
+        }
+
+        @Override
+        public void onTransitionsLoaded(ArrayList<DetectedActivities> activities) {
+            activitiesAdapter.clear();
+            activitiesAdapter.addAll(activities);
+        }
+
+        @Override
+        public void onActivityDetected(ArrayList<DetectedActivity> activities) {
+            ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
+            activityList.setText("");
+
+            for (DetectedActivity activity : copyActivities) {
+                int type = activity.getType();
+                int confidence = activity.getConfidence();
+
+                switch (type) {
+                    case DetectedActivity.IN_VEHICLE: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.IN_VEHICLE) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                    case DetectedActivity.ON_BICYCLE: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.ON_BICYCLE) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                    case DetectedActivity.ON_FOOT: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.ON_FOOT) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                    case DetectedActivity.RUNNING: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.RUNNING) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                    case DetectedActivity.STILL: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.STILL) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                    case DetectedActivity.TILTING: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.TILTING) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                    case DetectedActivity.WALKING: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.WALKING) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                    case DetectedActivity.UNKNOWN: {
+                        activityList.append(Activities.getActivityType(DetectedActivity.UNKNOWN) + ": " + confidence);
+                        activityList.append("\n");
+                        break;
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onPowerConnectionChanged(boolean hasPowerConnection) {
+            if (hasPowerConnection) {
+                vibe.vibrate(1000);
+            } else {
+                vibe.vibrate(500);
+            }
+        }
+
+        @Override
+        public void onWifiConnectionChanged(boolean hasWifiConnection) {
+            if (hasWifiConnection) {
+                vibe.vibrate(1000);
+            } else {
+                vibe.vibrate(500);
+            }
+        }
+
+        @Override
+        public void onGeofenceAdded(String key) {
+            geofences.add(key);
+            setText();
+        }
+
+        @Override
+        public void onGeofenceRemoved(ArrayList<String> keys) {
+            for (String key : keys) {
+                for (int i = geofences.size() - 1; i >= 0; i--) {
+                    if (geofences.get(i).equals(key)) {
+                        geofences.remove(i);
+                    }
+                }
+            }
+            setText();
+        }
+
+        @Override
+        public void onGeofencesRemoved() {
+            geofences.clear();
+            setText();
+        }
+
+        @Override
+        public void onRouteEnded(ArrayList<Route> routes) {
+            activitiesAdapter.clear();
+            routesAdapter.clear();
+            for (Route route : routes) {
+                routesAdapter.add(route);
+            }
+        }
+
+        @Override
+        public void onRoutesLoaded(ArrayList<Route> routes) {
+            routesAdapter.clear();
+            for (Route route : routes) {
+                routesAdapter.add(route);
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -193,136 +324,7 @@ public class MainActivity extends AppCompatActivity {
                 .setRadiusPower(50L)
                 .setRadiusWifi(50L)
                 .setRadiusActivity(100L)*/
-                .setListener(new MobilityDetectionListener() {
-                    @Override
-                    public void onStopService() {
-                        finish();
-                    }
-
-                    @Override
-                    public void onTransitioned(DetectedActivities activity) {
-                        activitiesAdapter.add(activity);
-                    }
-
-                    @Override
-                    public void onTransitionsLoaded(ArrayList<DetectedActivities> activities) {
-                        activitiesAdapter.clear();
-                        activitiesAdapter.addAll(activities);
-                    }
-
-                    @Override
-                    public void onActivityDetected(ArrayList<DetectedActivity> activities) {
-                        ArrayList<DetectedActivity> copyActivities = new ArrayList<>(activities);
-                        activityList.setText("");
-
-                        for (DetectedActivity activity : copyActivities) {
-                            int type = activity.getType();
-                            int confidence = activity.getConfidence();
-
-                            switch (type) {
-                                case DetectedActivity.IN_VEHICLE: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.IN_VEHICLE) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                                case DetectedActivity.ON_BICYCLE: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.ON_BICYCLE) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                                case DetectedActivity.ON_FOOT: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.ON_FOOT) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                                case DetectedActivity.RUNNING: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.RUNNING) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                                case DetectedActivity.STILL: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.STILL) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                                case DetectedActivity.TILTING: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.TILTING) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                                case DetectedActivity.WALKING: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.WALKING) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                                case DetectedActivity.UNKNOWN: {
-                                    activityList.append(Activities.getActivityType(DetectedActivity.UNKNOWN) + ": " + confidence);
-                                    activityList.append("\n");
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onPowerConnectionChanged(boolean hasPowerConnection) {
-                        if (hasPowerConnection) {
-                            vibe.vibrate(1000);
-                        } else {
-                            vibe.vibrate(500);
-                        }
-                    }
-
-                    @Override
-                    public void onWifiConnectionChanged(boolean hasWifiConnection) {
-                        if (hasWifiConnection) {
-                            vibe.vibrate(1000);
-                        } else {
-                            vibe.vibrate(500);
-                        }
-                    }
-
-                    @Override
-                    public void onGeofenceAdded(String key) {
-                        geofences.add(key);
-                        setText();
-                    }
-
-                    @Override
-                    public void onGeofenceRemoved(ArrayList<String> keys) {
-                        for (String key : keys) {
-                            for (int i = geofences.size() - 1; i >= 0; i--) {
-                                if (geofences.get(i).equals(key)) {
-                                    geofences.remove(i);
-                                }
-                            }
-                        }
-                        setText();
-                    }
-
-                    @Override
-                    public void onGeofencesRemoved() {
-                        geofences.clear();
-                        setText();
-                    }
-
-                    @Override
-                    public void onRouteEnded(ArrayList<Route> routes) {
-                        activitiesAdapter.clear();
-                        routesAdapter.clear();
-                        for (Route route : routes) {
-                            routesAdapter.add(route);
-                        }
-                    }
-
-                    @Override
-                    public void onRoutesLoaded(ArrayList<Route> routes) {
-                        routesAdapter.clear();
-                        for (Route route : routes) {
-                            routesAdapter.add(route);
-                        }
-                    }
-                })
+                .setListener(mobilityDetectionListener)
                 .build();
 
         initiateLocationSettings();

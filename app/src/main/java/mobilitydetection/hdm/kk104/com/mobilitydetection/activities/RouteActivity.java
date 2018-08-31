@@ -16,8 +16,7 @@ import mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.models.Route;
 public class RouteActivity extends AppCompatActivity {
 
     private Route route;
-
-    private TextView activityList;
+    
     private ListView activityListView;
 
     private ArrayList<DetectedActivities> activities;

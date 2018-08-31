@@ -407,21 +407,27 @@ public class DataManager {
 
             if (stringBuilder.toString().length() > 0) {
                 root = new JSONObject(stringBuilder.toString());
+
+                if (!root.has(WIFI)) {
+                    JSONObject wifi = new JSONObject();
+                    root.put(WIFI, wifi);
+                }
+                if (!root.has(ROUTES)) {
+                    JSONArray routes = new JSONArray();
+                    root.put(ROUTES, routes);
+                }
                 if (!root.getJSONObject(DB_NAME).has(shortDate)) {
                     JSONObject data = new JSONObject();
                     JSONObject activities = new JSONObject();
                     JSONObject location = new JSONObject();
                     JSONObject validation = new JSONObject();
                     JSONArray transitions = new JSONArray();
-                    JSONObject wifi = new JSONObject();
-                    JSONArray routes = new JSONArray();
 
                     data.put(ACTIVITIES, activities);
                     data.put(LOCATION, location);
                     data.put(VALIDATION, validation);
                     data.put(TRANSITIONS, transitions);
-                    root.put(WIFI, wifi);
-                    root.put(ROUTES, routes);
+
                     root.getJSONObject(DB_NAME).put(shortDate, data);
                 }
             } else {
@@ -456,6 +462,7 @@ public class DataManager {
             data.put(VALIDATION, validation);
             data.put(TRANSITIONS, transitions);
             day.put(shortDate, data);
+
             root.put(DB_NAME, day);
             root.put(WIFI, wifi);
             root.put(ROUTES, routes);

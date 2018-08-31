@@ -251,13 +251,27 @@ public class MobilityDetectionService extends Service {
 
                         if (dataManager.isWifiLocationStationary(ssid)) {
                             isInGeofence = true;
+
+                            // Adding activity STILL in wifi's location
+                            DetectedActivities exitedActivity = dataManager.getLastActivityTransition();
+                            if (exitedActivity.getTimestamp() != null) {
+                                if (!exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
+                                    DetectedLocation detectedLocation = detectedLocationFromSSID(ssid);
+                                    if (detectedLocation != null) {
+                                        DetectedActivities enteredActivity = new DetectedActivities();
+                                        enteredActivity.setTimestamp(Timestamp.generateTimestamp());
+                                        enteredActivity.getProbableActivities().setActivity(Activities.STILL);
+                                        enteredActivity.setDetectedLocation(detectedLocation);
+
+                                        dataManager.writeActivityTransition(enteredActivity);
+                                    }
+                                }
+                            }
+
                         } else {
                             // Creating a geofence for the possibility of a mobile hotspot
-                            Double[] location = dataManager.getWifiLocation(ssid);
-                            if (location[0] != null && location[1] != null) {
-                                DetectedLocation detectedLocation = new DetectedLocation();
-                                detectedLocation.setLatitude(location[0]);
-                                detectedLocation.setLatitude(location[1]);
+                            DetectedLocation detectedLocation = detectedLocationFromSSID(ssid);
+                            if (detectedLocation != null) {
                                 addGeofence(detectedLocation, radiusWifi, loiteringDelayWifi, "CONNECTED_CONNECTIVITY_ACTION hasWifiLocation");
                                 requestGeofenceUpdates();
                             }
@@ -312,6 +326,19 @@ public class MobilityDetectionService extends Service {
         Intent i = new Intent(Actions.WIFI_CONNECTION_ACTION);
         i.putExtra("isWifi", connectionType == ConnectivityManager.TYPE_WIFI);
         sendBroadcast(i, null);
+    }
+
+    private DetectedLocation detectedLocationFromSSID(String ssid) {
+        Double[] location = dataManager.getWifiLocation(ssid);
+
+        DetectedLocation detectedLocation = new DetectedLocation();
+
+        if (location[0] != null && location[1] != null) {
+            detectedLocation.setLatitude(location[0]);
+            detectedLocation.setLatitude(location[1]);
+            return detectedLocation;
+        }
+        return null;
     }
 
     /**
@@ -763,7 +790,7 @@ public class MobilityDetectionService extends Service {
                 .setInterval(fastInterval)
                 .setFastestInterval(fastInterval)
                 .setExpirationDuration(5000);
-                //.setMaxWaitTime(5000);
+        //.setMaxWaitTime(5000);
 
         return locationRequest;
     }

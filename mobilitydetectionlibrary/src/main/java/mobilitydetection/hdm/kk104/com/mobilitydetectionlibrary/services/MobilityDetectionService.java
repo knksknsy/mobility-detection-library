@@ -254,17 +254,15 @@ public class MobilityDetectionService extends Service {
 
                             // Adding activity STILL in wifi's location
                             DetectedActivities exitedActivity = dataManager.getLastActivityTransition();
-                            if (exitedActivity.getTimestamp() != null) {
-                                if (!exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
-                                    DetectedLocation detectedLocation = detectedLocationFromSSID(ssid);
-                                    if (detectedLocation != null) {
-                                        DetectedActivities enteredActivity = new DetectedActivities();
-                                        enteredActivity.setTimestamp(Timestamp.generateTimestamp());
-                                        enteredActivity.getProbableActivities().setActivity(Activities.STILL);
-                                        enteredActivity.setDetectedLocation(detectedLocation);
+                            if (exitedActivity.getTimestamp() == null || !exitedActivity.getProbableActivities().getActivity().equals(Activities.STILL)) {
+                                DetectedLocation detectedLocation = detectedLocationFromSSID(ssid);
+                                if (detectedLocation != null) {
+                                    DetectedActivities enteredActivity = new DetectedActivities();
+                                    enteredActivity.setTimestamp(Timestamp.generateTimestamp());
+                                    enteredActivity.getProbableActivities().setActivity(Activities.STILL);
+                                    enteredActivity.setDetectedLocation(detectedLocation);
 
-                                        dataManager.writeActivityTransition(enteredActivity);
-                                    }
+                                    broadcastActivityTransition(enteredActivity);
                                 }
                             }
 
@@ -434,13 +432,7 @@ public class MobilityDetectionService extends Service {
                                 endRoute();
                             }
                         }
-                        dataManager.writeActivityTransition(enteredActivity);
-                        dataManager.saveJSONFile();
-
-                        // Notify MobilityDetection class for activity transition
-                        Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_ACTION);
-                        i.putExtra(DetectedActivities.class.getSimpleName(), enteredActivity);
-                        sendBroadcast(i, null);
+                        broadcastActivityTransition(enteredActivity);
 
                         fusedLocationProviderClient.removeLocationUpdates(this);
                         activityDetectionInProgress = false;
@@ -448,6 +440,16 @@ public class MobilityDetectionService extends Service {
                 }, new HandlerThread(HANDLER_NAME).getLooper());
             }
         }
+    }
+
+    private void broadcastActivityTransition(DetectedActivities enteredActivity) {
+        dataManager.writeActivityTransition(enteredActivity);
+        dataManager.saveJSONFile();
+
+        // Notify MobilityDetection class for activity transition
+        Intent i = new Intent(Actions.ACTIVITY_TRANSITIONED_ACTION);
+        i.putExtra(DetectedActivities.class.getSimpleName(), enteredActivity);
+        sendBroadcast(i, null);
     }
 
     /**

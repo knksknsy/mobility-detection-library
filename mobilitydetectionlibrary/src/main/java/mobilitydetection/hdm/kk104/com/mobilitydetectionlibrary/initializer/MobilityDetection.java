@@ -42,6 +42,7 @@ public class MobilityDetection {
     private long radiusPower;
     private long radiusWifi;
     private long radiusActivity;
+    private int loiteringDelayStationaryWifi;
 
     public MobilityDetectionService mobilityDetectionService;
     private boolean serviceBound = false;
@@ -118,6 +119,11 @@ public class MobilityDetection {
 
     private MobilityDetection setRadiusActivity(long radiusActivity) {
         this.radiusActivity = radiusActivity;
+        return this;
+    }
+
+    private MobilityDetection setLoiteringDelayStationaryWifi(int loiteringDelayStationaryWifi) {
+        this.loiteringDelayStationaryWifi = loiteringDelayStationaryWifi;
         return this;
     }
 
@@ -222,6 +228,7 @@ public class MobilityDetection {
             mobilityDetectionService.radiusPower = radiusPower;
             mobilityDetectionService.radiusWifi = radiusWifi;
             mobilityDetectionService.radiusActivity = radiusActivity;
+            mobilityDetectionService.loiteringDelayStationaryWifi = loiteringDelayStationaryWifi;
             serviceBound = true;
         }
 
@@ -286,6 +293,8 @@ public class MobilityDetection {
         private long radiusPower = MobilityDetectionConstants.RADIUS_POWER;
         private long radiusWifi = MobilityDetectionConstants.RADIUS_WIFI;
         private long radiusActivity = MobilityDetectionConstants.RADIUS_ACTIVITY;
+
+        private int loiteringDelayStationaryWifi = MobilityDetectionConstants.LOITERING_DELAY_STATIONARY_WIFI;
 
         private MobilityDetectionListener listener;
 
@@ -381,6 +390,11 @@ public class MobilityDetection {
             return this;
         }
 
+        public Builder setLoiteringDelayStationaryWifi(int loiteringDelayStationaryWifi) {
+            this.loiteringDelayStationaryWifi = loiteringDelayStationaryWifi;
+            return this;
+        }
+
         /**
          * Setting the radius for a geofence when a power connection is established. The value is used for deciding whether an user is charging its mobile device with a power bank or from an socket.
          *
@@ -443,6 +457,7 @@ public class MobilityDetection {
                     .setRadiusPower(radiusPower)
                     .setRadiusWifi(radiusWifi)
                     .setRadiusActivity(radiusActivity)
+                    .setLoiteringDelayStationaryWifi(loiteringDelayStationaryWifi)
                     .setListener(listener);
         }
     }

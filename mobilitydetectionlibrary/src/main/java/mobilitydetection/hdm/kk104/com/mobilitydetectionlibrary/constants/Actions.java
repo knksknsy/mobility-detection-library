@@ -5,24 +5,24 @@ package mobilitydetection.hdm.kk104.com.mobilitydetectionlibrary.constants;
  */
 public class Actions {
 
-    public static String SAVE_DATA_ACTION = "SAVE_DATA_ACTION";
-    public static String STOP_MOBILITY_DETECTION_ACTION = "STOP_MOBILITY_DETECTION_ACTION";
+    public static final String SAVE_DATA_ACTION = "SAVE_DATA_ACTION";
+    public static final String STOP_MOBILITY_DETECTION_ACTION = "STOP_MOBILITY_DETECTION_ACTION";
 
-    public static String ACTIVITY_DETECTED_ACTION = "ACTIVITY_DETECTED_ACTION";
-    public static String ACTIVITY_TRANSITIONED_ACTION = "ACTIVITY_TRANSITIONED_ACTION";
-    public static String ACTIVITY_LIST_ACTION = "ACTIVITY_LIST_ACTION";
+    public static final String ACTIVITY_DETECTED_ACTION = "ACTIVITY_DETECTED_ACTION";
+    public static final String ACTIVITY_TRANSITIONED_ACTION = "ACTIVITY_TRANSITIONED_ACTION";
+    public static final String ACTIVITY_LIST_ACTION = "ACTIVITY_LIST_ACTION";
 
-    public static String GEOFENCE_TRANSITION_ACTION = "GEOFENCE_TRANSITION_ACTION";
-    public static String GEOFENCE_ADDED_ACTION = "GEOFENCE_ADDED_ACTION";
-    public static String GEOFENCE_REMOVED_ACTION = "GEOFENCE_REMOVED_ACTION";
-    public static String GEOFENCES_REMOVED_ACTION = "GEOFENCES_REMOVED_ACTION";
+    public static final String GEOFENCE_TRANSITION_ACTION = "GEOFENCE_TRANSITION_ACTION";
+    public static final String GEOFENCE_ADDED_ACTION = "GEOFENCE_ADDED_ACTION";
+    public static final String GEOFENCE_REMOVED_ACTION = "GEOFENCE_REMOVED_ACTION";
+    public static final String GEOFENCES_REMOVED_ACTION = "GEOFENCES_REMOVED_ACTION";
 
-    public static String ACTIVITY_TRANSITIONS_LOADED_ACTION = "ACTIVITY_TRANSITIONS_LOADED_ACTION";
-    public static String ROUTES_LOADED_ACTION = "ROUTES_LOADED_ACTION";
-    public static String ROUTE_ENDED_ACTION = "ROUTE_ENDED_ACTION";
+    public static final String ACTIVITY_TRANSITIONS_LOADED_ACTION = "ACTIVITY_TRANSITIONS_LOADED_ACTION";
+    public static final String ROUTES_LOADED_ACTION = "ROUTES_LOADED_ACTION";
+    public static final String ROUTE_ENDED_ACTION = "ROUTE_ENDED_ACTION";
 
-    public static String POWER_CONNECTION_ACTION = "POWER_CONNECTION_ACTION";
-    public static String WIFI_CONNECTION_ACTION = "WIFI_CONNECTION_ACTION";
+    public static final String POWER_CONNECTION_ACTION = "POWER_CONNECTION_ACTION";
+    public static final String WIFI_CONNECTION_ACTION = "WIFI_CONNECTION_ACTION";
 
     /**
      * @deprecated

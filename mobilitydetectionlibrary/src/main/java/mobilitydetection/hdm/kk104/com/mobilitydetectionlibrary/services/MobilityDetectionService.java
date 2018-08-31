@@ -1008,7 +1008,7 @@ public class MobilityDetectionService extends Service {
         locationRequestTracking = new LocationRequest();
 
         locationRequestTracking.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequestTracking.setInterval(INTERVAL_LOCATION);
+        locationRequestTracking.setDetectionInterval(INTERVAL_LOCATION);
         locationRequestTracking.setFastestInterval(INTERVAL);
 
         fusedLocationProviderClientTracking = LocationServices.getFusedLocationProviderClient(this);

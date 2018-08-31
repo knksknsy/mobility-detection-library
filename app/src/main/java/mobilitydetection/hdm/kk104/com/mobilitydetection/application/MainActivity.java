@@ -314,16 +314,16 @@ public class MainActivity extends AppCompatActivity {
     private void initMobilityDetection() {
         mobilityDetection = new MobilityDetection.Builder()
                 .setContext(MainActivity.this)
-                /*.setInterval(1000 * 5)
-                .setFastInterval(1000 * 5)
-                .setMediumInterval(1000 * 5)
+                /*.setDetectionInterval(1000 * 5)
+                .setDetectionIntervalFast(1000 * 5)
+                .setDetectionIntervalMedium(1000 * 5)
                 .setSlowInterval(1000 * 5)
-                .setLoiteringDelayWifi(1000 * 60 * 5)
-                .setLoiteringDelayPower(1000 * 60 * 5)
-                .setLoiteringDelayActivity(1000 * 60 * 5)
-                .setRadiusPower(50L)
-                .setRadiusWifi(50L)
-                .setRadiusActivity(100L)*/
+                .setWifiFenceLoiteringDelay(1000 * 60 * 5)
+                .setPowerFenceLoiteringDelay(1000 * 60 * 5)
+                .setActivityFenceLoiteringDelay(1000 * 60 * 5)
+                .setPowerFenceRadius(50L)
+                .setWifiFenceRadius(50L)
+                .setActivityFenceRadius(100L)*/
                 .setListener(mobilityDetectionListener)
                 .build();
 

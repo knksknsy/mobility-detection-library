@@ -4,18 +4,27 @@ import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.DetectedActivity;
 
 public class Activities {
-    public static String IN_VEHICLE = "IN_VEHICLE";
-    public static String ON_BICYCLE = "ON_BICYCLE";
-    public static String ON_FOOT = "ON_FOOT";
-    public static String STILL = "STILL";
-    public static String UNKNOWN = "UNKNOWN";
-    public static String TILTING = "TILTING";
-    public static String WALKING = "WALKING";
-    public static String RUNNING = "RUNNING";
+    public static final String IN_VEHICLE = "IN_VEHICLE";
+    public static final String ON_BICYCLE = "ON_BICYCLE";
+    public static final String ON_FOOT = "ON_FOOT";
+    public static final String STILL = "STILL";
+    public static final String UNKNOWN = "UNKNOWN";
+    public static final String TILTING = "TILTING";
+    public static final String WALKING = "WALKING";
+    public static final String RUNNING = "RUNNING";
 
+    /**
+     * @deprecated
+     */
     public static String ENTER = "ENTER";
+    /**
+     * @deprecated
+     */
     public static String EXIT = "EXIT";
 
+    /**
+     * @deprecated
+     */
     final public static String[] activities = new String[]{IN_VEHICLE, ON_BICYCLE, ON_FOOT, STILL, UNKNOWN, TILTING, WALKING, RUNNING};
 
     /**

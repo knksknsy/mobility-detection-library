@@ -183,8 +183,8 @@ public class DetectedLocation implements Parcelable {
         JSONObject object = new JSONObject();
         try {
             object.put("timestamp", this.timestamp);
-            object.put("longitude", this.longitude);
             object.put("latitude", this.latitude);
+            object.put("longitude", this.longitude);
             if (detectedAddress != null) {
                 object.put("detectedAddress", detectedAddress.toJSON());
             }

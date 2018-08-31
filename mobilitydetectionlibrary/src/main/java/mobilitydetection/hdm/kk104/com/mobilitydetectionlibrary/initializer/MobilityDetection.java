@@ -319,7 +319,7 @@ public class MobilityDetection {
          * @param interval Update interval in milliseconds
          * @return Builder
          */
-        public Builder setInterval(long interval) {
+        public Builder setDetectionInterval(long interval) {
             this.interval = interval;
             return this;
         }
@@ -330,10 +330,11 @@ public class MobilityDetection {
          * @param fastInterval Update interval in milliseconds
          * @return Builder
          */
-        public Builder setFastInterval(long fastInterval) {
+        public Builder setDetectionIntervalFast(long fastInterval) {
             this.fastInterval = fastInterval;
             return this;
         }
+
 
         /**
          * Setting the medium update interval for ActivityRecognitionClient
@@ -341,7 +342,7 @@ public class MobilityDetection {
          * @param mediumInterval Update interval in milliseconds
          * @return Builder
          */
-        public Builder setMediumInterval(long mediumInterval) {
+        public Builder setDetectionIntervalMedium(long mediumInterval) {
             this.mediumInterval = mediumInterval;
             return this;
         }
@@ -352,7 +353,7 @@ public class MobilityDetection {
          * @param slowInterval Update interval in milliseconds
          * @return Builder
          */
-        public Builder setSlowInterval(long slowInterval) {
+        public Builder setDetectionIntervalSlow(long slowInterval) {
             this.slowInterval = slowInterval;
             return this;
         }
@@ -363,7 +364,7 @@ public class MobilityDetection {
          * @param loiteringDelayWifi loitering delay in milliseconds
          * @return Builder
          */
-        public Builder setLoiteringDelayWifi(int loiteringDelayWifi) {
+        public Builder setWifiFenceLoiteringDelay(int loiteringDelayWifi) {
             this.loiteringDelayWifi = loiteringDelayWifi;
             return this;
         }
@@ -374,7 +375,7 @@ public class MobilityDetection {
          * @param loiteringDelayPower loitering delay in milliseconds
          * @return Builder
          */
-        public Builder setLoiteringDelayPower(int loiteringDelayPower) {
+        public Builder setPowerFenceLoiteringDelay(int loiteringDelayPower) {
             this.loiteringDelayPower = loiteringDelayPower;
             return this;
         }
@@ -385,12 +386,12 @@ public class MobilityDetection {
          * @param loiteringDelayActivity loitering delay in milliseconds
          * @return Builder
          */
-        public Builder setLoiteringDelayActivity(int loiteringDelayActivity) {
+        public Builder setActivityFenceLoiteringDelay(int loiteringDelayActivity) {
             this.loiteringDelayActivity = loiteringDelayActivity;
             return this;
         }
 
-        public Builder setLoiteringDelayStationaryWifi(int loiteringDelayStationaryWifi) {
+        public Builder setStationaryWifiFenceLoiteringDelay(int loiteringDelayStationaryWifi) {
             this.loiteringDelayStationaryWifi = loiteringDelayStationaryWifi;
             return this;
         }
@@ -401,7 +402,7 @@ public class MobilityDetection {
          * @param radiusPower radius in meters
          * @return Builder
          */
-        public Builder setRadiusPower(long radiusPower) {
+        public Builder setPowerFenceRadius(long radiusPower) {
             this.radiusPower = radiusPower;
             return this;
         }
@@ -412,7 +413,7 @@ public class MobilityDetection {
          * @param radiusWifi radius in meters
          * @return Builder
          */
-        public Builder setRadiusWifi(long radiusWifi) {
+        public Builder setWifiFenceRadius(long radiusWifi) {
             this.radiusWifi = radiusWifi;
             return this;
         }
@@ -423,7 +424,7 @@ public class MobilityDetection {
          * @param radiusActivity radius in meters
          * @return Builder
          */
-        public Builder setRadiusActivity(long radiusActivity) {
+        public Builder setActivityFenceRadius(long radiusActivity) {
             this.radiusActivity = radiusActivity;
             return this;
         }

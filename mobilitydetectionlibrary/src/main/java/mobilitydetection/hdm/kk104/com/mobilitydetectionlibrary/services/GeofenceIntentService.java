@@ -42,6 +42,10 @@ public class GeofenceIntentService extends IntentService {
             keys.add(geofence.getRequestId());
         }
 
+        broadcastActivityTransition(geofenceTransition, keys);
+    }
+
+    private void broadcastActivityTransition(int geofenceTransition, ArrayList<String> keys) {
         Intent i = new Intent(Actions.GEOFENCE_TRANSITION_ACTION);
         i.putExtra("geofenceTransition", geofenceTransition);
         i.putStringArrayListExtra("keys", keys);
